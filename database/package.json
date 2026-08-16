@@ -1,0 +1,20 @@
+{
+  "name": "legal-ai-assistant-database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Schema/migration CLI tooling only — not an application. Owns the Postgres schema both the Java and Python backends read/write (System Architecture §3).",
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx migrate.ts",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.38.4",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

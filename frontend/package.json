@@ -1,0 +1,24 @@
+{
+  "name": "legal-ai-assistant-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UI only — no database access, no API routes. Calls the Java backend (and, from V0.3/V0.4, the Python backend) over HTTP. System Architecture §1.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^15.1.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.4",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "^5.7.2"
+  }
+}

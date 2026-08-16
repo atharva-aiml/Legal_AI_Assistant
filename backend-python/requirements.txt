@@ -1,0 +1,17 @@
+fastapi==0.141.1
+uvicorn==0.52.3
+SQLAlchemy==2.0.52
+psycopg2-binary==2.9.12
+pypdf==6.16.1
+cryptography==50.0.0
+python-docx==1.2.0
+sentence-transformers==5.7.0
+easyocr==1.7.2
+pillow==12.3.0
+numpy==2.5.2
+openai==3.0.0
+python-dotenv==1.2.2
+
+# CPU-only build — installed separately via:
+# pip install --index-url https://download.pytorch.org/whl/cpu torch
+# (the default PyPI torch wheel pulls CUDA libraries unnecessarily on this machine)

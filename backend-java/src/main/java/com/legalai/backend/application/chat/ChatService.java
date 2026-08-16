@@ -1,0 +1,48 @@
+package com.legalai.backend.application.chat;
+
+import com.legalai.backend.application.chat.ChatDtos.ChatHistoryDto;
+import com.legalai.backend.application.chat.ChatDtos.ChatMessageDto;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+/**
+ * SD-005: thin by design — Java owns auth and Matter ownership (checked by
+ * the controller before this is ever called, System Architecture SD-003's
+ * "sole authority on session validity"), Python owns the entire chat domain
+ * (retrieval, generation, grounding rules, persistence). This class exists
+ * only so the controller depends on an application-layer service rather
+ * than a port directly, matching every other entity in this codebase.
+ */
+@Service
+public class ChatService {
+
+    private final ChatGateway gateway;
+
+    public ChatService(ChatGateway gateway) {
+        this.gateway = gateway;
+    }
+
+    public ChatMessageDto ask(UUID matterId, UUID lawyerId, String question) {
+        return gateway.ask(matterId, lawyerId, question);
+    }
+
+    public ChatHistoryDto history(UUID matterId) {
+        return gateway.history(matterId);
+    }
+
+    /** 422: the Matter has no ready Document yet — nothing to ground an answer in. */
+    public static class NoReadyDocumentsException extends RuntimeException {
+    }
+
+    /** 502: the retrieval query or the LLM call itself failed in Python — a system fault, not a content gap. */
+    public static class AssistantUnavailableException extends RuntimeException {
+        public AssistantUnavailableException(String message) {
+            super(message);
+        }
+
+        public AssistantUnavailableException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+}
