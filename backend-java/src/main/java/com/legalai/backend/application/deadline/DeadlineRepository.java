@@ -1,6 +1,7 @@
 package com.legalai.backend.application.deadline;
 
 import com.legalai.backend.domain.Deadline;
+import com.legalai.backend.domain.DeadlinePriority;
 import com.legalai.backend.domain.DeadlineStatus;
 
 import java.time.LocalDate;
@@ -20,7 +21,7 @@ public interface DeadlineRepository {
 
     Optional<Deadline> findById(UUID firmId, UUID id);
 
-    Optional<Deadline> update(UUID firmId, UUID id, String title, LocalDate dueDate, DeadlineStatus status, int notificationLeadDays);
+    Optional<Deadline> update(UUID firmId, UUID id, String title, LocalDate dueDate, DeadlineStatus status, DeadlinePriority priority, int notificationLeadDays);
 
     /** REQ-017: Dashboard Upcoming widget — every open Deadline due within `days`, across all the Firm's Matters. */
     List<Deadline> listUpcoming(UUID firmId, int days);

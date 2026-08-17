@@ -45,4 +45,11 @@ public record Matter(
         }
         return trimmed;
     }
+
+    /** I-35: the counterpart to closing — only meaningful from Closed, mirroring close()'s own state-specific validity (BR-003 there, "must actually be Closed" here). */
+    public static void validateReopen(MatterStatus currentStatus) {
+        if (currentStatus != MatterStatus.closed) {
+            throw new InvalidMatterException("Only a Closed Matter can be reopened.");
+        }
+    }
 }

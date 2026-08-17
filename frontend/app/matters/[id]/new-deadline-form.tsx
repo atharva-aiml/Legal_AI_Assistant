@@ -5,17 +5,34 @@ import { useRouter } from "next/navigation";
 import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { useToast } from "@/components/toast-context";
 
 function todayISO(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
+function dateISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// I-39: relative quick-picks, computed from today at click time — each just
+// populates the same field the lawyer could type into directly, nothing more.
+const QUICK_PICKS: { label: string; compute: () => string }[] = [
+  { label: "In 1 week", compute: () => dateISO(new Date(new Date().setDate(new Date().getDate() + 7))) },
+  { label: "In 2 weeks", compute: () => dateISO(new Date(new Date().setDate(new Date().getDate() + 14))) },
+  { label: "In 1 month", compute: () => dateISO(new Date(new Date().setMonth(new Date().getMonth() + 1))) },
+];
+
+type Priority = "standard" | "critical";
+
 export function NewDeadlineForm({ matterId }: { matterId: string }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [priority, setPriority] = useState<Priority>("standard");
   const [leadDays, setLeadDays] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -25,11 +42,6 @@ export function NewDeadlineForm({ matterId }: { matterId: string }) {
     e.preventDefault();
     setError(null);
 
-    // BR-009: a Deadline's due date can't be in the past. The date input's
-    // min= attribute blocks this in the calendar picker, but a manually
-    // typed date bypasses that in some browsers — checked explicitly here
-    // too, with the server-side check (Deadline.validateDueDate) as the
-    // real backstop either way.
     if (dueDate < minDate) {
       setError("The due date can't be in the past — please pick today or a later date.");
       return;
@@ -44,6 +56,7 @@ export function NewDeadlineForm({ matterId }: { matterId: string }) {
       body: JSON.stringify({
         title,
         dueDate,
+        priority,
         notificationLeadDays: leadDays.trim() === "" ? null : Number(leadDays),
       }),
     });
@@ -58,8 +71,10 @@ export function NewDeadlineForm({ matterId }: { matterId: string }) {
 
     setTitle("");
     setDueDate("");
+    setPriority("standard");
     setLeadDays("");
     setOpen(false);
+    showToast("Deadline created");
     router.refresh();
   }
 
@@ -79,7 +94,26 @@ export function NewDeadlineForm({ matterId }: { matterId: string }) {
       </div>
       <div className="field">
         <label className="field-label" htmlFor="deadline-due-date">Due date *</label>
+        <div className="row" style={{ gap: "var(--space-2)", marginBottom: "var(--space-2)", flexWrap: "wrap" }}>
+          {QUICK_PICKS.map((pick) => (
+            <button
+              key={pick.label}
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setDueDate(pick.compute())}
+            >
+              {pick.label}
+            </button>
+          ))}
+        </div>
         <input id="deadline-due-date" className="input" type="date" value={dueDate} min={minDate} onChange={(e) => setDueDate(e.target.value)} required />
+      </div>
+      <div className="field">
+        <label className="field-label" htmlFor="deadline-priority">Priority</label>
+        <select id="deadline-priority" className="select" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+          <option value="standard">Standard</option>
+          <option value="critical">Critical</option>
+        </select>
       </div>
       <div className="field">
         <label className="field-label" htmlFor="deadline-lead-days">Notify how many days before? (default 3)</label>

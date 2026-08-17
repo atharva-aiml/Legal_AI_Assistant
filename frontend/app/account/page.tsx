@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { javaFetch } from "@/lib/api/java-client";
 import { NavBar } from "@/components/nav-bar";
 import { LogoutButton } from "./logout-button";
+import { ChangePasswordForm, EditNameForm, NotificationPreferencesForm } from "./account-forms";
 
 type Lawyer = { id: string; name: string; email: string; role: string };
 
@@ -9,6 +10,11 @@ export default async function AccountPage() {
   const meRes = await javaFetch("/api/auth/me");
   if (!meRes.ok) redirect("/login");
   const { lawyer }: { lawyer: Lawyer } = await meRes.json();
+
+  const prefsRes = await javaFetch("/api/auth/me/preferences");
+  const { deadlineRemindersEnabled }: { deadlineRemindersEnabled: boolean } = prefsRes.ok
+    ? await prefsRes.json()
+    : { deadlineRemindersEnabled: true };
 
   const initial = lawyer.name.trim().charAt(0).toUpperCase() || "?";
 
@@ -45,7 +51,7 @@ export default async function AccountPage() {
             </div>
           </div>
 
-          <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "var(--space-4)" }}>
+          <dl style={{ margin: "0 0 var(--space-5)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "var(--space-4)" }}>
             <div>
               <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Role</dt>
               <dd style={{ margin: 0, textTransform: "capitalize" }}>{lawyer.role}</dd>
@@ -55,6 +61,18 @@ export default async function AccountPage() {
               <dd style={{ margin: 0 }}>{lawyer.email}</dd>
             </div>
           </dl>
+
+          <EditNameForm currentName={lawyer.name} />
+        </div>
+
+        <div className="card" style={{ marginTop: "var(--space-4)" }}>
+          <div style={{ fontWeight: 500, marginBottom: "var(--space-3)" }}>Change password</div>
+          <ChangePasswordForm />
+        </div>
+
+        <div className="card" style={{ marginTop: "var(--space-4)" }}>
+          <div style={{ fontWeight: 500, marginBottom: "var(--space-3)" }}>Notification preferences</div>
+          <NotificationPreferencesForm initialDeadlineRemindersEnabled={deadlineRemindersEnabled} />
         </div>
 
         <div className="card" style={{ marginTop: "var(--space-4)" }}>

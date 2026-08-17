@@ -2,6 +2,7 @@ package com.legalai.backend.application.chat;
 
 import com.legalai.backend.application.chat.ChatDtos.ChatHistoryDto;
 import com.legalai.backend.application.chat.ChatDtos.ChatMessageDto;
+import com.legalai.backend.application.chat.ChatDtos.PinToggleDto;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -31,8 +32,16 @@ public class ChatService {
         return gateway.history(matterId);
     }
 
+    public PinToggleDto togglePin(UUID matterId, UUID messageId, boolean pinned) {
+        return gateway.togglePin(matterId, messageId, pinned);
+    }
+
     /** 422: the Matter has no ready Document yet — nothing to ground an answer in. */
     public static class NoReadyDocumentsException extends RuntimeException {
+    }
+
+    /** 404: no assistant message with that id in this Matter — I-34's pin toggle. */
+    public static class ChatMessageNotFoundException extends RuntimeException {
     }
 
     /** 502: the retrieval query or the LLM call itself failed in Python — a system fault, not a content gap. */

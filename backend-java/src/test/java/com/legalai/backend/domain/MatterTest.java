@@ -51,4 +51,16 @@ class MatterTest {
     void renameRejectsAnEmptyTitle() {
         assertThrows(InvalidMatterException.class, () -> Matter.renameTitle("   "));
     }
+
+    // --- I-35: reopen() ---
+
+    @Test
+    void validateReopenAllowsAClosedMatter() {
+        assertDoesNotThrow(() -> Matter.validateReopen(MatterStatus.closed));
+    }
+
+    @Test
+    void validateReopenRejectsAnAlreadyOpenMatter() {
+        assertThrows(InvalidMatterException.class, () -> Matter.validateReopen(MatterStatus.open));
+    }
 }

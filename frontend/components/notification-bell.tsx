@@ -70,7 +70,7 @@ export function NotificationBell() {
             padding: "0 3px",
             borderRadius: "var(--radius-full)",
             background: "var(--color-error-base)",
-            color: "#FFFFFF",
+            color: "var(--color-text-on-brand)",
             fontSize: "10px",
             fontWeight: 600,
             border: "1.5px solid var(--color-bg-surface)",

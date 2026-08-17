@@ -2,9 +2,17 @@ package com.legalai.backend.web.controller;
 
 import com.legalai.backend.application.auth.AuthService;
 import com.legalai.backend.application.auth.SessionToken;
+import com.legalai.backend.application.preferences.LawyerPreferencesService;
+import com.legalai.backend.domain.InvalidLawyerException;
+import com.legalai.backend.domain.Lawyer;
 import com.legalai.backend.web.ApiError;
+import com.legalai.backend.web.CurrentLawyerResolver;
+import com.legalai.backend.web.dto.AuthDtos.ChangePasswordRequest;
 import com.legalai.backend.web.dto.AuthDtos.LoginRequest;
+import com.legalai.backend.web.dto.AuthDtos.PreferencesResponse;
 import com.legalai.backend.web.dto.AuthDtos.RegisterRequest;
+import com.legalai.backend.web.dto.AuthDtos.UpdateNameRequest;
+import com.legalai.backend.web.dto.AuthDtos.UpdatePreferencesRequest;
 import com.legalai.backend.web.dto.LawyerResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,16 +22,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
+    private final LawyerPreferencesService preferencesService;
+    private final CurrentLawyerResolver currentLawyerResolver;
     private final boolean secureCookies;
 
-    public AuthController(AuthService authService, @org.springframework.beans.factory.annotation.Value("${app.secure-cookies:false}") boolean secureCookies) {
+    public AuthController(AuthService authService, LawyerPreferencesService preferencesService, CurrentLawyerResolver currentLawyerResolver,
+                           @org.springframework.beans.factory.annotation.Value("${app.secure-cookies:false}") boolean secureCookies) {
         this.authService = authService;
+        this.preferencesService = preferencesService;
+        this.currentLawyerResolver = currentLawyerResolver;
         this.secureCookies = secureCookies;
     }
 
@@ -51,6 +65,12 @@ public class AuthController {
         }
     }
 
+    /** I-06: pre-auth, read-only — lets the register form hint at a taken email before submit. */
+    @GetMapping("/email-available")
+    public ResponseEntity<?> emailAvailable(@RequestParam String email) {
+        return ResponseEntity.ok(Map.of("available", authService.isEmailAvailable(email)));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> me(HttpServletRequest request) {
         String raw = null;
@@ -64,6 +84,52 @@ public class AuthController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiError.unauthenticated()));
     }
 
+    /** I-51: PATCH not POST — a partial update of the already-existing "current lawyer" resource. */
+    @PatchMapping("/me")
+    public ResponseEntity<?> updateName(@RequestBody UpdateNameRequest body, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+
+        try {
+            Lawyer updated = authService.updateName(lawyer.get().id(), body.name());
+            return ResponseEntity.ok(Map.of("lawyer", LawyerResponse.from(updated)));
+        } catch (InvalidLawyerException e) {
+            return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest body, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+
+        try {
+            authService.changePassword(lawyer.get().id(), body.currentPassword(), body.newPassword());
+            return ResponseEntity.ok(Map.of());
+        } catch (AuthService.IncorrectPasswordException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiError.of("INCORRECT_PASSWORD", e.getMessage()));
+        } catch (InvalidLawyerException e) {
+            return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", e.getMessage()));
+        }
+    }
+
+    /** I-52: SD-006 — which notification types this Lawyer wants to receive. */
+    @GetMapping("/me/preferences")
+    public ResponseEntity<?> getPreferences(HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+
+        return ResponseEntity.ok(PreferencesResponse.from(preferencesService.get(lawyer.get().id())));
+    }
+
+    @PatchMapping("/me/preferences")
+    public ResponseEntity<?> updatePreferences(@RequestBody UpdatePreferencesRequest body, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+
+        return ResponseEntity.ok(PreferencesResponse.from(preferencesService.update(lawyer.get().id(), body.deadlineRemindersEnabled())));
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         String raw = null;
@@ -75,6 +141,10 @@ public class AuthController {
         authService.logout(raw);
         clearSessionCookie(response);
         return ResponseEntity.ok(Map.of());
+    }
+
+    private ResponseEntity<?> unauthenticated() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiError.unauthenticated());
     }
 
     private void setSessionCookie(HttpServletResponse response, String rawToken) {

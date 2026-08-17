@@ -4,77 +4,116 @@ Single light theme for v1 (no dark mode — not required by Requirements; revisi
 
 ## 1. Color Tokens
 
+Deep Navy primary (authority, trust, legal tradition) + Slate Graphite secondary (enterprise neutrality) + a cool neutral scale, replacing the earlier warm-ivory/forest-green direction. A single muted indigo-violet **AI accent** marks AI-origin content; a muted teal **Citation** color marks legal-reference links — both deliberately distinct from Primary and from each other so each reads as its own semantic category at a glance, and deliberately desaturated so neither reads as decorative/flashy.
+
 **Neutrals** — backgrounds, text, borders, disabled states.
 
 | Token | Hex | Used for |
 |---|---|---|
-| `--color-neutral-0` | `#FFFFFF` | Surface background (cards, modals, inputs). |
-| `--color-neutral-50` | `#F8F9FA` | Page background. |
-| `--color-neutral-100` | `#F1F3F5` | Hover background, disabled field background, secondary surface. |
-| `--color-neutral-200` | `#E9ECEF` | Default card/panel border, disabled field border. |
-| `--color-neutral-300` | `#DEE2E6` | Default input/control border. |
-| `--color-neutral-400` | `#CED4DA` | Hover border, disabled text. |
-| `--color-neutral-500` | `#ADB5BD` | Placeholder text. |
-| `--color-neutral-600` | `#868E96` | Muted/tertiary text, inactive icons. |
-| `--color-neutral-700` | `#495057` | Secondary text, secondary-button text. |
-| `--color-neutral-800` | `#343A40` | Strong body text. |
-| `--color-neutral-900` | `#212529` | Primary text, headings. |
+| `--color-neutral-0` | `#FFFFFF` | Surface background (cards, modals, inputs' focus state). |
+| `--color-neutral-50` | `#F7F8F9` | Page background. |
+| `--color-neutral-100` | `#EEF0F2` | Sunken surface — resting form inputs; hover background. |
+| `--color-neutral-200` | `#E1E4E8` | Default card/panel/input border. |
+| `--color-neutral-300` | `#C9CED4` | Strong border — table header rule, emphasized dividers, hover border. |
+| `--color-neutral-400` | `#A7AEB8` | Disabled text, placeholder text. |
+| `--color-neutral-500` | `#838C97` | Tertiary/meta text (timestamps, hints). |
+| `--color-neutral-600` | `#626B76` | Secondary text, labels. |
+| `--color-neutral-700` | `#48505A` | Reserved (dark-mode intermediate). |
+| `--color-neutral-800` | `#313740` | Reserved (dark-mode intermediate). |
+| `--color-neutral-900` | `#1B1F24` | Primary text, headings. |
+| `--color-neutral-950` | `#101317` | Reserved — dark-mode page background (dark mode not built; see note below). |
 
-**Brand** — primary interactive color.
+**Primary — Deep Navy** — brand primary, primary buttons, active nav, links.
 
 | Token | Hex | Used for |
 |---|---|---|
-| `--color-brand-50` | `#EFF6FF` | Selected-row/tab tint background. |
-| `--color-brand-100` | `#DBEAFE` | Hover tint on brand-tinted surfaces. |
-| `--color-brand-200` | `#BFDBFE` | Focus-ring glow color. |
-| `--color-brand-300` | `#93C5FD` | Selected-card border. |
-| `--color-brand-500` | `#3B7DD8` | Links, icons, focus border — not used as a button fill (insufficient contrast for white text). |
-| `--color-brand-600` | `#2A63B8` | Primary button default fill, active-nav accent, active-tab underline. |
-| `--color-brand-700` | `#1D4E93` | Primary button hover, link hover. |
-| `--color-brand-800` | `#163B70` | Primary button active/pressed. |
+| `--color-primary-50` | `#EAF1F6` | Subtle selected-row/hover background. |
+| `--color-primary-100` | `#CBDEEA` | Selected navigation item background. |
+| `--color-primary-200` | `#A2C4DA` | Focus-ring glow, selected-card/message border. |
+| `--color-primary-300` | `#74A6C6` | Decorative/illustrative use only (rare). |
+| `--color-primary-400` | `#4C8AB2` | Primary color on dark surfaces (not yet built). |
+| `--color-primary-500` | `#2A6E9C` | **Brand primary** — primary buttons, active nav, links. |
+| `--color-primary-600` | `#1F567C` | Primary button hover/pressed. |
+| `--color-primary-700` | `#17415F` | Primary button active/pressed (dark), strong-emphasis text on light. |
+| `--color-primary-800` | `#102D42` | Reserved, high-emphasis dark surfaces. |
+| `--color-primary-900` | `#0A1D2B` | Reserved, maximum-emphasis dark surfaces. |
 
-Brand-600/700/800 are used wherever white text sits on the fill — each meets ≥ 4.5:1 contrast against white. Brand-500 is reserved for text/icons/borders on light backgrounds, where it meets ≥ 4.5:1 against white/neutral-50.
+`--color-brand-*` (50/100/200/300/500/600/700/800) are kept as aliases onto the matching `--color-primary-*` step, so existing component CSS referencing "brand" continues to resolve correctly.
+
+**Secondary — Slate Graphite** — secondary actions, enterprise neutrality.
+
+| Token | Hex | Used for |
+|---|---|---|
+| `--color-secondary-50` | `#F0F2F4` | Secondary button hover background. |
+| `--color-secondary-100` | `#DCE0E5` | Secondary badge background. |
+| `--color-secondary-300` | `#9CA6B2` | Secondary icon default. |
+| `--color-secondary-500` | `#5C6877` | Secondary text emphasis. |
+| `--color-secondary-700` | `#353C46` | Secondary button pressed. |
+| `--color-secondary-900` | `#14171B` | Reserved. |
 
 **Semantic** — status and feedback. Each has a fill (`base`, for icons/dots), a soft `bg`, a `border`, and a `text` tuned for readability on its own `bg`.
 
 | Token | Hex | Used for |
 |---|---|---|
-| `--color-success-base` | `#2F9E44` | Success icon/dot. |
-| `--color-success-bg` | `#EBFBEE` | Success badge/alert background — Document "Ready," Deadline "Complete." |
-| `--color-success-border` | `#B2F2BB` | Success badge/alert border. |
-| `--color-success-text` | `#2B8A3E` | Success badge/alert text. |
-| `--color-warning-base` | `#F59F00` | Warning icon/dot. |
-| `--color-warning-bg` | `#FFF9DB` | Warning badge/alert background — Document "Draft." |
-| `--color-warning-border` | `#FFE066` | Warning badge/alert border. |
-| `--color-warning-text` | `#E67700` | Warning badge/alert text. |
-| `--color-error-base` | `#E03131` | Error icon/dot, destructive-button default fill. |
-| `--color-error-bg` | `#FFF5F5` | Error badge/alert/input background — Document "Failed," Deadline "Overdue," field validation. |
-| `--color-error-border` | `#FFC9C9` | Error badge/alert border. |
-| `--color-error-text` | `#C92A2A` | Error badge/alert/helper text; also destructive-button hover fill. |
-| `--color-error-active` | `#A61E1E` | Destructive-button active/pressed fill. |
-| `--color-info-base` | `#339AF0` | Info icon/dot. |
-| `--color-info-bg` | `#E7F5FF` | Info badge background — Matter "Open," Document "Processing," Deadline "Upcoming." |
-| `--color-info-border` | `#A5D8FF` | Info badge border. |
-| `--color-info-text` | `#1864AB` | Info badge text. |
+| `--color-success-base` | `#1E7B4D` | Success icon/dot. |
+| `--color-success-bg` | `#E8F5EE` | Success badge/alert/toast background — Document "Ready," Deadline "Complete." |
+| `--color-success-border` | `#B7E0C7` | Success badge/alert border. |
+| `--color-success-text` | `#145C39` | Success badge/alert/toast text. |
+| `--color-warning-base` | `#B5790A` | Warning icon/dot. |
+| `--color-warning-bg` | `#FBF1DE` | Warning badge/alert background — Document "Draft," approaching-deadline "Caution" treatment. |
+| `--color-warning-border` | `#EDCB86` | Warning badge/alert border. |
+| `--color-warning-text` | `#7A5107` | Warning badge/alert text. |
+| `--color-error-base` | `#B3261E` | Error icon/dot, destructive-button default fill (see note below). |
+| `--color-error-bg` | `#FBEAE9` | Error badge/alert/input background — Document "Failed," Deadline "Overdue," field validation. |
+| `--color-error-border` | `#E9B3AF` | Error badge/alert border. |
+| `--color-error-text` | `#7C1A14` | Error badge/alert/helper text; also destructive-button hover fill. |
+| `--color-error-active` | `#611510` | Destructive-button active/pressed fill. |
+| `--color-info-base` | `#0E7C86` | Info icon/dot. |
+| `--color-info-bg` | `#E5F3F4` | Info badge background — Matter "Open," Document "Processing," Deadline "Upcoming." |
+| `--color-info-border` | `#A9D6DA` | Info badge border. |
+| `--color-info-text` | `#0A5960` | Info badge text. |
+
+**Destructive-action note.** Unlike a hypothetical no-permanent-deletion product, this app has a real irreversible action — REQ-027 Document delete is deliberately unrestricted (explicit user override, not gated by Matter status). `.btn-destructive` therefore keeps using `--color-error-base` as a genuine destructive-red variant; it was not removed.
+
+**AI accent** — muted indigo-violet, used only within or referencing AI-origin content (the Chat panel's assistant messages/citations, Section 4). Never a general-purpose accent.
+
+| Token | Hex | Used for |
+|---|---|---|
+| `--color-ai-50` | `#EFEBF7` | Assistant chat-bubble background; AI-origin content tint. |
+| `--color-ai-200` | `#CFC3E8` | Assistant chat-bubble border. |
+| `--color-ai-500` | `#5B4B9E` | AI accent (icons/markers). |
+| `--color-ai-700` | `#40356F` | "AI" label text on `ai-50`. |
+
+**Citation** — muted teal, used only on citation markers/links (Chat panel citations), so a citation reads as a distinct category from ordinary hyperlinks or AI-accent content.
+
+| Token | Hex | Used for |
+|---|---|---|
+| `--color-citation-50` | `#E7F0EF` | Citation marker background (rare, e.g. hover). |
+| `--color-citation-200` | `#B9D6D3` | Citation chip/badge border (reserved). |
+| `--color-citation-500` | `#3E6E6B` | Citation link/marker text and underline. |
+| `--color-citation-700` | `#2A4C4A` | Citation link hover/strong emphasis. |
 
 **Aliases** — semantic roles composed from the tables above; components reference these, not raw hex.
 
 | Token | Value | Used for |
 |---|---|---|
 | `--color-bg-page` | `--color-neutral-50` | App background behind all screens. |
-| `--color-bg-surface` | `--color-neutral-0` | Cards, modals, panels, inputs. |
+| `--color-bg-surface` | `--color-neutral-0` | Cards, modals, panels; input focus state. |
 | `--color-bg-surface-hover` | `--color-neutral-100` | Hover state on rows, ghost buttons, nav items. |
-| `--color-bg-selected` | `--color-brand-50` | Selected/current nav item, highlighted row. |
+| `--color-bg-surface-sunken` | `--color-neutral-100` | Resting form inputs (text/select/textarea). |
+| `--color-bg-selected` | `--color-primary-50` | Selected/current nav item, highlighted row, user chat bubble. |
 | `--color-text-primary` | `--color-neutral-900` | Body text, headings. |
-| `--color-text-secondary` | `--color-neutral-700` | Secondary text, labels. |
-| `--color-text-tertiary` | `--color-neutral-600` | Timestamps, metadata, placeholder-adjacent text. |
+| `--color-text-secondary` | `--color-neutral-600` | Secondary text, labels. |
+| `--color-text-tertiary` | `--color-neutral-500` | Timestamps, metadata, placeholder-adjacent text. |
 | `--color-text-disabled` | `--color-neutral-400` | Disabled text everywhere. |
-| `--color-text-on-brand` | `--color-neutral-0` | Text on filled brand/error buttons. |
-| `--color-text-link` | `--color-brand-600` | Inline links, citation links. |
-| `--color-text-link-hover` | `--color-brand-700` | Link hover. |
-| `--color-border-default` | `--color-neutral-300` | Input/control borders. |
-| `--color-border-strong` | `--color-neutral-400` | Hovered input/control borders. |
-| `--color-border-focus` | `--color-brand-500` | Focused input/control border. |
+| `--color-text-on-brand` | `#FFFFFF` | Text on filled primary/error buttons. |
+| `--color-text-link` | `--color-primary-500` | Inline links. |
+| `--color-text-link-hover` | `--color-primary-600` | Link hover. |
+| `--color-border-default` | `--color-neutral-200` | Input/control/card borders. |
+| `--color-border-strong` | `--color-neutral-300` | Table header rule, hovered input/control borders. |
+| `--color-border-focus` | `--color-primary-500` | Focused input/control border, focus ring. |
+
+**Dark mode.** Not built (no Requirement calls for it). `neutral-950`/`neutral-700`/`neutral-800`/`primary-400`/`primary-800`/`primary-900` are reserved token slots for a future dark theme, following the source spec's rule of substituting one step lighter/less saturated per token on dark surfaces — not wired up yet.
 
 ## 2. Typography
 
@@ -226,64 +265,105 @@ Base: `border-radius: var(--radius-full)`, `padding: 2px var(--space-2)`, `font-
 :root {
   /* Neutrals */
   --color-neutral-0: #FFFFFF;
-  --color-neutral-50: #F8F9FA;
-  --color-neutral-100: #F1F3F5;
-  --color-neutral-200: #E9ECEF;
-  --color-neutral-300: #DEE2E6;
-  --color-neutral-400: #CED4DA;
-  --color-neutral-500: #ADB5BD;
-  --color-neutral-600: #868E96;
-  --color-neutral-700: #495057;
-  --color-neutral-800: #343A40;
-  --color-neutral-900: #212529;
+  --color-neutral-50: #F7F8F9;
+  --color-neutral-100: #EEF0F2;
+  --color-neutral-200: #E1E4E8;
+  --color-neutral-300: #C9CED4;
+  --color-neutral-400: #A7AEB8;
+  --color-neutral-500: #838C97;
+  --color-neutral-600: #626B76;
+  --color-neutral-700: #48505A;
+  --color-neutral-800: #313740;
+  --color-neutral-900: #1B1F24;
+  --color-neutral-950: #101317;
 
-  /* Brand */
-  --color-brand-50: #EFF6FF;
-  --color-brand-100: #DBEAFE;
-  --color-brand-200: #BFDBFE;
-  --color-brand-300: #93C5FD;
-  --color-brand-500: #3B7DD8;
-  --color-brand-600: #2A63B8;
-  --color-brand-700: #1D4E93;
-  --color-brand-800: #163B70;
+  /* Primary — Deep Navy */
+  --color-primary-50: #EAF1F6;
+  --color-primary-100: #CBDEEA;
+  --color-primary-200: #A2C4DA;
+  --color-primary-300: #74A6C6;
+  --color-primary-400: #4C8AB2;
+  --color-primary-500: #2A6E9C;
+  --color-primary-600: #1F567C;
+  --color-primary-700: #17415F;
+  --color-primary-800: #102D42;
+  --color-primary-900: #0A1D2B;
+
+  /* Brand: aliases onto Primary, kept for existing component CSS */
+  --color-brand-50: var(--color-primary-50);
+  --color-brand-100: var(--color-primary-100);
+  --color-brand-200: var(--color-primary-200);
+  --color-brand-300: var(--color-primary-300);
+  --color-brand-500: var(--color-primary-500);
+  --color-brand-600: var(--color-primary-600);
+  --color-brand-700: var(--color-primary-700);
+  --color-brand-800: var(--color-primary-800);
+
+  /* Secondary — Slate Graphite */
+  --color-secondary-50: #F0F2F4;
+  --color-secondary-100: #DCE0E5;
+  --color-secondary-300: #9CA6B2;
+  --color-secondary-500: #5C6877;
+  --color-secondary-700: #353C46;
+  --color-secondary-900: #14171B;
 
   /* Semantic */
-  --color-success-base: #2F9E44;
-  --color-success-bg: #EBFBEE;
-  --color-success-border: #B2F2BB;
-  --color-success-text: #2B8A3E;
+  --color-success-base: #1E7B4D;
+  --color-success-bg: #E8F5EE;
+  --color-success-border: #B7E0C7;
+  --color-success-text: #145C39;
+  --color-success-active: #0F4529;
 
-  --color-warning-base: #F59F00;
-  --color-warning-bg: #FFF9DB;
-  --color-warning-border: #FFE066;
-  --color-warning-text: #E67700;
+  --color-warning-base: #B5790A;
+  --color-warning-bg: #FBF1DE;
+  --color-warning-border: #EDCB86;
+  --color-warning-text: #7A5107;
+  --color-warning-active: #5C3D05;
 
-  --color-error-base: #E03131;
-  --color-error-bg: #FFF5F5;
-  --color-error-border: #FFC9C9;
-  --color-error-text: #C92A2A;
-  --color-error-active: #A61E1E;
+  --color-error-base: #B3261E;
+  --color-error-bg: #FBEAE9;
+  --color-error-border: #E9B3AF;
+  --color-error-text: #7C1A14;
+  --color-error-active: #611510;
 
-  --color-info-base: #339AF0;
-  --color-info-bg: #E7F5FF;
-  --color-info-border: #A5D8FF;
-  --color-info-text: #1864AB;
+  --color-info-base: #0E7C86;
+  --color-info-bg: #E5F3F4;
+  --color-info-border: #A9D6DA;
+  --color-info-text: #0A5960;
+
+  /* AI accent — muted indigo-violet, AI-origin content only */
+  --color-ai-50: #EFEBF7;
+  --color-ai-200: #CFC3E8;
+  --color-ai-500: #5B4B9E;
+  --color-ai-700: #40356F;
+
+  /* Citation — muted teal, citation markers/links only */
+  --color-citation-50: #E7F0EF;
+  --color-citation-200: #B9D6D3;
+  --color-citation-500: #3E6E6B;
+  --color-citation-700: #2A4C4A;
 
   /* Aliases */
   --color-bg-page: var(--color-neutral-50);
   --color-bg-surface: var(--color-neutral-0);
   --color-bg-surface-hover: var(--color-neutral-100);
-  --color-bg-selected: var(--color-brand-50);
+  --color-bg-surface-sunken: var(--color-neutral-100);
+  --color-bg-selected: var(--color-primary-50);
   --color-text-primary: var(--color-neutral-900);
-  --color-text-secondary: var(--color-neutral-700);
-  --color-text-tertiary: var(--color-neutral-600);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-text-tertiary: var(--color-neutral-500);
   --color-text-disabled: var(--color-neutral-400);
-  --color-text-on-brand: var(--color-neutral-0);
-  --color-text-link: var(--color-brand-600);
-  --color-text-link-hover: var(--color-brand-700);
-  --color-border-default: var(--color-neutral-300);
-  --color-border-strong: var(--color-neutral-400);
-  --color-border-focus: var(--color-brand-500);
+  --color-text-on-brand: #FFFFFF;
+  --color-text-link: var(--color-primary-500);
+  --color-text-link-hover: var(--color-primary-600);
+  --color-border-default: var(--color-neutral-200);
+  --color-border-strong: var(--color-neutral-300);
+  --color-border-focus: var(--color-primary-500);
+
+  /* Layout */
+  --page-max-width: 1400px;   /* standard pages — Dashboard, Clients, Matters, Notifications, Search */
+  --page-wide-max-width: 1680px; /* dense pages — Matter Detail */
+  --nav-height: 64px;
 
   /* Typography */
   --font-family-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;

@@ -12,6 +12,7 @@ type Deadline = {
   title: string;
   dueDate: string;
   status: "open" | "complete";
+  priority: "standard" | "critical";
   notificationLeadDays: number;
 };
 
@@ -65,6 +66,8 @@ export function DeadlinesList({ deadlines }: { deadlines: Deadline[] }) {
                   <span style={{ fontWeight: 500, textDecoration: d.status === "complete" ? "line-through" : "none" }}>
                     {d.title}
                   </span>
+                  {/* I-40: independent of status — stays visible whether the Deadline is Complete, Overdue, or Upcoming. */}
+                  {d.priority === "critical" && <Badge variant="warning">Critical</Badge>}
                   {d.status === "complete" ? (
                     <Badge variant="success">Complete</Badge>
                   ) : isOverdue ? (

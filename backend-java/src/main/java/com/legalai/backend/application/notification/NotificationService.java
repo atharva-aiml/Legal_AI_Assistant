@@ -23,4 +23,8 @@ public class NotificationService {
     public Optional<Notification> markRead(UUID lawyerId, UUID id) {
         return repository.markRead(lawyerId, id);
     }
+
+    public int markAllRead(UUID lawyerId) {
+        return repository.markAllRead(lawyerId);
+    }
 }

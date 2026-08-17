@@ -2,6 +2,7 @@ package com.legalai.backend.application.chat;
 
 import com.legalai.backend.application.chat.ChatDtos.ChatHistoryDto;
 import com.legalai.backend.application.chat.ChatDtos.ChatMessageDto;
+import com.legalai.backend.application.chat.ChatDtos.PinToggleDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,10 +16,14 @@ class ChatServiceTest {
     static class InMemoryChatGateway implements ChatGateway {
         ChatMessageDto askResponse;
         ChatHistoryDto historyResponse = new ChatHistoryDto(List.of());
+        PinToggleDto togglePinResponse;
         RuntimeException askException;
+        RuntimeException togglePinException;
         UUID lastMatterId;
         UUID lastLawyerId;
         String lastQuestion;
+        UUID lastMessageId;
+        Boolean lastPinned;
 
         @Override
         public ChatMessageDto ask(UUID matterId, UUID lawyerId, String question) {
@@ -33,6 +38,15 @@ class ChatServiceTest {
         public ChatHistoryDto history(UUID matterId) {
             lastMatterId = matterId;
             return historyResponse;
+        }
+
+        @Override
+        public PinToggleDto togglePin(UUID matterId, UUID messageId, boolean pinned) {
+            lastMatterId = matterId;
+            lastMessageId = messageId;
+            lastPinned = pinned;
+            if (togglePinException != null) throw togglePinException;
+            return togglePinResponse;
         }
     }
 
@@ -49,7 +63,7 @@ class ChatServiceTest {
 
     @Test
     void askForwardsTheQuestionAndReturnsTheGatewaysAnswer() {
-        gateway.askResponse = new ChatMessageDto(UUID.randomUUID(), matterId, null, "assistant", "Rs. 85,000 [1].", null, List.of(), false);
+        gateway.askResponse = new ChatMessageDto(UUID.randomUUID(), matterId, null, "assistant", "Rs. 85,000 [1].", null, List.of(), false, false);
 
         ChatMessageDto result = service.ask(matterId, lawyerId, "What is the rent?");
 
@@ -73,12 +87,31 @@ class ChatServiceTest {
 
     @Test
     void historyForwardsTheMatterIdAndReturnsTheGatewaysMessages() {
-        ChatMessageDto message = new ChatMessageDto(UUID.randomUUID(), matterId, lawyerId, "user", "What is the rent?", null, List.of(), null);
+        ChatMessageDto message = new ChatMessageDto(UUID.randomUUID(), matterId, lawyerId, "user", "What is the rent?", null, List.of(), null, false);
         gateway.historyResponse = new ChatHistoryDto(List.of(message));
 
         ChatHistoryDto result = service.history(matterId);
 
         assertEquals(matterId, gateway.lastMatterId);
         assertEquals(1, result.messages().size());
+    }
+
+    @Test
+    void togglePinForwardsTheMessageIdAndPinnedFlagAndReturnsTheGatewaysResult() {
+        UUID messageId = UUID.randomUUID();
+        gateway.togglePinResponse = new PinToggleDto(messageId, true);
+
+        PinToggleDto result = service.togglePin(matterId, messageId, true);
+
+        assertEquals(matterId, gateway.lastMatterId);
+        assertEquals(messageId, gateway.lastMessageId);
+        assertEquals(true, gateway.lastPinned);
+        assertTrue(result.pinned());
+    }
+
+    @Test
+    void togglePinPropagatesChatMessageNotFoundExceptionForTheControllerTo404() {
+        gateway.togglePinException = new ChatService.ChatMessageNotFoundException();
+        assertThrows(ChatService.ChatMessageNotFoundException.class, () -> service.togglePin(matterId, UUID.randomUUID(), true));
     }
 }

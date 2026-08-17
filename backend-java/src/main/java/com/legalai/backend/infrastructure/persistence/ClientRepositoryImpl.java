@@ -45,6 +45,18 @@ public class ClientRepositoryImpl implements ClientRepository {
         return jpa.findByIdAndFirmId(id, firmId).map(ClientRepositoryImpl::toDomain);
     }
 
+    @Override
+    public Optional<Client> update(UUID firmId, UUID id, String name, String contactEmail, String contactPhone, String notes) {
+        return jpa.findByIdAndFirmId(id, firmId).map(entity -> {
+            entity.setName(name);
+            entity.setContactEmail(contactEmail);
+            entity.setContactPhone(contactPhone);
+            entity.setNotes(notes);
+            entity.setUpdatedAt(Instant.now());
+            return toDomain(jpa.save(entity));
+        });
+    }
+
     static Client toDomain(ClientEntity e) {
         return new Client(e.getId(), e.getFirmId(), e.getName(), e.getContactEmail(), e.getContactPhone(), e.getNotes(), e.getCreatedAt(), e.getUpdatedAt());
     }

@@ -9,6 +9,9 @@ public class ClientDtos {
     public record CreateClientRequest(String name, String contact_email, String contact_phone, String notes) {
     }
 
+    public record UpdateClientRequest(String name, String contact_email, String contact_phone, String notes) {
+    }
+
     public record ClientResponse(
             UUID id,
             UUID firmId,

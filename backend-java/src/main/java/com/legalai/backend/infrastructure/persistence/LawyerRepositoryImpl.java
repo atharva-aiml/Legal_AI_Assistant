@@ -38,6 +38,11 @@ public class LawyerRepositoryImpl implements LawyerRepository {
     }
 
     @Override
+    public Optional<LawyerWithHash> findByIdWithHash(UUID id) {
+        return lawyers.findById(id).map(e -> new LawyerWithHash(toDomain(e), e.getPasswordHash()));
+    }
+
+    @Override
     public List<Lawyer> listByFirm(UUID firmId) {
         return lawyers.findByFirmId(firmId).stream().map(LawyerRepositoryImpl::toDomain).toList();
     }
@@ -64,6 +69,22 @@ public class LawyerRepositoryImpl implements LawyerRepository {
         entity.setCreatedAt(Instant.now());
         FirmEntity saved = firms.save(entity);
         return new Firm(saved.getId(), saved.getName(), saved.getCreatedAt());
+    }
+
+    @Override
+    public Optional<Lawyer> updateName(UUID id, String name) {
+        return lawyers.findById(id).map(entity -> {
+            entity.setName(name);
+            return toDomain(lawyers.save(entity));
+        });
+    }
+
+    @Override
+    public void updatePassword(UUID id, String newPasswordHash) {
+        lawyers.findById(id).ifPresent(entity -> {
+            entity.setPasswordHash(newPasswordHash);
+            lawyers.save(entity);
+        });
     }
 
     private static Lawyer toDomain(LawyerEntity e) {

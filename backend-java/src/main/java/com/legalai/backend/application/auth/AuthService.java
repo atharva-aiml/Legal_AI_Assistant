@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -57,6 +58,13 @@ public class AuthService {
         return new AuthResult(created.lawyer(), issueSession(created.lawyer().id()));
     }
 
+    /** I-06: reuses the same uniqueness check `register` runs, read-only, for a live pre-submit hint. */
+    public boolean isEmailAvailable(String email) {
+        String normalizedEmail = email == null ? "" : email.trim().toLowerCase();
+        if (normalizedEmail.isEmpty()) return false;
+        return lawyers.findByEmailWithHash(normalizedEmail).isEmpty();
+    }
+
     /** Mirrors POST /api/auth/login — identical error for "no such email" and "wrong password". */
     public AuthResult login(String email, String password) {
         String normalizedEmail = email == null ? "" : email.trim().toLowerCase();
@@ -94,6 +102,32 @@ public class AuthService {
     /** SCR-15: read-only Firm/team roster — invite/remove is V0.7, not built yet. */
     public java.util.List<Lawyer> listFirmMembers(java.util.UUID firmId) {
         return lawyers.listByFirm(firmId);
+    }
+
+    /** I-51: PATCH /api/auth/me — the display name shown across the nav bar and account menu. */
+    public Lawyer updateName(UUID lawyerId, String name) {
+        String validated = Lawyer.validateName(name);
+        return lawyers.updateName(lawyerId, validated)
+                .orElseThrow(() -> new IllegalStateException("Lawyer " + lawyerId + " not found for an already-authenticated session."));
+    }
+
+    /** I-51: requires re-verifying the current password before a new one is ever hashed and stored. */
+    public void changePassword(UUID lawyerId, String currentPassword, String newPassword) {
+        LawyerRepository.LawyerWithHash found = lawyers.findByIdWithHash(lawyerId)
+                .orElseThrow(() -> new IllegalStateException("Lawyer " + lawyerId + " not found for an already-authenticated session."));
+
+        if (currentPassword == null || !passwordHasher.matches(currentPassword, found.passwordHash())) {
+            throw new IncorrectPasswordException();
+        }
+
+        String validatedNewPassword = Lawyer.validateNewPassword(newPassword);
+        lawyers.updatePassword(lawyerId, passwordHasher.hash(validatedNewPassword));
+    }
+
+    public static class IncorrectPasswordException extends RuntimeException {
+        public IncorrectPasswordException() {
+            super("Current password is incorrect.");
+        }
     }
 
     private String issueSession(java.util.UUID lawyerId) {

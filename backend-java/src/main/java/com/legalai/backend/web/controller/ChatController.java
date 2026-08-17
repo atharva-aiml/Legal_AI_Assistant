@@ -62,7 +62,27 @@ public class ChatController {
         }
     }
 
+    @PatchMapping("/api/matters/{matterId}/chat/{messageId}/pin")
+    public ResponseEntity<?> togglePin(@PathVariable UUID matterId, @PathVariable UUID messageId, @RequestBody PinRequest body, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+        if (matterService.get(lawyer.get().firmId(), matterId).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Matter not found"));
+        }
+
+        try {
+            return ResponseEntity.ok(chatService.togglePin(matterId, messageId, body.pinned()));
+        } catch (ChatService.ChatMessageNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Chat message not found"));
+        } catch (ChatService.AssistantUnavailableException e) {
+            return assistantUnavailable();
+        }
+    }
+
     public record AskRequest(String question) {
+    }
+
+    public record PinRequest(boolean pinned) {
     }
 
     private ResponseEntity<?> assistantUnavailable() {

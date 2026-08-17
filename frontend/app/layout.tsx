@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Source_Serif_4, Public_Sans, JetBrains_Mono } from "next/font/google";
+import { ListSearchProvider } from "@/components/list-search-context";
+import { ToastProvider } from "@/components/toast-context";
 import "@/styles/globals.css";
 
 const sourceSerif = Source_Serif_4({
@@ -27,7 +29,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sourceSerif.variable} ${publicSans.variable} ${jetBrainsMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <ListSearchProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </ListSearchProvider>
+      </body>
     </html>
   );
 }

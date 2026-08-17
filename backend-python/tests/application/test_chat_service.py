@@ -1,7 +1,7 @@
 import pytest
 
 import app.application.chat_service as chat_service_module
-from app.application.chat_service import AssistantUnavailableError, ChatService, NoReadyDocumentsError
+from app.application.chat_service import AssistantUnavailableError, ChatMessageNotFoundError, ChatService, NoReadyDocumentsError
 from app.domain.chat import ChatMessage, Citation, DocumentMetadata, NOT_FOUND_RESPONSE, OUT_OF_SCOPE_RESPONSE
 
 
@@ -89,6 +89,17 @@ class InMemoryChatMessageRepository:
 
     def list_messages(self, matter_id):
         return [(m, [c for c in self.citations if c.chat_message_id == m.id]) for m in self.messages if m.matter_id == matter_id]
+
+    def toggle_pin(self, matter_id, message_id, pinned):
+        for i, m in enumerate(self.messages):
+            if m.id == message_id and m.matter_id == matter_id and m.role == "assistant":
+                updated = ChatMessage(id=m.id, matter_id=m.matter_id, lawyer_id=m.lawyer_id, role=m.role, content=m.content, created_at=m.created_at, pinned=pinned)
+                self.messages[i] = updated
+                return updated
+        return None
+
+    def list_pinned(self, matter_id):
+        return [(m, [c for c in self.citations if c.chat_message_id == m.id]) for m in self.messages if m.matter_id == matter_id and m.pinned]
 
 
 class FakeEmbedder:
@@ -421,3 +432,61 @@ def test_history_returns_messages_with_their_citations():
     assistant_msg, assistant_citations = history[1]
     assert assistant_msg.role == "assistant"
     assert len(assistant_citations) == 1
+
+
+# --- I-34: pinning ---
+
+
+def test_pinning_an_assistant_message_marks_it_pinned():
+    messages = InMemoryChatMessageRepository()
+    assistant_msg, _ = messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf")])
+    service = make_service(messages=messages)
+
+    updated = service.toggle_pin(MATTER, assistant_msg.id, True)
+
+    assert updated.pinned is True
+    assert service.history(MATTER)[0][0].pinned is True, "the pin must be visible through the same read path as normal history"
+
+
+def test_unpinning_clears_the_flag():
+    messages = InMemoryChatMessageRepository()
+    assistant_msg, _ = messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf")])
+    service = make_service(messages=messages)
+    service.toggle_pin(MATTER, assistant_msg.id, True)
+
+    updated = service.toggle_pin(MATTER, assistant_msg.id, False)
+
+    assert updated.pinned is False
+
+
+def test_pinning_a_user_message_is_not_found_not_silently_allowed():
+    messages = InMemoryChatMessageRepository()
+    user_msg = messages.save_user_message(MATTER, LAWYER, "What is the rent?")
+    service = make_service(messages=messages)
+
+    with pytest.raises(ChatMessageNotFoundError):
+        service.toggle_pin(MATTER, user_msg.id, True)
+
+
+def test_pinning_a_message_from_a_different_matter_is_not_found():
+    messages = InMemoryChatMessageRepository()
+    assistant_msg, _ = messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [])
+    service = make_service(messages=messages)
+
+    with pytest.raises(ChatMessageNotFoundError):
+        service.toggle_pin("a-different-matter", assistant_msg.id, True)
+
+
+def test_pinned_lists_only_pinned_messages_most_pin_order_preserved():
+    messages = InMemoryChatMessageRepository()
+    first, _ = messages.save_assistant_message(MATTER, "First answer [1].", [("doc-1", 1, "a", "f.pdf")])
+    messages.save_assistant_message(MATTER, "Second answer, never pinned [1].", [("doc-1", 1, "a", "f.pdf")])
+    third, _ = messages.save_assistant_message(MATTER, "Third answer [1].", [("doc-1", 1, "a", "f.pdf")])
+    service = make_service(messages=messages)
+    service.toggle_pin(MATTER, first.id, True)
+    service.toggle_pin(MATTER, third.id, True)
+
+    pinned = service.pinned(MATTER)
+
+    assert [m.content for m, _ in pinned] == ["First answer [1].", "Third answer [1]."]
+    assert all(len(c) == 1 for _, c in pinned), "pinned messages must still carry their citations"

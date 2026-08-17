@@ -2,6 +2,7 @@ package com.legalai.backend.application.matter;
 
 import com.legalai.backend.application.deadline.DeadlineRepository;
 import com.legalai.backend.domain.Deadline;
+import com.legalai.backend.domain.DeadlinePriority;
 import com.legalai.backend.domain.DeadlineStatus;
 import com.legalai.backend.domain.InvalidMatterException;
 import com.legalai.backend.domain.Matter;
@@ -76,6 +77,19 @@ class MatterServiceTest {
             }
             return Optional.empty();
         }
+
+        @Override
+        public Optional<Matter> reopen(UUID firmId, UUID id) {
+            for (int i = 0; i < matters.size(); i++) {
+                Matter m = matters.get(i);
+                if (m.firmId().equals(firmId) && m.id().equals(id)) {
+                    Matter reopened = new Matter(m.id(), m.firmId(), m.clientId(), m.title(), com.legalai.backend.domain.MatterStatus.open, null, m.createdAt(), Instant.now());
+                    matters.set(i, reopened);
+                    return Optional.of(reopened);
+                }
+            }
+            return Optional.empty();
+        }
     }
 
     /** Minimal fake — MatterService only ever calls listByMatter on this port. */
@@ -98,7 +112,7 @@ class MatterServiceTest {
         }
 
         @Override
-        public Optional<Deadline> update(UUID firmId, UUID id, String title, LocalDate dueDate, DeadlineStatus status, int notificationLeadDays) {
+        public Optional<Deadline> update(UUID firmId, UUID id, String title, LocalDate dueDate, DeadlineStatus status, DeadlinePriority priority, int notificationLeadDays) {
             throw new UnsupportedOperationException("not needed for MatterServiceTest");
         }
 
@@ -146,7 +160,7 @@ class MatterServiceTest {
         service.create(firm1, client1, "Firm 1 Matter");
         service.create(firm2, client2, "Firm 2 Matter");
 
-        List<Matter> firm1Matters = service.list(firm1, null);
+        List<Matter> firm1Matters = service.list(firm1, null, null);
         assertEquals(1, firm1Matters.size());
         assertEquals("Firm 1 Matter", firm1Matters.get(0).title());
     }
@@ -156,9 +170,47 @@ class MatterServiceTest {
         service.create(firm1, client1, "Client 1 Matter");
         service.create(firm1, client2, "Client 2 Matter");
 
-        List<Matter> client1Matters = service.list(firm1, client1);
+        List<Matter> client1Matters = service.list(firm1, client1, null);
         assertEquals(1, client1Matters.size());
         assertEquals("Client 1 Matter", client1Matters.get(0).title());
+    }
+
+    // --- I-23: status filter ---
+
+    @Test
+    void filtersByStatus_WhenGiven() {
+        Matter open = service.create(firm1, client1, "Open Matter");
+        Matter toClose = service.create(firm1, client1, "Closed Matter");
+        service.close(firm1, toClose.id());
+
+        List<Matter> openOnly = service.list(firm1, null, com.legalai.backend.domain.MatterStatus.open);
+        assertEquals(1, openOnly.size());
+        assertEquals(open.id(), openOnly.get(0).id());
+
+        List<Matter> closedOnly = service.list(firm1, null, com.legalai.backend.domain.MatterStatus.closed);
+        assertEquals(1, closedOnly.size());
+        assertEquals(toClose.id(), closedOnly.get(0).id());
+    }
+
+    @Test
+    void combinesClientAndStatusFilters() {
+        Matter c1Open = service.create(firm1, client1, "Client1 Open");
+        Matter c1Closed = service.create(firm1, client1, "Client1 Closed");
+        service.close(firm1, c1Closed.id());
+        service.create(firm1, client2, "Client2 Open");
+
+        List<Matter> result = service.list(firm1, client1, com.legalai.backend.domain.MatterStatus.open);
+        assertEquals(1, result.size());
+        assertEquals(c1Open.id(), result.get(0).id());
+    }
+
+    @Test
+    void nullStatusReturnsMattersOfEveryStatus() {
+        service.create(firm1, client1, "Open Matter");
+        Matter toClose = service.create(firm1, client1, "Closed Matter");
+        service.close(firm1, toClose.id());
+
+        assertEquals(2, service.list(firm1, null, null).size());
     }
 
     @Test
@@ -199,7 +251,7 @@ class MatterServiceTest {
     @Test
     void closesAMatterWhoseDeadlinesAreAllComplete_BR003() {
         Matter created = service.create(firm1, client1, "All Done");
-        deadlineRepo.deadlines.add(new Deadline(UUID.randomUUID(), created.id(), "Filed", LocalDate.now(), DeadlineStatus.complete, 3, null, null));
+        deadlineRepo.deadlines.add(new Deadline(UUID.randomUUID(), created.id(), "Filed", LocalDate.now(), DeadlineStatus.complete, DeadlinePriority.standard, 3, null, null));
 
         Matter closed = service.close(firm1, created.id()).orElseThrow();
         assertEquals(com.legalai.backend.domain.MatterStatus.closed, closed.status());
@@ -208,7 +260,7 @@ class MatterServiceTest {
     @Test
     void blocksClosingAMatterWithAnOpenDeadline_BR003() {
         Matter created = service.create(firm1, client1, "Has Open Deadline");
-        Deadline open = new Deadline(UUID.randomUUID(), created.id(), "File response", LocalDate.now().plusDays(5), DeadlineStatus.open, 3, null, null);
+        Deadline open = new Deadline(UUID.randomUUID(), created.id(), "File response", LocalDate.now().plusDays(5), DeadlineStatus.open, DeadlinePriority.standard, 3, null, null);
         deadlineRepo.deadlines.add(open);
 
         MatterService.MatterHasOpenDeadlinesException ex = assertThrows(
@@ -225,5 +277,32 @@ class MatterServiceTest {
     void closingAMatterOutsideTheCallersFirmReturnsEmptyNotAnError_BR008() {
         Matter created = service.create(firm1, client1, "Private");
         assertTrue(service.close(firm2, created.id()).isEmpty());
+    }
+
+    // --- I-35: reopening a Matter ---
+
+    @Test
+    void reopensAClosedMatter() {
+        Matter created = service.create(firm1, client1, "Closed by mistake");
+        service.close(firm1, created.id());
+
+        Matter reopened = service.reopen(firm1, created.id()).orElseThrow();
+        assertEquals(com.legalai.backend.domain.MatterStatus.open, reopened.status());
+        assertNull(reopened.closedAt());
+    }
+
+    @Test
+    void rejectsReopeningAMatterThatIsAlreadyOpen() {
+        Matter created = service.create(firm1, client1, "Never closed");
+        assertThrows(InvalidMatterException.class, () -> service.reopen(firm1, created.id()));
+        // Untouched — still open, as it always was.
+        assertEquals(com.legalai.backend.domain.MatterStatus.open, repo.findById(firm1, created.id()).orElseThrow().status());
+    }
+
+    @Test
+    void reopeningAMatterOutsideTheCallersFirmReturnsEmptyNotAnError_BR008() {
+        Matter created = service.create(firm1, client1, "Private");
+        service.close(firm1, created.id());
+        assertTrue(service.reopen(firm2, created.id()).isEmpty());
     }
 }

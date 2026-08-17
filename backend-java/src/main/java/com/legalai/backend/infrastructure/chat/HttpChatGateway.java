@@ -2,6 +2,7 @@ package com.legalai.backend.infrastructure.chat;
 
 import com.legalai.backend.application.chat.ChatDtos.ChatHistoryDto;
 import com.legalai.backend.application.chat.ChatDtos.ChatMessageDto;
+import com.legalai.backend.application.chat.ChatDtos.PinToggleDto;
 import com.legalai.backend.application.chat.ChatGateway;
 import com.legalai.backend.application.chat.ChatService;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,6 +76,33 @@ public class HttpChatGateway implements ChatGateway {
                 throw new ChatService.AssistantUnavailableException("Assistant service returned " + response.statusCode());
             }
             return mapper.readValue(response.body(), ChatHistoryDto.class);
+        } catch (IOException e) {
+            throw new ChatService.AssistantUnavailableException("Assistant service unreachable", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ChatService.AssistantUnavailableException("Assistant call interrupted", e);
+        }
+    }
+
+    @Override
+    public PinToggleDto togglePin(UUID matterId, UUID messageId, boolean pinned) {
+        try {
+            String requestBody = mapper.writeValueAsString(Map.of("pinned", pinned));
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(pythonBaseUrl + "/chat/" + matterId + "/messages/" + messageId + "/pin"))
+                    .timeout(Duration.ofSeconds(10))
+                    .header("Content-Type", "application/json")
+                    .method("PATCH", HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 404) {
+                throw new ChatService.ChatMessageNotFoundException();
+            }
+            if (response.statusCode() >= 300) {
+                throw new ChatService.AssistantUnavailableException("Assistant service returned " + response.statusCode());
+            }
+            return mapper.readValue(response.body(), PinToggleDto.class);
         } catch (IOException e) {
             throw new ChatService.AssistantUnavailableException("Assistant service unreachable", e);
         } catch (InterruptedException e) {

@@ -8,6 +8,7 @@ import com.legalai.backend.web.ApiError;
 import com.legalai.backend.web.CurrentLawyerResolver;
 import com.legalai.backend.web.dto.ClientDtos.ClientResponse;
 import com.legalai.backend.web.dto.ClientDtos.CreateClientRequest;
+import com.legalai.backend.web.dto.ClientDtos.UpdateClientRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +61,20 @@ public class ClientController {
         return clientService.get(lawyer.get().firmId(), id)
                 .<ResponseEntity<?>>map(c -> ResponseEntity.ok(Map.of("client", ClientResponse.from(c))))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Client not found")));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateClientRequest body, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+
+        try {
+            return clientService.update(lawyer.get().firmId(), id, body.name(), body.contact_email(), body.contact_phone(), body.notes())
+                    .<ResponseEntity<?>>map(c -> ResponseEntity.ok(ClientResponse.from(c)))
+                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Client not found")));
+        } catch (InvalidClientException e) {
+            return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", e.getMessage()));
+        }
     }
 
     private ResponseEntity<?> unauthenticated() {

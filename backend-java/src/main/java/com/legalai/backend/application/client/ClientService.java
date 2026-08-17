@@ -28,4 +28,10 @@ public class ClientService {
     public Optional<Client> get(UUID firmId, UUID id) {
         return repository.findById(firmId, id);
     }
+
+    /** Validated by the domain layer before the repository is ever touched, same as create(). */
+    public Optional<Client> update(UUID firmId, UUID id, String name, String contactEmail, String contactPhone, String notes) {
+        Client.UpdatedFields validated = Client.update(name, contactEmail, contactPhone, notes);
+        return repository.update(firmId, id, validated.name(), validated.contactEmail(), validated.contactPhone(), validated.notes());
+    }
 }

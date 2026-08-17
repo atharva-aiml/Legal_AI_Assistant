@@ -111,7 +111,7 @@ class SqlAlchemyChatRepository:
                 text(
                     "INSERT INTO chat_messages (id, matter_id, lawyer_id, role, content, created_at) "
                     "VALUES (gen_random_uuid(), :matter_id, :lawyer_id, 'user', :content, now()) "
-                    "RETURNING id, matter_id, lawyer_id, role, content, created_at"
+                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned"
                 ),
                 {"matter_id": matter_id, "lawyer_id": lawyer_id, "content": content},
             ).mappings().first()
@@ -125,7 +125,7 @@ class SqlAlchemyChatRepository:
                 text(
                     "INSERT INTO chat_messages (id, matter_id, lawyer_id, role, content, created_at) "
                     "VALUES (gen_random_uuid(), :matter_id, NULL, 'assistant', :content, now()) "
-                    "RETURNING id, matter_id, lawyer_id, role, content, created_at"
+                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned"
                 ),
                 {"matter_id": matter_id, "content": content},
             ).mappings().first()
@@ -156,7 +156,7 @@ class SqlAlchemyChatRepository:
         with engine.connect() as conn:
             rows = conn.execute(
                 text(
-                    "SELECT id, matter_id, lawyer_id, role, content, created_at FROM chat_messages "
+                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned FROM chat_messages "
                     "WHERE matter_id = :matter_id ORDER BY created_at DESC LIMIT :limit"
                 ),
                 {"matter_id": matter_id, "limit": limit},
@@ -167,7 +167,7 @@ class SqlAlchemyChatRepository:
         with engine.connect() as conn:
             message_rows = conn.execute(
                 text(
-                    "SELECT id, matter_id, lawyer_id, role, content, created_at FROM chat_messages "
+                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned FROM chat_messages "
                     "WHERE matter_id = :matter_id ORDER BY created_at ASC"
                 ),
                 {"matter_id": matter_id},
@@ -176,23 +176,58 @@ class SqlAlchemyChatRepository:
             if not messages:
                 return []
 
-            citation_rows = conn.execute(
+            citations_by_message = self._citations_by_message(conn, matter_id)
+            return [(m, citations_by_message.get(m.id, [])) for m in messages]
+
+    def toggle_pin(self, matter_id: str, message_id: str, pinned: bool) -> ChatMessage | None:
+        """I-34: pinnable state only ever applies to assistant answers — scoping the
+        UPDATE to role='assistant' AND matter_id=:matter_id makes that the one place
+        this is enforced, rather than trusting every caller to check it first."""
+        with engine.begin() as conn:
+            row = conn.execute(
                 text(
-                    "SELECT c.id, c.chat_message_id, c.document_id, d.file_name, c.page_number, c.excerpt, c.created_at "
-                    "FROM citations c JOIN chat_messages m ON m.id = c.chat_message_id "
-                    # LEFT JOIN, not JOIN: REQ-027 lets a Document be deleted unconditionally,
-                    # and a Citation must survive that (AI Architecture §4, "persisted permanently").
-                    "LEFT JOIN documents d ON d.id = c.document_id "
-                    "WHERE m.matter_id = :matter_id ORDER BY c.created_at ASC"
+                    "UPDATE chat_messages SET pinned = :pinned "
+                    "WHERE id = :message_id AND matter_id = :matter_id AND role = 'assistant' "
+                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned"
+                ),
+                {"pinned": pinned, "message_id": message_id, "matter_id": matter_id},
+            ).mappings().first()
+            return _to_message(row) if row else None
+
+    def list_pinned(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]:
+        with engine.connect() as conn:
+            message_rows = conn.execute(
+                text(
+                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned FROM chat_messages "
+                    "WHERE matter_id = :matter_id AND pinned = true ORDER BY created_at ASC"
                 ),
                 {"matter_id": matter_id},
             ).mappings().all()
-            citations_by_message: dict[str, list[Citation]] = {}
-            for r in citation_rows:
-                citation = _to_citation(r)
-                citations_by_message.setdefault(citation.chat_message_id, []).append(citation)
+            messages = [_to_message(r) for r in message_rows]
+            if not messages:
+                return []
 
+            citations_by_message = self._citations_by_message(conn, matter_id)
             return [(m, citations_by_message.get(m.id, [])) for m in messages]
+
+    @staticmethod
+    def _citations_by_message(conn, matter_id: str) -> dict[str, list[Citation]]:
+        citation_rows = conn.execute(
+            text(
+                "SELECT c.id, c.chat_message_id, c.document_id, d.file_name, c.page_number, c.excerpt, c.created_at "
+                "FROM citations c JOIN chat_messages m ON m.id = c.chat_message_id "
+                # LEFT JOIN, not JOIN: REQ-027 lets a Document be deleted unconditionally,
+                # and a Citation must survive that (AI Architecture §4, "persisted permanently").
+                "LEFT JOIN documents d ON d.id = c.document_id "
+                "WHERE m.matter_id = :matter_id ORDER BY c.created_at ASC"
+            ),
+            {"matter_id": matter_id},
+        ).mappings().all()
+        citations_by_message: dict[str, list[Citation]] = {}
+        for r in citation_rows:
+            citation = _to_citation(r)
+            citations_by_message.setdefault(citation.chat_message_id, []).append(citation)
+        return citations_by_message
 
 
 def _to_message(row) -> ChatMessage:
@@ -203,6 +238,7 @@ def _to_message(row) -> ChatMessage:
         role=row["role"],
         content=row["content"],
         created_at=row["created_at"],
+        pinned=bool(row["pinned"]),
     )
 
 

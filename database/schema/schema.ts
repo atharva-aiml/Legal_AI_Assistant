@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, date, pgEnum, integer, bigint, boolean, customType } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, date, pgEnum, integer, bigint, boolean, customType, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Drizzle has no built-in pgvector column type (CLAUDE.md §4) — defined via
 // customType, fixed at 384 dimensions to match all-MiniLM-L6-v2 (System
@@ -129,6 +129,7 @@ export const documentChunks = pgTable("document_chunks", {
 });
 
 export const deadlineStatusEnum = pgEnum("deadline_status", ["open", "complete"]);
+export const deadlinePriorityEnum = pgEnum("deadline_priority", ["standard", "critical"]); // I-40
 
 export const deadlines = pgTable("deadlines", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -138,6 +139,7 @@ export const deadlines = pgTable("deadlines", {
   title: text("title").notNull(),
   dueDate: date("due_date").notNull(), // date, not timestamp — a Deadline is a calendar day, no time-of-day concept
   status: deadlineStatusEnum("status").notNull().default("open"), // BR-003
+  priority: deadlinePriorityEnum("priority").notNull().default("standard"), // I-40, independent of status
   notificationLeadDays: integer("notification_lead_days").notNull().default(3), // REQ-016
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -167,6 +169,7 @@ export const chatMessages = pgTable("chat_messages", {
   lawyerId: uuid("lawyer_id").references(() => lawyers.id), // null when role='assistant'
   role: chatRoleEnum("role").notNull(),
   content: text("content").notNull(),
+  pinned: boolean("pinned").notNull().default(false), // I-34: assistant answers only, enforced at the application layer, not here
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -186,6 +189,60 @@ export const citations = pgTable("citations", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// I-07: one row per (Lawyer, Matter) — upserted on each open, not an
+// append-only view log. Recency of that single row is what "Recent
+// Matters" sorts by.
+export const matterViews = pgTable(
+  "matter_views",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    lawyerId: uuid("lawyer_id")
+      .notNull()
+      .references(() => lawyers.id),
+    matterId: uuid("matter_id")
+      .notNull()
+      .references(() => matters.id),
+    viewedAt: timestamp("viewed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("matter_views_lawyer_matter_unique").on(table.lawyerId, table.matterId)]
+);
+
+// I-48: one row per (Lawyer, query) — upserted on each real search, same
+// shape as matterViews. `query` is stored trimmed-as-typed (case preserved),
+// so "Acme" and "acme" are deliberately treated as distinct recent searches
+// — a simple, honest tradeoff for a small convenience feature, not a real
+// entity needing normalization rules.
+export const recentSearches = pgTable(
+  "recent_searches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    lawyerId: uuid("lawyer_id")
+      .notNull()
+      .references(() => lawyers.id),
+    query: text("query").notNull(),
+    searchedAt: timestamp("searched_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("recent_searches_lawyer_query_unique").on(table.lawyerId, table.query)]
+);
+
+// I-52: at most one row per Lawyer (unique index on lawyerId alone, unlike
+// matterViews/recentSearches which key on a pair). No row yet means "never
+// touched this preference" — the application layer defaults that case to
+// enabled, preserving the pre-I-52 behavior of every Firm member getting
+// every Deadline reminder.
+export const lawyerPreferences = pgTable(
+  "lawyer_preferences",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    lawyerId: uuid("lawyer_id")
+      .notNull()
+      .references(() => lawyers.id),
+    deadlineRemindersEnabled: boolean("deadline_reminders_enabled").notNull().default(true),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("lawyer_preferences_lawyer_unique").on(table.lawyerId)]
+);
+
 export type Firm = typeof firms.$inferSelect;
 export type Lawyer = typeof lawyers.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -199,3 +256,6 @@ export type CitationRow = typeof citations.$inferSelect;
 export type DeadlineRow = typeof deadlines.$inferSelect;
 export type NotificationRow = typeof notifications.$inferSelect;
 export type TemplateRow = typeof templates.$inferSelect;
+export type MatterViewRow = typeof matterViews.$inferSelect;
+export type RecentSearchRow = typeof recentSearches.$inferSelect;
+export type LawyerPreferencesRow = typeof lawyerPreferences.$inferSelect;

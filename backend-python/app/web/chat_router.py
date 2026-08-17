@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.application.chat_service import AssistantUnavailableError, ChatService, NoReadyDocumentsError
+from app.application.chat_service import AssistantUnavailableError, ChatMessageNotFoundError, ChatService, NoReadyDocumentsError
 from app.domain.chat import ChatMessage, Citation
 from app.infrastructure.chat_repository import SqlAlchemyChatRepository
 from app.infrastructure.embedding import SentenceTransformerEmbedder
@@ -19,6 +19,7 @@ def _message_dict(message: ChatMessage, citations: list[Citation]) -> dict:
         "content": message.content,
         "createdAt": message.created_at.isoformat() if message.created_at else None,
         "citations": [_citation_dict(c) for c in citations],
+        "pinned": message.pinned,
     }
 
 
@@ -73,3 +74,19 @@ def ask(matter_id: str, body: dict):
     response = _message_dict(result.message, result.citations)
     response["lowConfidence"] = result.low_confidence
     return response
+
+
+@router.patch("/chat/{matter_id}/messages/{message_id}/pin")
+def toggle_pin(matter_id: str, message_id: str, body: dict):
+    """Called by Java's PATCH /api/matters/{id}/chat/{messageId}/pin, same trust
+    boundary as the other chat routes. Only an assistant message in this Matter can
+    be pinned — anything else (wrong id, a user message, another Matter's message)
+    is a 404, not a 400, matching how the rest of this codebase treats an
+    out-of-scope id as "not found" rather than a distinct validation error."""
+    pinned = body["pinned"]
+    service = _service()
+    try:
+        message = service.toggle_pin(matter_id, message_id, pinned)
+    except ChatMessageNotFoundError:
+        return JSONResponse(status_code=404, content={"error": {"code": "NOT_FOUND", "message": "Chat message not found."}})
+    return {"id": message.id, "pinned": message.pinned}

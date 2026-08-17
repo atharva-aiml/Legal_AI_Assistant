@@ -67,6 +67,7 @@ class ChatMessage:
     role: str  # 'user' | 'assistant'
     content: str
     created_at: datetime | None = None
+    pinned: bool = False  # I-34: assistant answers only — enforced where it's set, not here
 
 
 def validate_assistant_message(content: str, citations: list[Citation]) -> None:

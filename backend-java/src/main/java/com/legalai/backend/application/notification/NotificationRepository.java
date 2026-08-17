@@ -12,6 +12,9 @@ public interface NotificationRepository {
 
     Optional<Notification> markRead(UUID lawyerId, UUID id);
 
+    /** I-44: bulk version of markRead — returns how many were actually updated (unread notifications only). */
+    int markAllRead(UUID lawyerId);
+
     Notification create(Notification.NewNotification record);
 
     /**

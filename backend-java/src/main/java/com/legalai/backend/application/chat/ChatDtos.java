@@ -22,9 +22,14 @@ public class ChatDtos {
             String content,
             Instant createdAt,
             List<CitationDto> citations,
-            Boolean lowConfidence) {
+            Boolean lowConfidence,
+            Boolean pinned) {
     }
 
     public record ChatHistoryDto(List<ChatMessageDto> messages) {
+    }
+
+    /** I-34: a dedicated, minimal response shape — the pin toggle doesn't touch citations, so reusing the full ChatMessageDto would just leave that field null and imply more than actually changed. */
+    public record PinToggleDto(UUID id, boolean pinned) {
     }
 }

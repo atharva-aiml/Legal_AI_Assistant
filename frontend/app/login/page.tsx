@@ -7,16 +7,64 @@ import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 
+function EyeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M2 12c1.8-4.2 5.6-7 10-7s8.2 2.8 10 7c-1.8 4.2-5.6 7-10 7s-8.2-2.8-10-7Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.24 4.24M9.3 5.3C10.16 5.1 11.06 5 12 5c4.4 0 8.2 2.8 10 7-.6 1.4-1.44 2.66-2.47 3.71M6.6 6.6C4.7 7.9 3.2 9.8 2 12c1.8 4.2 5.6 7 10 7 1.27 0 2.48-.23 3.6-.66"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// Shape check only — not full RFC 5322. Good enough to catch an obviously
+// malformed address before a round trip; the server remains the real
+// authority on whether the address is registered.
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  function handleEmailBlur() {
+    if (email.trim() !== "" && !EMAIL_SHAPE.test(email.trim())) {
+      setEmailError("Enter a valid email");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!EMAIL_SHAPE.test(email.trim())) {
+      setEmailError("Enter a valid email");
+      return;
+    }
+
     setSubmitting(true);
 
     const res = await fetch(`${JAVA_API_URL_PUBLIC}/api/auth/login`, {
@@ -52,11 +100,60 @@ export default function LoginPage() {
 
         <div className="field">
           <label className="field-label" htmlFor="email">Email</label>
-          <input id="email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus autoComplete="email" />
+          <input
+            id="email"
+            className={emailError ? "input input-error" : "input"}
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (emailError) setEmailError(null);
+            }}
+            onBlur={handleEmailBlur}
+            required
+            autoFocus
+            autoComplete="email"
+            aria-invalid={emailError ? true : undefined}
+            aria-describedby={emailError ? "email-error" : undefined}
+          />
+          {emailError && <span id="email-error" className="field-error">{emailError}</span>}
         </div>
         <div className="field">
           <label className="field-label" htmlFor="password">Password</label>
-          <input id="password" className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+          <div style={{ position: "relative" }}>
+            <input
+              id="password"
+              className="input"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              style={{ paddingRight: "var(--space-7)" }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              style={{
+                position: "absolute",
+                right: 0,
+                top: 0,
+                height: 40,
+                width: 40,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--color-text-tertiary)",
+              }}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
         </div>
 
         {error && <ErrorBanner>{error}</ErrorBanner>}

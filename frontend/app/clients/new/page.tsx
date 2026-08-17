@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { useToast } from "@/components/toast-context";
 
 export default function NewClientPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [name, setName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -41,15 +43,14 @@ export default function NewClientPage() {
       return;
     }
 
+    showToast("Client created");
     router.push("/clients");
     router.refresh();
   }
 
   return (
     <main className="page" style={{ maxWidth: 480 }}>
-      <Link href="/clients" className="text-sm">
-        ← Clients
-      </Link>
+      <Breadcrumb items={[{ label: "Clients", href: "/clients" }, { label: "New Client" }]} />
       <h1 style={{ fontSize: "var(--font-size-2xl)", margin: "var(--space-3) 0 var(--space-4)" }}>New Client</h1>
       <form onSubmit={handleSubmit} className="card stack-4">
         <div className="field">

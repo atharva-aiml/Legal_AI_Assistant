@@ -12,4 +12,7 @@ public interface ClientRepository {
     List<Client> listByFirm(UUID firmId);
 
     Optional<Client> findById(UUID firmId, UUID id);
+
+    /** I-17: caller (ClientService) has already validated the fields — empty Optional means the Client wasn't found (BR-008). */
+    Optional<Client> update(UUID firmId, UUID id, String name, String contactEmail, String contactPhone, String notes);
 }

@@ -22,6 +22,7 @@ type ChatMsg = {
   createdAt: string;
   citations: Citation[];
   lowConfidence: boolean | null;
+  pinned: boolean;
 };
 
 export function ChatPanel({
@@ -39,7 +40,26 @@ export function ChatPanel({
   const [error, setError] = useState<string | null>(null);
   const [hasReadyDocuments, setHasReadyDocuments] = useState(initialHasReadyDocuments);
   const [pollTick, setPollTick] = useState(0);
+  const [togglingPinId, setTogglingPinId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // I-34: derived from the same messages already fetched/held in state — no separate "pinned" request.
+  const pinnedMessages = messages.filter((m) => m.pinned);
+
+  async function togglePin(message: ChatMsg) {
+    setTogglingPinId(message.id);
+    const nextPinned = !message.pinned;
+    const res = await fetch(`${JAVA_API_URL_PUBLIC}/api/matters/${matterId}/chat/${message.id}/pin`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pinned: nextPinned }),
+    });
+    setTogglingPinId(null);
+    if (res.ok) {
+      setMessages((prev) => prev.map((m) => (m.id === message.id ? { ...m, pinned: nextPinned } : m)));
+    }
+  }
 
   useEffect(() => {
     if (hasReadyDocuments) return;
@@ -85,6 +105,7 @@ export function ChatPanel({
       createdAt: new Date().toISOString(),
       citations: [],
       lowConfidence: null,
+      pinned: false,
     };
     setMessages((prev) => [...prev, optimisticUserMessage]);
 
@@ -113,23 +134,59 @@ export function ChatPanel({
 
   return (
     <div className="card stack-4">
+      {pinnedMessages.length > 0 && (
+        <div className="stack" style={{ gap: "var(--space-2)", paddingBottom: "var(--space-4)", borderBottom: "1px solid var(--color-border-default)" }}>
+          <span className="field-label" style={{ margin: 0 }}>Pinned</span>
+          {pinnedMessages.map((m) => (
+            <div
+              key={m.id}
+              className="row-between"
+              style={{ padding: "var(--space-2) var(--space-3)", background: "var(--color-bg-selected)", borderRadius: "var(--radius-md)", gap: "var(--space-3)" }}
+            >
+              <div className="text-sm" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.content}</div>
+              <button type="button" className="btn-link" onClick={() => togglePin(m)} disabled={togglingPinId === m.id}>
+                Unpin
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {messages.length === 0 ? (
         <div className="text-tertiary text-sm">Ask a question about this Matter&apos;s Documents.</div>
       ) : (
         <div className="stack-4">
           {messages.map((m) => (
-            <div key={m.id} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "85%" }}>
+            <div key={m.id} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "min(85%, 640px)" }}>
+              {m.role === "assistant" && (
+                <div className="text-ai text-xs" style={{ fontWeight: 600, letterSpacing: "0.04em", marginBottom: "var(--space-1)" }}>
+                  AI
+                </div>
+              )}
               <div
                 style={{
                   padding: "var(--space-3)",
                   borderRadius: "var(--radius-md)",
-                  background: m.role === "user" ? "var(--color-bg-selected)" : "var(--color-neutral-100)",
-                  border: m.role === "user" ? "1px solid var(--color-brand-200)" : "1px solid var(--color-neutral-200)",
+                  background: m.role === "user" ? "var(--color-bg-selected)" : "var(--color-ai-50)",
+                  border: m.role === "user" ? "1px solid var(--color-primary-200)" : "1px solid var(--color-ai-200)",
                   whiteSpace: "pre-wrap",
                 }}
               >
                 {m.content}
               </div>
+              {m.role === "assistant" && (
+                <button
+                  type="button"
+                  className="btn-link"
+                  onClick={() => togglePin(m)}
+                  disabled={togglingPinId === m.id}
+                  aria-pressed={m.pinned}
+                  aria-label={m.pinned ? "Unpin this answer" : "Pin this answer"}
+                  style={{ fontSize: "var(--font-size-xs)", marginTop: "var(--space-2)" }}
+                >
+                  {m.pinned ? "★ Pinned" : "☆ Pin"}
+                </button>
+              )}
               {m.lowConfidence && (
                 <div className="text-xs text-tertiary" style={{ marginTop: "var(--space-2)" }}>
                   This answer is based on limited matching content — verify against the source documents.
@@ -138,16 +195,16 @@ export function ChatPanel({
               {m.citations.length > 0 && (
                 <div className="stack" style={{ gap: "var(--space-1)", marginTop: "var(--space-2)" }}>
                   {m.citations.map((c) => (
-                    <div key={c.id} className="text-xs text-tertiary mono">
+                    <div key={c.id} className="text-xs mono">
                       {c.documentId ? (
-                        <a href={`${JAVA_API_URL_PUBLIC}/api/documents/${c.documentId}/download`} target="_blank" rel="noreferrer">
+                        <a className="text-citation" href={`${JAVA_API_URL_PUBLIC}/api/documents/${c.documentId}/download`} target="_blank" rel="noreferrer">
                           {c.fileName ?? "source document"}
                           {c.pageNumber != null ? `, p.${c.pageNumber}` : ""}
                         </a>
                       ) : (
-                        <span>{c.fileName ?? "source document"} (deleted)</span>
+                        <span className="text-tertiary">{c.fileName ?? "source document"} (deleted)</span>
                       )}
-                      {c.excerpt && <span> — &quot;{c.excerpt}&quot;</span>}
+                      {c.excerpt && <span className="text-tertiary"> — &quot;{c.excerpt}&quot;</span>}
                     </div>
                   ))}
                 </div>
@@ -161,13 +218,13 @@ export function ChatPanel({
                 style={{
                   padding: "var(--space-3)",
                   borderRadius: "var(--radius-md)",
-                  background: "var(--color-neutral-100)",
-                  border: "1px solid var(--color-neutral-200)",
+                  background: "var(--color-ai-50)",
+                  border: "1px solid var(--color-ai-200)",
                   gap: "var(--space-2)",
                 }}
               >
                 <span className="spinner spinner-dark" aria-hidden="true" />
-                <span className="text-tertiary text-sm">Thinking…</span>
+                <span className="text-ai text-sm">Thinking…</span>
               </div>
             </div>
           )}

@@ -5,6 +5,7 @@ import com.legalai.backend.domain.Notification;
 import com.legalai.backend.infrastructure.persistence.entity.NotificationEntity;
 import com.legalai.backend.infrastructure.persistence.jpa.JpaNotificationRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -33,6 +34,12 @@ public class NotificationRepositoryImpl implements NotificationRepository {
             entity.setReadAt(Instant.now());
             return toDomain(jpa.save(entity));
         });
+    }
+
+    @Override
+    @Transactional
+    public int markAllRead(UUID lawyerId) {
+        return jpa.markAllReadForLawyer(lawyerId, Instant.now());
     }
 
     @Override

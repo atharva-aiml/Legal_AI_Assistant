@@ -31,6 +31,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     } else {
       errored = true;
     }
+
+    // I-48: recent-search suggestions are a nice-to-have — a failed record
+    // must never break the page the lawyer actually asked for.
+    await javaFetch("/api/search/recent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    }).catch(() => {});
   }
 
   const hasResults = clients.length > 0 || matters.length > 0;

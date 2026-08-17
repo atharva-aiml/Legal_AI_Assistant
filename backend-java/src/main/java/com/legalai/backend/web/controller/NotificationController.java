@@ -47,6 +47,16 @@ public class NotificationController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Notification not found")));
     }
 
+    /** I-44: matched above no path variable is needed — there's no id here to collide with {id}/read. */
+    @PatchMapping("/read-all")
+    public ResponseEntity<?> markAllRead(HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+
+        int markedCount = notificationService.markAllRead(lawyer.get().id());
+        return ResponseEntity.ok(Map.of("markedCount", markedCount));
+    }
+
     private ResponseEntity<?> unauthenticated() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiError.unauthenticated());
     }

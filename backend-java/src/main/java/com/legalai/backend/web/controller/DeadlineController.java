@@ -3,6 +3,7 @@ package com.legalai.backend.web.controller;
 import com.legalai.backend.application.deadline.DeadlineService;
 import com.legalai.backend.application.matter.MatterService;
 import com.legalai.backend.domain.Deadline;
+import com.legalai.backend.domain.DeadlinePriority;
 import com.legalai.backend.domain.DeadlineStatus;
 import com.legalai.backend.domain.InvalidDeadlineException;
 import com.legalai.backend.domain.Lawyer;
@@ -55,8 +56,15 @@ public class DeadlineController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Matter not found"));
         }
 
+        DeadlinePriority priority;
         try {
-            Deadline created = deadlineService.create(matterId, body.title(), body.dueDate(), body.notificationLeadDays());
+            priority = body.priority() == null ? null : DeadlinePriority.valueOf(body.priority());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", "Unknown Deadline priority: " + body.priority()));
+        }
+
+        try {
+            Deadline created = deadlineService.create(matterId, body.title(), body.dueDate(), priority, body.notificationLeadDays());
             return ResponseEntity.status(HttpStatus.CREATED).body(DeadlineResponse.from(created));
         } catch (InvalidDeadlineException e) {
             return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", e.getMessage()));
@@ -95,8 +103,15 @@ public class DeadlineController {
             return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", "Unknown Deadline status: " + body.status()));
         }
 
+        DeadlinePriority priority;
         try {
-            return deadlineService.update(lawyer.get().firmId(), id, body.title(), body.dueDate(), status, body.notificationLeadDays())
+            priority = body.priority() == null ? null : DeadlinePriority.valueOf(body.priority());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", "Unknown Deadline priority: " + body.priority()));
+        }
+
+        try {
+            return deadlineService.update(lawyer.get().firmId(), id, body.title(), body.dueDate(), status, priority, body.notificationLeadDays())
                     .<ResponseEntity<?>>map(d -> ResponseEntity.ok(DeadlineResponse.from(d)))
                     .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Deadline not found")));
         } catch (InvalidDeadlineException e) {

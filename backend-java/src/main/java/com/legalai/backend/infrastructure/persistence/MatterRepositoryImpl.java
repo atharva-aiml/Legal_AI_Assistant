@@ -70,6 +70,16 @@ public class MatterRepositoryImpl implements MatterRepository {
         });
     }
 
+    @Override
+    public Optional<Matter> reopen(UUID firmId, UUID id) {
+        return jpa.findByIdAndFirmId(id, firmId).map(entity -> {
+            entity.setStatus(com.legalai.backend.domain.MatterStatus.open);
+            entity.setClosedAt(null);
+            entity.setUpdatedAt(Instant.now());
+            return toDomain(jpa.save(entity));
+        });
+    }
+
     static Matter toDomain(MatterEntity e) {
         return new Matter(e.getId(), e.getFirmId(), e.getClientId(), e.getTitle(), e.getStatus(), e.getClosedAt(), e.getCreatedAt(), e.getUpdatedAt());
     }

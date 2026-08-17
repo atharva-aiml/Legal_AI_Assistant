@@ -2,6 +2,7 @@ package com.legalai.backend.infrastructure.persistence;
 
 import com.legalai.backend.application.deadline.DeadlineRepository;
 import com.legalai.backend.domain.Deadline;
+import com.legalai.backend.domain.DeadlinePriority;
 import com.legalai.backend.domain.DeadlineStatus;
 import com.legalai.backend.infrastructure.persistence.entity.DeadlineEntity;
 import com.legalai.backend.infrastructure.persistence.entity.MatterEntity;
@@ -34,6 +35,7 @@ public class DeadlineRepositoryImpl implements DeadlineRepository {
         entity.setTitle(record.title());
         entity.setDueDate(record.dueDate());
         entity.setStatus(DeadlineStatus.open);
+        entity.setPriority(record.priority());
         entity.setNotificationLeadDays(record.notificationLeadDays());
         Instant now = Instant.now();
         entity.setCreatedAt(now);
@@ -52,11 +54,12 @@ public class DeadlineRepositoryImpl implements DeadlineRepository {
     }
 
     @Override
-    public Optional<Deadline> update(UUID firmId, UUID id, String title, LocalDate dueDate, DeadlineStatus status, int notificationLeadDays) {
+    public Optional<Deadline> update(UUID firmId, UUID id, String title, LocalDate dueDate, DeadlineStatus status, DeadlinePriority priority, int notificationLeadDays) {
         return jpa.findByIdAndFirmId(id, firmId).map(entity -> {
             entity.setTitle(title);
             entity.setDueDate(dueDate);
             entity.setStatus(status);
+            entity.setPriority(priority);
             entity.setNotificationLeadDays(notificationLeadDays);
             entity.setUpdatedAt(Instant.now());
             return toDomain(jpa.save(entity));
@@ -81,6 +84,6 @@ public class DeadlineRepositoryImpl implements DeadlineRepository {
     }
 
     private static Deadline toDomain(DeadlineEntity e) {
-        return new Deadline(e.getId(), e.getMatterId(), e.getTitle(), e.getDueDate(), e.getStatus(), e.getNotificationLeadDays(), e.getCreatedAt(), e.getUpdatedAt());
+        return new Deadline(e.getId(), e.getMatterId(), e.getTitle(), e.getDueDate(), e.getStatus(), e.getPriority(), e.getNotificationLeadDays(), e.getCreatedAt(), e.getUpdatedAt());
     }
 }

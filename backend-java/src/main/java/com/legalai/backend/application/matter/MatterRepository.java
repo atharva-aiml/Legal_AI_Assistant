@@ -24,4 +24,7 @@ public interface MatterRepository {
 
     /** REQ-010: sets status='closed' and closed_at=now(). Caller (MatterService) has already verified BR-003. */
     Optional<Matter> close(UUID firmId, UUID id);
+
+    /** I-35: sets status='open' and closed_at=null. Caller (MatterService) has already verified the Matter was actually Closed. */
+    Optional<Matter> reopen(UUID firmId, UUID id);
 }

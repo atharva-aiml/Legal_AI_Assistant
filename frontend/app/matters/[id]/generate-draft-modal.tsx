@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Modal } from "@/components/ui/modal";
 import { SkeletonRows } from "@/components/ui/skeleton";
+import { useToast } from "@/components/toast-context";
 
 type Template = { id: string; name: string; description: string | null; placeholders: string[] };
 
@@ -20,6 +21,7 @@ export function GenerateDraftModal({
   clientName: string | null;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [templates, setTemplates] = useState<Template[] | null>(null);
@@ -78,6 +80,7 @@ export function GenerateDraftModal({
     }
 
     reset();
+    showToast("Document generated");
     router.refresh();
   }
 

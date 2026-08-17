@@ -62,6 +62,13 @@ class ChatMessageRepository(Protocol):
 
     def list_messages(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]: ...
 
+    def toggle_pin(self, matter_id: str, message_id: str, pinned: bool) -> ChatMessage | None:
+        """None means no matching assistant message in this Matter — pinning a user
+        message, or a message from a different Matter, is treated as not-found."""
+        ...
+
+    def list_pinned(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]: ...
+
 
 class ChatLLM(Protocol):
     def generate(self, system_prompt: str, user_prompt: str) -> str: ...

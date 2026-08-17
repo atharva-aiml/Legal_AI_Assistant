@@ -6,11 +6,13 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { QuickStatCard } from "@/components/ui/quick-stat-card";
 
 type Lawyer = { name: string; email: string };
 type Matter = { id: string; title: string; status: "open" | "closed"; clientId: string };
 type Client = { id: string; name: string };
 type Deadline = { id: string; matterId: string; title: string; dueDate: string; status: "open" | "complete" };
+type NotificationRow = { id: string; readAt: string | null };
 
 function formatDueDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
@@ -22,20 +24,64 @@ export default async function DashboardPage() {
   if (!meRes.ok) redirect("/login");
   const { lawyer }: { lawyer: Lawyer } = await meRes.json();
 
-  const [mattersRes, deadlinesRes, clientsRes] = await Promise.all([
+  const [mattersRes, deadlinesRes, clientsRes, recentMattersRes, weekDeadlinesRes, notificationsRes, allDeadlinesRes] = await Promise.all([
     javaFetch("/api/matters"),
     javaFetch("/api/deadlines/upcoming?days=14"),
     javaFetch("/api/clients"),
+    javaFetch("/api/matters/recent"),
+    javaFetch("/api/deadlines/upcoming?days=7"),
+    javaFetch("/api/notifications"),
+    javaFetch("/api/deadlines/upcoming?days=36500"), // every open Deadline, not just a near-term slice — same approach as I-19/I-24/I-25
   ]);
   const { matters }: { matters: Matter[] } = mattersRes.ok ? await mattersRes.json() : { matters: [] };
   const { deadlines }: { deadlines: Deadline[] } = deadlinesRes.ok ? await deadlinesRes.json() : { deadlines: [] };
   const { clients }: { clients: Client[] } = clientsRes.ok ? await clientsRes.json() : { clients: [] };
+  const { matters: recentMatters }: { matters: Matter[] } = recentMattersRes.ok ? await recentMattersRes.json() : { matters: [] };
+  const { deadlines: weekDeadlines }: { deadlines: Deadline[] } = weekDeadlinesRes.ok ? await weekDeadlinesRes.json() : { deadlines: [] };
+  const { notifications }: { notifications: NotificationRow[] } = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
+  const { deadlines: allDeadlines }: { deadlines: Deadline[] } = allDeadlinesRes.ok ? await allDeadlinesRes.json() : { deadlines: [] };
 
   const matterById = new Map(matters.map((m) => [m.id, m]));
   const clientNameById = new Map(clients.map((c) => [c.id, c.name]));
   const upcomingDeadlines = [...deadlines].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const activeMatters = matters.filter((m) => m.status === "open").slice(0, 8);
   const isFirstLogin = clientsRes.ok && clients.length === 0 && matters.length === 0;
+
+  // Next-deadline-per-Matter, shown on the Recent/Active Matters rows below —
+  // /api/deadlines/upcoming already scopes to status=open, so no further filtering needed.
+  const nextDeadlineByMatter = new Map<string, string>();
+  for (const d of allDeadlines) {
+    const current = nextDeadlineByMatter.get(d.matterId);
+    if (!current || d.dueDate < current) nextDeadlineByMatter.set(d.matterId, d.dueDate);
+  }
+
+  // I-09: three counts a lawyer would otherwise get by reading every list below.
+  const statTiles = [
+    {
+      label: "Open Matters",
+      value: matters.filter((m) => m.status === "open").length,
+      ok: mattersRes.ok,
+      icon: "matters" as const,
+      tone: "primary" as const,
+      seeAllHref: "/matters?status=open",
+    },
+    {
+      label: "Deadlines this week",
+      value: weekDeadlines.length,
+      ok: weekDeadlinesRes.ok,
+      icon: "deadlines" as const,
+      tone: "warning" as const,
+      seeAllHref: "#upcoming-deadlines",
+    },
+    {
+      label: "Unread notifications",
+      value: notifications.filter((n) => n.readAt === null).length,
+      ok: notificationsRes.ok,
+      icon: "notifications" as const,
+      tone: "info" as const,
+      seeAllHref: "/notifications",
+    },
+  ];
 
   return (
     <>
@@ -59,7 +105,20 @@ export default async function DashboardPage() {
           />
         ) : (
           <>
-            <h2 style={{ fontSize: "var(--font-size-xl)", margin: "0 0 var(--space-3)" }}>Upcoming Deadlines</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "var(--space-3)", margin: "0 0 var(--space-5)" }}>
+              {statTiles.map((tile) => (
+                <QuickStatCard
+                  key={tile.label}
+                  value={tile.ok ? tile.value : "—"}
+                  label={tile.label}
+                  icon={tile.icon}
+                  tone={tile.tone}
+                  seeAllHref={tile.seeAllHref}
+                />
+              ))}
+            </div>
+
+            <h2 id="upcoming-deadlines" style={{ fontSize: "var(--font-size-xl)", margin: "0 0 var(--space-3)" }}>Upcoming Deadlines</h2>
             {!deadlinesRes.ok ? (
               <ErrorBanner>Couldn&apos;t load deadlines — retry.</ErrorBanner>
             ) : upcomingDeadlines.length === 0 ? (
@@ -83,6 +142,31 @@ export default async function DashboardPage() {
               </div>
             )}
 
+            {recentMatters.length > 0 && (
+              <>
+                <h2 style={{ fontSize: "var(--font-size-xl)", margin: "var(--space-5) 0 var(--space-3)" }}>Recent Matters</h2>
+                <div className="stack">
+                  {recentMatters.map((matter) => {
+                    const nextDeadline = nextDeadlineByMatter.get(matter.id);
+                    return (
+                      <Link key={matter.id} href={`/matters/${matter.id}`} className="card">
+                        <div className="row-between">
+                          <div>
+                            <div style={{ fontWeight: 500 }}>{matter.title}</div>
+                            <div className="text-tertiary text-sm">{clientNameById.get(matter.clientId)}</div>
+                          </div>
+                          <div className="row" style={{ gap: "var(--space-3)" }}>
+                            <span className="text-tertiary text-sm mono">{nextDeadline ? formatDueDate(nextDeadline) : "No deadline"}</span>
+                            <StatusBadge status={matter.status} />
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
             <h2 style={{ fontSize: "var(--font-size-xl)", margin: "var(--space-5) 0 var(--space-3)" }}>Active Matters</h2>
             {!mattersRes.ok ? (
               <ErrorBanner>Couldn&apos;t load matters — retry.</ErrorBanner>
@@ -92,17 +176,23 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="stack">
-                {activeMatters.map((matter) => (
-                  <Link key={matter.id} href={`/matters/${matter.id}`} className="card">
-                    <div className="row-between">
-                      <div>
-                        <div style={{ fontWeight: 500 }}>{matter.title}</div>
-                        <div className="text-tertiary text-sm">{clientNameById.get(matter.clientId)}</div>
+                {activeMatters.map((matter) => {
+                  const nextDeadline = nextDeadlineByMatter.get(matter.id);
+                  return (
+                    <Link key={matter.id} href={`/matters/${matter.id}`} className="card">
+                      <div className="row-between">
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{matter.title}</div>
+                          <div className="text-tertiary text-sm">{clientNameById.get(matter.clientId)}</div>
+                        </div>
+                        <div className="row" style={{ gap: "var(--space-3)" }}>
+                          <span className="text-tertiary text-sm mono">{nextDeadline ? formatDueDate(nextDeadline) : "No deadline"}</span>
+                          <StatusBadge status={matter.status} />
+                        </div>
                       </div>
-                      <StatusBadge status={matter.status} />
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </>

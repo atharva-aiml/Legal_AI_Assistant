@@ -3,6 +3,7 @@ package com.legalai.backend.application.matter;
 import com.legalai.backend.application.deadline.DeadlineRepository;
 import com.legalai.backend.domain.Deadline;
 import com.legalai.backend.domain.Matter;
+import com.legalai.backend.domain.MatterStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,8 +40,10 @@ public class MatterService {
         return repository.create(draft);
     }
 
-    public List<Matter> list(UUID firmId, UUID clientId) {
-        return clientId != null ? repository.listByClient(firmId, clientId) : repository.listByFirm(firmId);
+    /** I-23: status is filtered here, in-memory, rather than a new repository query — the Firm's Matter volume never justifies pushing this to the database. */
+    public List<Matter> list(UUID firmId, UUID clientId, MatterStatus status) {
+        List<Matter> matters = clientId != null ? repository.listByClient(firmId, clientId) : repository.listByFirm(firmId);
+        return status == null ? matters : matters.stream().filter(m -> m.status() == status).toList();
     }
 
     /** BR-008: a Matter outside the caller's Firm resolves to empty, not an error. */
@@ -68,6 +71,20 @@ public class MatterService {
             throw new MatterHasOpenDeadlinesException(openDeadlines);
         }
         return repository.close(firmId, id);
+    }
+
+    /**
+     * I-35: the counterpart to close() — BR-008 first (empty means not
+     * found/not this Firm's), then the domain-layer "must actually be
+     * Closed" check, before the repository is ever touched.
+     */
+    public Optional<Matter> reopen(UUID firmId, UUID id) {
+        Optional<Matter> existing = repository.findById(firmId, id);
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+        Matter.validateReopen(existing.get().status());
+        return repository.reopen(firmId, id);
     }
 
     /** Carries the specific blocking Deadlines so the API/UI can name them, not just say "blocked." */

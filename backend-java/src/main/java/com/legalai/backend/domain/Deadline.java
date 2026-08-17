@@ -11,6 +11,7 @@ public record Deadline(
         String title,
         LocalDate dueDate,
         DeadlineStatus status,
+        DeadlinePriority priority,
         int notificationLeadDays,
         Instant createdAt,
         Instant updatedAt) {
@@ -18,7 +19,10 @@ public record Deadline(
     /** REQ-009: "default: 3 days before + day-of." */
     private static final int DEFAULT_NOTIFICATION_LEAD_DAYS = 3;
 
-    public record NewDeadline(UUID matterId, String title, LocalDate dueDate, int notificationLeadDays) {
+    /** I-40: every Deadline not explicitly marked otherwise is Standard priority. */
+    private static final DeadlinePriority DEFAULT_PRIORITY = DeadlinePriority.standard;
+
+    public record NewDeadline(UUID matterId, String title, LocalDate dueDate, DeadlinePriority priority, int notificationLeadDays) {
     }
 
     /**
@@ -28,7 +32,7 @@ public record Deadline(
      * repository's FK/NOT NULL constraints are the storage-layer half.
      * A new Deadline always starts "open."
      */
-    public static NewDeadline create(UUID matterId, String title, LocalDate dueDate, Integer notificationLeadDays) {
+    public static NewDeadline create(UUID matterId, String title, LocalDate dueDate, DeadlinePriority priority, Integer notificationLeadDays) {
         if (matterId == null) {
             throw new InvalidDeadlineException("A Deadline must belong to a Matter (BR-004).");
         }
@@ -41,7 +45,12 @@ public record Deadline(
         if (leadDays < 0) {
             throw new InvalidDeadlineException("Notification lead time can't be negative.");
         }
-        return new NewDeadline(matterId, trimmed, dueDate, leadDays);
+        return new NewDeadline(matterId, trimmed, dueDate, resolvePriority(priority), leadDays);
+    }
+
+    /** No validation beyond "default to Standard when unspecified" — every value the type allows is a valid choice. */
+    public static DeadlinePriority resolvePriority(DeadlinePriority priority) {
+        return priority != null ? priority : DEFAULT_PRIORITY;
     }
 
     /** Same "non-empty title" invariant as creation; a due date can be rescheduled, subject to BR-009. */

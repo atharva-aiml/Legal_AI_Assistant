@@ -97,6 +97,12 @@ class AssistantUnavailableError(Exception):
     """502: the retrieval query or the LLM call itself failed — a system fault, not a content gap."""
 
 
+class ChatMessageNotFoundError(Exception):
+    """404: no assistant message with that id in this Matter — covers a bad id, a
+    different Matter's message, and a user message alike, same as the rest of this
+    codebase collapsing an out-of-scope id to "not found" rather than a distinct error."""
+
+
 @dataclass(frozen=True)
 class AskResult:
     message: ChatMessage
@@ -247,3 +253,12 @@ class ChatService:
 
     def history(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]:
         return self.messages.list_messages(matter_id)
+
+    def toggle_pin(self, matter_id: str, message_id: str, pinned: bool) -> ChatMessage:
+        message = self.messages.toggle_pin(matter_id, message_id, pinned)
+        if message is None:
+            raise ChatMessageNotFoundError()
+        return message
+
+    def pinned(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]:
+        return self.messages.list_pinned(matter_id)

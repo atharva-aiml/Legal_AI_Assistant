@@ -1,5 +1,6 @@
 package com.legalai.backend.infrastructure.persistence.entity;
 
+import com.legalai.backend.domain.DeadlinePriority;
 import com.legalai.backend.domain.DeadlineStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -28,6 +29,10 @@ public class DeadlineEntity {
     @Column(nullable = false)
     private DeadlineStatus status;
 
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
+    private DeadlinePriority priority;
+
     @Column(name = "notification_lead_days", nullable = false)
     private int notificationLeadDays;
 
@@ -47,6 +52,8 @@ public class DeadlineEntity {
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
     public DeadlineStatus getStatus() { return status; }
     public void setStatus(DeadlineStatus status) { this.status = status; }
+    public DeadlinePriority getPriority() { return priority; }
+    public void setPriority(DeadlinePriority priority) { this.priority = priority; }
     public int getNotificationLeadDays() { return notificationLeadDays; }
     public void setNotificationLeadDays(int notificationLeadDays) { this.notificationLeadDays = notificationLeadDays; }
     public Instant getCreatedAt() { return createdAt; }
