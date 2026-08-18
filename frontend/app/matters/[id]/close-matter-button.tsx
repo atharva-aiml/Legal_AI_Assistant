@@ -9,7 +9,7 @@ import { ErrorBanner } from "@/components/ui/error-banner";
 
 type OpenDeadline = { id: string; title: string; dueDate: string };
 
-export function CloseMatterButton({ matterId }: { matterId: string }) {
+export function CloseMatterButton({ matterId, onUpdated }: { matterId: string; onUpdated?: () => void }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [blockingDeadlines, setBlockingDeadlines] = useState<OpenDeadline[]>([]);
@@ -30,7 +30,8 @@ export function CloseMatterButton({ matterId }: { matterId: string }) {
     setSubmitting(false);
 
     if (res.ok) {
-      router.refresh();
+      if (onUpdated) onUpdated();
+      else router.refresh();
       return;
     }
 

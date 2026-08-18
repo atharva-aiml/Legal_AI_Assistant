@@ -1,14 +1,15 @@
 /* ==========================================================================
    Legal AI Assistant — Design Tokens
-   Direction: deep navy for authority/trust/legal tradition, slate graphite
-   for secondary actions, a cool neutral scale — enterprise, not warm paper.
-   A single muted indigo-violet AI accent marks AI-origin content; a muted
-   teal marks citations/legal references — both deliberately distinct from
-   Primary so each reads as its own semantic category at a glance. Headings
-   set in a literary serif (Source Serif 4); UI chrome and body text in an
-   institutional sans (Public Sans); citations and identifiers in JetBrains
-   Mono. Corners are slightly sharper than typical rounded-bubble SaaS —
-   closer to paper and forms than app tiles.
+   Direction (2026-08-18 reskin, reference: a monochrome SaaS CRM dashboard):
+   near-black primary for buttons/links/active-tab instead of navy, a soft
+   lavender for selected/highlighted states, a cool neutral scale. A single
+   muted indigo-violet AI accent still marks AI-origin content; a muted teal
+   still marks citations/legal references — both deliberately distinct from
+   Primary and left untouched by this reskin so each keeps reading as its
+   own semantic category. Headings now share the same sans (Public Sans) as
+   UI chrome and body text — no serif anywhere, matching the reference;
+   citations and identifiers stay in JetBrains Mono. Corners are a touch
+   rounder than the previous "sharper than typical SaaS" direction.
    ========================================================================== */
 
 :root {
@@ -26,17 +27,17 @@
   --color-neutral-900: #1B1F24;
   --color-neutral-950: #101317;
 
-  /* ---- Primary: Deep Navy — brand primary, primary buttons, active nav, links ---- */
-  --color-primary-50: #EAF1F6;
-  --color-primary-100: #CBDEEA;
-  --color-primary-200: #A2C4DA;
-  --color-primary-300: #74A6C6;
-  --color-primary-400: #4C8AB2;
-  --color-primary-500: #2A6E9C;
-  --color-primary-600: #1F567C;
-  --color-primary-700: #17415F;
-  --color-primary-800: #102D42;
-  --color-primary-900: #0A1D2B;
+  /* ---- Primary: near-black — brand primary, primary buttons, active nav, links ---- */
+  --color-primary-50: #F4F4F5;
+  --color-primary-100: #E4E4E7;
+  --color-primary-200: #D4D4D8;
+  --color-primary-300: #A1A1AA;
+  --color-primary-400: #71717A;
+  --color-primary-500: #27272A;
+  --color-primary-600: #18181B;
+  --color-primary-700: #09090B;
+  --color-primary-800: #050506;
+  --color-primary-900: #000000;
 
   /* ---- Brand aliases: existing component CSS references these ---- */
   --color-brand-50: var(--color-primary-50);
@@ -97,7 +98,10 @@
   --color-bg-surface: var(--color-neutral-0);
   --color-bg-surface-hover: var(--color-neutral-100);
   --color-bg-surface-sunken: var(--color-neutral-100);
-  --color-bg-selected: var(--color-primary-50);
+  /* Deliberately its own value, not var(--color-primary-50) — the reference's
+     selected/highlighted state is a soft lavender, distinct from the
+     near-black primary, not a tint of it. */
+  --color-bg-selected: #EFEBFB;
   --color-text-primary: var(--color-neutral-900);
   --color-text-secondary: var(--color-neutral-600);
   --color-text-tertiary: var(--color-neutral-500);
@@ -110,7 +114,9 @@
   --color-border-focus: var(--color-primary-500);
 
   /* ---- Typography ---- */
-  --font-family-heading: var(--font-heading), Georgia, 'Times New Roman', serif;
+  /* Reskin: same sans as UI chrome, not --font-heading (Source Serif 4) — the
+     reference has no serif anywhere. */
+  --font-family-heading: var(--font-ui), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-family-ui: var(--font-ui), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-family-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 
@@ -139,10 +145,10 @@
   --space-8: 4rem;
   --space-9: 6rem;
 
-  /* ---- Radius & elevation — sharper than typical rounded SaaS ---- */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  /* ---- Radius & elevation ---- */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
   --radius-full: 9999px;
   --shadow-sm: 0 1px 2px rgba(26, 32, 41, 0.06);
   --shadow-md: 0 4px 12px rgba(26, 32, 41, 0.10);
@@ -189,6 +195,8 @@ a {
   text-decoration: none;
 }
 a:hover { color: var(--color-text-link-hover); text-decoration: underline; }
+/* "See all" links opt out of the default hover-underline above. */
+a.link-quiet:hover { text-decoration: none; }
 
 code, .mono {
   font-family: var(--font-family-mono);
@@ -233,7 +241,12 @@ select:focus-visible,
   white-space: nowrap;
 }
 .btn:disabled, .btn[aria-disabled="true"] { cursor: not-allowed; }
+/* Buttons rendered as <Link> are still <a> underneath — without this, the
+   global a:hover underline rule below wins on specificity and every
+   href-based Button gets an underline on hover, which no button should. */
+.btn:hover { text-decoration: none; }
 
+.btn-xs { height: 26px; padding: 0 var(--space-2); font-size: 11px; gap: 4px; }
 .btn-sm { height: 32px; padding: 0 var(--space-3); font-size: var(--font-size-xs); }
 .btn-lg { height: 48px; padding: 0 var(--space-5); font-size: var(--font-size-base); }
 
@@ -245,6 +258,9 @@ select:focus-visible,
 .btn-primary:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--color-primary-600); border-color: var(--color-primary-600); }
 .btn-primary:active:not(:disabled):not([aria-disabled="true"]) { background: var(--color-primary-700); border-color: var(--color-primary-700); }
 .btn-primary:disabled, .btn-primary[aria-disabled="true"] { background: var(--color-neutral-200); border-color: var(--color-neutral-200); color: var(--color-text-disabled); }
+/* Modifier (pass via Button's className) — background/border/text stay put on
+   hover; only .btn-plus-icon inside is meant to animate. Used by "+ New Matter". */
+.btn-primary.btn-hold-bg:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--color-primary-500); border-color: var(--color-primary-500); color: var(--color-text-on-brand); }
 
 .btn-secondary {
   background: var(--color-bg-surface);
@@ -254,6 +270,25 @@ select:focus-visible,
 .btn-secondary:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--color-bg-surface-hover); border-color: var(--color-border-strong); }
 .btn-secondary:active:not(:disabled):not([aria-disabled="true"]) { background: var(--color-neutral-200); border-color: var(--color-border-strong); }
 .btn-secondary:disabled, .btn-secondary[aria-disabled="true"] { color: var(--color-text-disabled); border-color: var(--color-neutral-200); }
+/* Modifier (pass via Button's className) — no fill/border at rest, only a
+   faint hover tint. Used by "+ New Client". */
+.btn-secondary.btn-plain {
+  background: transparent;
+  border-color: transparent;
+}
+.btn-secondary.btn-plain:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--color-bg-surface-hover); border-color: transparent; }
+.btn-secondary.btn-plain:active:not(:disabled):not([aria-disabled="true"]) { background: var(--color-neutral-200); border-color: transparent; }
+/* Modifier (pass via Button's className) — background/border/text stay put on
+   hover for secondary buttons too (see .btn-primary.btn-hold-bg above). */
+.btn-secondary.btn-hold-bg:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--color-bg-surface); border-color: var(--color-border-default); color: var(--color-neutral-800); }
+
+/* "+" glyph wrapped so it can animate independently of the button label. */
+.btn-plus-icon { display: inline-block; transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.btn:hover .btn-plus-icon { transform: scale(1.35); }
+.btn:active:not(:disabled):not([aria-disabled="true"]) .btn-plus-icon { transform: scale(1.1); }
+/* SVG variant (HollowPlusIcon, "+ New Client") — outline at rest, fills solid on hover. */
+.btn-plus-icon path { fill: transparent; stroke: currentColor; stroke-width: 1.5; transition: fill 200ms ease; }
+.btn:hover .btn-plus-icon path { fill: currentColor; }
 
 .btn-ghost {
   background: transparent;
@@ -416,16 +451,41 @@ a.text-citation:hover { color: var(--color-citation-700); }
 }
 
 .app-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
   font-family: var(--font-family-heading);
   font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-md);
+  font-size: calc(var(--font-size-md) + 1px);
+  line-height: 1;
   color: var(--color-text-primary);
   text-decoration: none;
   white-space: nowrap;
 }
 .app-nav-brand:hover { color: var(--color-text-primary); text-decoration: none; }
 
-.app-nav-links { display: flex; align-items: center; gap: var(--space-1); }
+.app-nav-links { display: flex; align-items: center; gap: var(--space-4); }
+
+/* Top-bar links only — deliberately not .nav-item, which dropdown menus
+   (AccountMenu, SortDropdown) also use for their block-style hover rows. */
+.app-nav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  line-height: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.app-nav-link:hover { color: var(--color-text-primary); text-decoration: none; }
+.app-nav-link-active {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+  border-bottom-color: var(--color-brand-600);
+}
 
 .nav-item {
   display: inline-flex;
@@ -443,7 +503,36 @@ a.text-citation:hover { color: var(--color-citation-700); }
 .nav-item:hover { background: var(--color-bg-surface-hover); color: var(--color-neutral-900); text-decoration: none; }
 .nav-item-active { background: var(--color-bg-selected); color: var(--color-brand-700); }
 
-.app-nav-search { flex: 1; max-width: 320px; }
+.app-nav-search { flex: 1; max-width: 280px; position: relative; }
+.app-nav-search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 var(--space-3) 0 40px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-neutral-200);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.app-nav-search-input::placeholder { color: var(--color-neutral-500); font-weight: var(--font-weight-regular); }
+.app-nav-search-input:hover { border-color: var(--color-neutral-300); }
+.app-nav-search-input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: var(--focus-ring);
+}
+.app-nav-search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-neutral-500);
+  pointer-events: none;
+  display: flex;
+}
 .app-nav-actions { display: flex; align-items: center; gap: var(--space-3); margin-left: auto; }
 
 /* Tabs (e.g. Documents / Chat / Deadlines within Matter Detail) */
@@ -606,6 +695,432 @@ a.text-citation:hover { color: var(--color-citation-700); }
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   z-index: 40;
+  animation: cal-panel-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top;
+}
+@media (prefers-reduced-motion: reduce) {
+  .overlay-panel { animation: none; }
+}
+
+/* ==========================================================================
+   Dashboard — single-screen shell + calendar widget
+   ========================================================================== */
+
+.dashboard-shell {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--nav-height));
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6) var(--space-5);
+  overflow: hidden;
+  gap: var(--space-4);
+}
+.dashboard-header { flex-shrink: 0; flex-wrap: wrap; gap: var(--space-3); }
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+}
+/* Each column is its own independent vertical stack — Quick Stats and Active
+   Matters (left) sit directly on top of each other regardless of how tall
+   Calendar and Recent Matters (right) end up, instead of both columns being
+   locked to a shared grid-row height. */
+.dashboard-col { display: flex; flex-direction: column; gap: var(--space-3); min-height: 0; min-width: 0; }
+.dashboard-panel { min-height: 0; min-width: 0; overflow-y: auto; }
+
+/* Active Matters — compact tiles (per reference image): folder icon + status
+   top row, bold title + client-icon row, gray metadata line underneath.
+   Deliberately its own classes, not shared with .active-matter-title/-meta,
+   which Recent Matters (app/page.tsx) still uses unchanged. */
+.active-matters-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+a.active-matter-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+a.active-matter-row:hover { transform: scale(1.03); z-index: 3; }
+.active-matter-folder-icon { flex-shrink: 0; }
+.active-matter-card-title { font-size: var(--font-size-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: font-size 200ms ease; }
+a.active-matter-row:hover .active-matter-card-title { font-size: calc(var(--font-size-sm) + 1px); }
+.active-matter-subtext { font-size: var(--font-size-xs); color: var(--color-text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.active-matter-title { font-size: var(--font-size-sm); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.active-matter-meta { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Recent Matters — the shortest row on the dashboard. */
+a.recent-matter-row { display: flex; align-items: center; gap: var(--space-2); padding: 5px var(--space-3); }
+
+.matter-avatar-xs { width: 16px; height: 16px; font-size: 7px; }
+
+.sort-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.sort-toggle-btn:hover, .sort-toggle-btn[aria-expanded="true"] { background: var(--color-bg-surface-hover); color: var(--color-text-primary); }
+.sort-menu-item[aria-selected="true"] { color: var(--color-primary-700); font-weight: var(--font-weight-semibold); }
+
+.cal-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+.cal-expand-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-text-primary); }
+.cal-expand-btn:active svg { transform: scale(0.92); }
+.cal-expand-btn:hover svg { animation: cal-expand-corners-pulse 500ms cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes cal-expand-corners-pulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.cal-strip {
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow-x: auto;
+  /* overflow-x: auto forces overflow-y to clip too, so extra vertical padding
+     keeps the hover lift/scale on .cal-day-cell from being cut off. */
+  padding: 10px 2px 12px;
+  margin: -10px -2px -12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.cal-strip::-webkit-scrollbar { height: 6px; }
+.cal-strip::-webkit-scrollbar-track { background: transparent; }
+.cal-strip::-webkit-scrollbar-thumb { background: transparent; border-radius: var(--radius-full); }
+.cal-strip-scrolling { scrollbar-width: thin; scrollbar-color: var(--color-neutral-300) transparent; }
+.cal-strip-scrolling::-webkit-scrollbar-thumb { background: var(--color-neutral-300); }
+.cal-day-cell {
+  position: relative;
+  display: flex;
+  flex: 0 0 44px;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface-sunken);
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-height: 52px;
+  min-width: 0;
+  font-family: var(--font-family-ui);
+  transition: background-color 200ms ease, border-color 200ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease;
+  animation: cal-cell-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.cal-day-cell:nth-child(1) { animation-delay: 0ms; }
+.cal-day-cell:nth-child(2) { animation-delay: 25ms; }
+.cal-day-cell:nth-child(3) { animation-delay: 50ms; }
+.cal-day-cell:nth-child(4) { animation-delay: 75ms; }
+.cal-day-cell:nth-child(5) { animation-delay: 100ms; }
+.cal-day-cell:nth-child(6) { animation-delay: 125ms; }
+.cal-day-cell:nth-child(7) { animation-delay: 150ms; }
+.cal-day-cell:hover { border-color: var(--color-border-strong); background: var(--color-bg-surface); transform: translateY(-3px) scale(1.14); box-shadow: var(--shadow-md); z-index: 3; }
+.cal-day-cell:active { transform: translateY(-1px) scale(1.05); }
+.cal-day-today { border-color: var(--color-primary-500); background: var(--color-bg-selected); }
+.cal-day-today::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1.5px solid var(--color-primary-400);
+  animation: cal-today-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+.cal-day-label { font-size: var(--font-size-xs); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+.cal-day-number { font-family: var(--font-family-heading); font-weight: 600; font-size: var(--font-size-md); transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cal-day-cell:hover .cal-day-number { transform: scale(1.08); }
+.cal-day-initials { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.cal-initial-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+  flex-shrink: 0;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cal-day-cell:hover .cal-initial-badge, .cal-month-cell:hover .cal-initial-badge { transform: scale(1.1); }
+.cal-day-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--color-warning-base); flex-shrink: 0; }
+
+.cal-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 19, 23, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  animation: cal-backdrop-in 160ms ease;
+}
+.cal-overlay-panel {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 640px;
+  max-height: calc(100dvh - var(--space-8));
+  overflow-y: auto;
+  padding: var(--space-5);
+  animation: cal-panel-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cal-view-enter { animation: cal-view-in 180ms ease; }
+@keyframes cal-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cal-panel-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes cal-view-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes cal-cell-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cal-today-pulse {
+  0% { opacity: 0.6; transform: scale(1); }
+  70% { opacity: 0; transform: scale(1.09); }
+  100% { opacity: 0; transform: scale(1.09); }
+}
+@keyframes cal-slide-from-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes cal-slide-from-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cal-overlay-backdrop, .cal-overlay-panel, .cal-view-enter, .cal-day-cell, .cal-day-today::after,
+  .cal-month-slide-next, .cal-month-slide-prev, .cal-expand-btn:hover svg { animation: none; }
+}
+
+.cal-month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-1); min-width: 0; }
+.cal-month-slide-next { animation: cal-slide-from-right 220ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cal-month-slide-prev { animation: cal-slide-from-left 220ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cal-month-cell {
+  position: relative;
+  min-height: 60px;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background-color 200ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease;
+}
+.cal-month-cell:hover { background: var(--color-bg-surface-hover); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.cal-month-cell:active { transform: translateY(0) scale(0.97); }
+.cal-month-outside { opacity: 0.35; }
+
+/* Active/Recent Matters avatar badge (dashboard only — reuses the calendar's initials style). */
+.matter-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Dashboard micro-interactions
+   ========================================================================== */
+
+/* Notification bell (nav-bar) */
+.nav-bell-btn svg { transition: transform 150ms ease; }
+.nav-bell-btn:hover svg { animation: bell-wobble 500ms ease; }
+.nav-bell-badge { animation: badge-pop-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes bell-wobble {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-12deg); }
+  40% { transform: rotate(10deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(3deg); }
+}
+@keyframes badge-pop-in {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* Account menu avatar (nav-bar) */
+.account-avatar-btn { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease; }
+.account-avatar-btn:hover { transform: scale(1.08); box-shadow: 0 0 0 3px var(--color-primary-100); }
+.account-avatar-btn:active { transform: scale(0.96); }
+
+/* Dashboard header CTAs — press feedback (scoped to these buttons' own
+   modifier classes, not the shared .btn, so no other button in the app changes). */
+.btn-plain:active:not(:disabled):not([aria-disabled="true"]),
+.btn-hold-bg:active:not(:disabled):not([aria-disabled="true"]) { transform: scale(0.96); }
+.btn-plain, .btn-hold-bg { transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, transform 150ms ease; }
+
+/* Quick Stat Cards */
+.stat-card-hover { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease, border-color 200ms ease; }
+.stat-card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--color-border-strong); }
+.stat-icon-badge { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.stat-card-hover:hover .stat-icon-badge { transform: scale(1.12) rotate(-6deg); }
+
+/* "See all" links (Quick Stat Cards, Active Matters, Recent Matters) */
+.see-all-arrow { display: inline-flex; transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.see-all-link:hover .see-all-arrow { transform: translateX(3px); }
+
+/* Sort dropdown chevron (Active Matters + Matters/Clients list sort & filters) */
+.sort-toggle-icon { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.sort-toggle-btn[aria-expanded="true"] .sort-toggle-icon { transform: rotate(180deg); }
+
+/* Active Matters tiles — entrance stagger + icon micro-interactions on hover */
+.active-matter-row:nth-child(1) { animation-delay: 0ms; }
+.active-matter-row:nth-child(2) { animation-delay: 30ms; }
+.active-matter-row:nth-child(3) { animation-delay: 60ms; }
+.active-matter-row:nth-child(4) { animation-delay: 90ms; }
+.active-matter-row:nth-child(5) { animation-delay: 120ms; }
+.active-matter-row:nth-child(6) { animation-delay: 150ms; }
+.active-matter-row:nth-child(7) { animation-delay: 180ms; }
+.active-matter-row:nth-child(8) { animation-delay: 210ms; }
+.active-matter-row { animation: cal-cell-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.active-matter-row:hover .active-matter-folder-icon { animation: folder-tilt 400ms ease; }
+.active-matter-client-icon { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.active-matter-row:hover .active-matter-client-icon { transform: scale(1.2); }
+@keyframes folder-tilt {
+  0%, 100% { transform: rotate(0) scale(1); }
+  35% { transform: rotate(-8deg) scale(1.08); }
+  65% { transform: rotate(4deg) scale(1.08); }
+}
+
+/* Recent Matters rows — entrance stagger + avatar pop on hover */
+a.recent-matter-row:nth-child(1) { animation-delay: 0ms; }
+a.recent-matter-row:nth-child(2) { animation-delay: 30ms; }
+a.recent-matter-row:nth-child(3) { animation-delay: 60ms; }
+a.recent-matter-row:nth-child(4) { animation-delay: 90ms; }
+a.recent-matter-row:nth-child(5) { animation-delay: 120ms; }
+a.recent-matter-row { animation: cal-cell-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+a.recent-matter-row .matter-avatar-xs { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
+
+/* Calendar overlay: close / prev / next buttons — scoped, not the shared .btn-ghost */
+.cal-icon-btn { transition: background-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cal-icon-btn:active:not(:disabled) { transform: scale(0.92); }
+.cal-close-btn:hover { transform: rotate(90deg); }
+
+/* Calendar day-view Matter rows — avatar pop, matching Active/Recent Matters */
+.cal-day-matter-row .matter-avatar { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cal-day-matter-row:hover .matter-avatar { transform: scale(1.1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-bell-btn:hover svg, .nav-bell-badge, .active-matter-row, a.recent-matter-row,
+  .active-matter-row:hover .active-matter-folder-icon { animation: none; }
+}
+
+/* ==========================================================================
+   Clients page micro-interactions
+   ========================================================================== */
+
+.client-row {
+  position: relative;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  animation: cal-cell-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.client-row:nth-child(1) { animation-delay: 0ms; }
+.client-row:nth-child(2) { animation-delay: 30ms; }
+.client-row:nth-child(3) { animation-delay: 60ms; }
+.client-row:nth-child(4) { animation-delay: 90ms; }
+.client-row:nth-child(5) { animation-delay: 120ms; }
+.client-row:nth-child(6) { animation-delay: 150ms; }
+.client-row:nth-child(7) { animation-delay: 180ms; }
+.client-row:nth-child(8) { animation-delay: 210ms; }
+/* Magnify hover — scales from the left edge (not the center) so a full-width
+   row visibly grows outward instead of just jittering symmetrically in place,
+   and lifts with a shadow so it reads as popping above the other rows. */
+.client-row { transform-origin: center left; }
+.client-row:hover { transform: scale(1.025) translateY(-2px); box-shadow: var(--shadow-lg); z-index: 3; }
+.client-row-avatar { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.client-row:hover .client-row-avatar { transform: scale(1.15); }
+.client-row-name { transition: font-size 200ms ease; }
+.client-row:hover .client-row-name { font-size: calc(var(--font-size-base) + 1px); }
+
+.client-empty-fade { animation: cal-cell-in 240ms ease both; }
+
+/* Error/info banners app-wide (shared component) — fade+slide in for attention instead of snapping in. */
+.banner { animation: cal-cell-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* ==========================================================================
+   Matters page micro-interactions — same treatment as Clients rows above.
+   ========================================================================== */
+
+.matter-row {
+  position: relative;
+  transform-origin: center left;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  animation: cal-cell-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.matter-row:nth-child(1) { animation-delay: 0ms; }
+.matter-row:nth-child(2) { animation-delay: 30ms; }
+.matter-row:nth-child(3) { animation-delay: 60ms; }
+.matter-row:nth-child(4) { animation-delay: 90ms; }
+.matter-row:nth-child(5) { animation-delay: 120ms; }
+.matter-row:nth-child(6) { animation-delay: 150ms; }
+.matter-row:nth-child(7) { animation-delay: 180ms; }
+.matter-row:nth-child(8) { animation-delay: 210ms; }
+.matter-row:hover { transform: scale(1.025) translateY(-2px); box-shadow: var(--shadow-lg); z-index: 3; }
+.matter-row-avatar { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.matter-row:hover .matter-row-avatar { transform: scale(1.15); }
+.matter-row-name { transition: font-size 200ms ease; }
+.matter-row:hover .matter-row-name { font-size: calc(var(--font-size-base) + 1px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .client-row, .client-empty-fade, .banner, .matter-row { animation: none; }
+}
+
+/* Master-detail layout — shared by /clients and /matters. */
+.master-detail-grid { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: var(--space-5); align-items: start; }
+.master-detail-list { min-width: 0; }
+.master-detail-panel-col { min-width: 0; position: sticky; top: calc(var(--nav-height) + var(--space-4)); animation: cal-cell-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .master-detail-panel-col { animation: none; }
+}
+@media (max-width: 900px) {
+  .master-detail-grid { grid-template-columns: 1fr; }
+  .master-detail-panel-col { position: static; }
 }
 
 /* ==========================================================================
@@ -616,9 +1131,17 @@ a.text-citation:hover { color: var(--color-citation-700); }
   .page, .page-wide { padding: var(--space-4); }
   .app-nav { padding: 0 var(--space-4); gap: var(--space-3); flex-wrap: wrap; height: auto; min-height: var(--nav-height); }
   .app-nav-search { order: 3; max-width: none; flex-basis: 100%; }
+  .dashboard-shell { height: auto; overflow: visible; padding: var(--space-4); }
+  .dashboard-grid { grid-template-columns: 1fr; grid-template-rows: none; }
+  .dashboard-panel { overflow-y: visible; }
+  .cal-strip { gap: 4px; }
+  .cal-day-cell { min-height: 48px; padding: var(--space-1) 2px; }
+  .cal-day-label { font-size: 9px; }
+  .cal-initial-badge { width: 16px; height: 16px; font-size: 8px; }
 }
 
 @media (max-width: 640px) {
   .app-nav-links { gap: 0; }
-  .nav-item { padding: 0 var(--space-2); font-size: var(--font-size-xs); }
+  .app-nav-link { font-size: var(--font-size-xs); }
+  .active-matters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

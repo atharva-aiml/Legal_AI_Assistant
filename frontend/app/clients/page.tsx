@@ -4,7 +4,7 @@ import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { ClientsList } from "./clients-list";
+import { ClientsMasterDetail } from "./clients-master-detail";
 
 type Lawyer = { name: string; email: string };
 type Client = { id: string; name: string; contactEmail: string | null };
@@ -24,8 +24,10 @@ export default async function ClientsPage() {
       <NavBar lawyerName={lawyer.name} lawyerEmail={lawyer.email} />
       <main className="page">
         <div className="page-header">
-          <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Clients</h1>
-          <Button href="/clients/new">+ New Client</Button>
+          <div className="row">
+            <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Clients</h1>
+            <Button href="/clients/new" className="btn-hold-bg btn-xs"><span className="btn-plus-icon">+</span> New Client</Button>
+          </div>
         </div>
 
         {!clientsRes.ok ? (
@@ -34,10 +36,10 @@ export default async function ClientsPage() {
           <EmptyState
             title="No clients yet"
             body="Add your first client to start opening Matters and uploading documents."
-            action={<Button href="/clients/new">+ New Client</Button>}
+            action={<Button href="/clients/new" className="btn-hold-bg"><span className="btn-plus-icon">+</span> New Client</Button>}
           />
         ) : (
-          <ClientsList clients={clients} matters={matters} />
+          <ClientsMasterDetail clients={clients} matters={matters} />
         )}
       </main>
     </>

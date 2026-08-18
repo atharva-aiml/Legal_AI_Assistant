@@ -6,7 +6,7 @@ import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 
-export function ReopenMatterButton({ matterId }: { matterId: string }) {
+export function ReopenMatterButton({ matterId, onUpdated }: { matterId: string; onUpdated?: () => void }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -25,7 +25,8 @@ export function ReopenMatterButton({ matterId }: { matterId: string }) {
     setSubmitting(false);
 
     if (res.ok) {
-      router.refresh();
+      if (onUpdated) onUpdated();
+      else router.refresh();
       return;
     }
 

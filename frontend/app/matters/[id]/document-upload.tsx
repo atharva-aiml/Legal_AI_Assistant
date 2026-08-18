@@ -49,7 +49,7 @@ function uploadWithProgress(matterId: string, file: File, onProgress: (pct: numb
   });
 }
 
-export function DocumentUpload({ matterId }: { matterId: string }) {
+export function DocumentUpload({ matterId, onUpdated }: { matterId: string; onUpdated?: () => void }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
@@ -71,7 +71,8 @@ export function DocumentUpload({ matterId }: { matterId: string }) {
           // response returns) — DocumentsList's own polling takes over the
           // Processing -> Ready progression from here, unchanged.
           setUploads((prev) => prev.filter((u) => u.id !== id));
-          router.refresh();
+          if (onUpdated) onUpdated();
+          else router.refresh();
         })
         .catch((err: Error) => {
           setUploads((prev) => prev.map((u) => (u.id === id ? { ...u, status: "error", errorMessage: err.message } : u)));

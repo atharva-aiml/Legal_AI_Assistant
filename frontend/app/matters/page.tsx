@@ -4,7 +4,7 @@ import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { MattersList } from "./matters-list";
+import { MattersMasterDetail } from "./matters-master-detail";
 
 type Lawyer = { name: string; email: string };
 type Matter = { id: string; title: string; status: "open" | "closed"; clientId: string };
@@ -38,10 +38,12 @@ export default async function MattersPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <NavBar lawyerName={lawyer.name} lawyerEmail={lawyer.email} />
-      <main className="page">
+      <main className="page-wide">
         <div className="page-header">
-          <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Matters</h1>
-          <Button href="/matters/new">+ New Matter</Button>
+          <div className="row">
+            <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Matters</h1>
+            <Button href="/matters/new" className="btn-hold-bg btn-xs"><span className="btn-plus-icon">+</span> New Matter</Button>
+          </div>
         </div>
 
         {!mattersRes.ok ? (
@@ -50,10 +52,10 @@ export default async function MattersPage({ searchParams }: { searchParams: Prom
           <EmptyState
             title="No matters yet"
             body="Create a Matter from a Client's page, or start one here."
-            action={<Button href="/matters/new">+ New Matter</Button>}
+            action={<Button href="/matters/new" className="btn-hold-bg"><span className="btn-plus-icon">+</span> New Matter</Button>}
           />
         ) : (
-          <MattersList
+          <MattersMasterDetail
             matters={matters}
             clients={clients}
             deadlines={deadlines}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { javaFetch } from "@/lib/api/java-client";
+import { NavBar } from "@/components/nav-bar";
 import { StatusBadge } from "@/components/status-badge";
 import { Breadcrumb, type BreadcrumbItem } from "@/components/ui/breadcrumb";
 import { DocumentUpload } from "./document-upload";
@@ -12,6 +13,7 @@ import { CloseMatterButton } from "./close-matter-button";
 import { ReopenMatterButton } from "./reopen-matter-button";
 import { GenerateDraftModal } from "./generate-draft-modal";
 
+type Lawyer = { name: string; email: string };
 type Matter = { id: string; title: string; status: "open" | "closed" };
 type Client = { id: string; name: string };
 type Doc = {
@@ -48,6 +50,7 @@ export default async function MatterDetailPage({ params }: { params: Promise<{ i
 
   const meRes = await javaFetch("/api/auth/me");
   if (!meRes.ok) redirect("/login");
+  const { lawyer }: { lawyer: Lawyer } = await meRes.json();
 
   const matterRes = await javaFetch(`/api/matters/${id}`);
   if (matterRes.status === 404) notFound();
@@ -77,97 +80,100 @@ export default async function MatterDetailPage({ params }: { params: Promise<{ i
     : [{ label: "Matters", href: "/matters" }, { label: matter.title }];
 
   return (
-    <main className="page-wide">
-      {/* I-30: pinned so the title/status/Close-Matter action stay reachable while scrolling a long Chat. */}
-      <div
-        className="row-between"
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 20,
-          background: "var(--color-bg-surface)",
-          borderBottom: "1px solid var(--color-border-default)",
-          padding: "var(--space-3) 0",
-          marginBottom: "var(--space-3)",
-        }}
-      >
-        <div className="row" style={{ gap: "var(--space-3)", minWidth: 0 }}>
-          <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{matter.title}</span>
-          <StatusBadge status={matter.status} />
-        </div>
-        {matter.status === "open" ? <CloseMatterButton matterId={matter.id} /> : <ReopenMatterButton matterId={matter.id} />}
-      </div>
-
-      <Breadcrumb items={breadcrumbItems} />
-      <div className="row-between" style={{ marginTop: "var(--space-3)" }}>
-        <h1 style={{ fontSize: "var(--font-size-2xl)" }}>{matter.title}</h1>
-        <StatusBadge status={matter.status} />
-      </div>
-      {client && (
-        <div className="text-tertiary text-sm" style={{ marginTop: "var(--space-2)" }}>
-          Client: <Link href={`/clients/${client.id}`}>{client.name}</Link>
-        </div>
-      )}
-
-      {/* I-32, moved up + condensed per follow-up request: a compact-glance summary
-          before the detail sections, not a full-size section competing with them. */}
-      {activity.length > 0 && (
-        <section aria-labelledby="activity-heading" style={{ marginTop: "var(--space-4)" }}>
-          <h2 id="activity-heading" style={{ fontSize: "var(--font-size-base)", fontWeight: 600, margin: "0 0 var(--space-2)" }}>
-            Activity
-          </h2>
-          <div className="card" style={{ padding: "var(--space-1) var(--space-3)", maxHeight: 200, overflowY: "auto" }}>
-            {activity.map((entry, i) => (
-              <div
-                key={i}
-                className="row-between"
-                style={{
-                  gap: "var(--space-3)",
-                  padding: "var(--space-2) 0",
-                  borderBottom: i < activity.length - 1 ? "1px solid var(--color-border-default)" : "none",
-                }}
-              >
-                <div className="row" style={{ gap: "var(--space-2)", minWidth: 0 }}>
-                  <span className="text-tertiary text-xs" style={{ textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0 }}>
-                    {ACTIVITY_LABEL[entry.type]}
-                  </span>
-                  <span className="text-sm" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {entry.title}
-                  </span>
-                </div>
-                <span className="text-tertiary text-xs mono" style={{ flexShrink: 0 }}>{formatActivityTimestamp(entry.timestamp)}</span>
-              </div>
-            ))}
+    <>
+      <NavBar lawyerName={lawyer.name} lawyerEmail={lawyer.email} />
+      <main className="page-wide">
+        {/* I-30: pinned so the title/status/Close-Matter action stay reachable while scrolling a long Chat. */}
+        <div
+          className="row-between"
+          style={{
+            position: "sticky",
+            top: "var(--nav-height)",
+            zIndex: 20,
+            background: "var(--color-bg-surface)",
+            borderBottom: "1px solid var(--color-border-default)",
+            padding: "var(--space-3) 0",
+            marginBottom: "var(--space-3)",
+          }}
+        >
+          <div className="row" style={{ gap: "var(--space-3)", minWidth: 0 }}>
+            <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{matter.title}</span>
+            <StatusBadge status={matter.status} />
           </div>
-        </section>
-      )}
-
-      <section id="deadlines" aria-labelledby="deadlines-heading">
-        <div className="section-header">
-          <h2 id="deadlines-heading" style={{ fontSize: "var(--font-size-xl)" }}>Deadlines</h2>
-          {/* 03-UX-Product-Design.md J4: a Closed Matter is read-only — create actions are hidden, not just discouraged. */}
-          {matter.status === "open" && <NewDeadlineForm matterId={matter.id} />}
-        </div>
-        <DeadlinesList deadlines={deadlines} />
-
-        <div style={{ marginTop: "var(--space-4)" }}>
           {matter.status === "open" ? <CloseMatterButton matterId={matter.id} /> : <ReopenMatterButton matterId={matter.id} />}
         </div>
-      </section>
 
-      <section aria-labelledby="documents-heading">
-        <div className="section-header">
-          <h2 id="documents-heading" style={{ fontSize: "var(--font-size-xl)", marginRight: "auto" }}>Documents</h2>
-          {matter.status === "open" && <DocumentUpload matterId={matter.id} />}
-          <GenerateDraftModal matterId={matter.id} matterTitle={matter.title} clientName={client?.name ?? null} />
+        <Breadcrumb items={breadcrumbItems} />
+        <div className="row-between" style={{ marginTop: "var(--space-3)" }}>
+          <h1 style={{ fontSize: "var(--font-size-2xl)" }}>{matter.title}</h1>
+          <StatusBadge status={matter.status} />
         </div>
-        <DocumentsList matterId={matter.id} initialDocuments={documents} />
-      </section>
+        {client && (
+          <div className="text-tertiary text-sm" style={{ marginTop: "var(--space-2)" }}>
+            Client: <Link href={`/clients/${client.id}`}>{client.name}</Link>
+          </div>
+        )}
 
-      <section aria-labelledby="chat-heading">
-        <h2 id="chat-heading" style={{ fontSize: "var(--font-size-xl)", margin: "var(--space-5) 0 var(--space-3)" }}>Chat</h2>
-        <ChatPanel matterId={matter.id} initialMessages={messages} hasReadyDocuments={hasReadyDocuments} />
-      </section>
-    </main>
+        {/* I-32, moved up + condensed per follow-up request: a compact-glance summary
+            before the detail sections, not a full-size section competing with them. */}
+        {activity.length > 0 && (
+          <section aria-labelledby="activity-heading" style={{ marginTop: "var(--space-4)" }}>
+            <h2 id="activity-heading" style={{ fontSize: "var(--font-size-base)", fontWeight: 600, margin: "0 0 var(--space-2)" }}>
+              Activity
+            </h2>
+            <div className="card" style={{ padding: "var(--space-1) var(--space-3)", maxHeight: 200, overflowY: "auto" }}>
+              {activity.map((entry, i) => (
+                <div
+                  key={i}
+                  className="row-between"
+                  style={{
+                    gap: "var(--space-3)",
+                    padding: "var(--space-2) 0",
+                    borderBottom: i < activity.length - 1 ? "1px solid var(--color-border-default)" : "none",
+                  }}
+                >
+                  <div className="row" style={{ gap: "var(--space-2)", minWidth: 0 }}>
+                    <span className="text-tertiary text-xs" style={{ textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0 }}>
+                      {ACTIVITY_LABEL[entry.type]}
+                    </span>
+                    <span className="text-sm" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {entry.title}
+                    </span>
+                  </div>
+                  <span className="text-tertiary text-xs mono" style={{ flexShrink: 0 }}>{formatActivityTimestamp(entry.timestamp)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section id="deadlines" aria-labelledby="deadlines-heading">
+          <div className="section-header">
+            <h2 id="deadlines-heading" style={{ fontSize: "var(--font-size-xl)" }}>Deadlines</h2>
+            {/* 03-UX-Product-Design.md J4: a Closed Matter is read-only — create actions are hidden, not just discouraged. */}
+            {matter.status === "open" && <NewDeadlineForm matterId={matter.id} />}
+          </div>
+          <DeadlinesList deadlines={deadlines} />
+
+          <div style={{ marginTop: "var(--space-4)" }}>
+            {matter.status === "open" ? <CloseMatterButton matterId={matter.id} /> : <ReopenMatterButton matterId={matter.id} />}
+          </div>
+        </section>
+
+        <section aria-labelledby="documents-heading">
+          <div className="section-header">
+            <h2 id="documents-heading" style={{ fontSize: "var(--font-size-xl)", marginRight: "auto" }}>Documents</h2>
+            {matter.status === "open" && <DocumentUpload matterId={matter.id} />}
+            <GenerateDraftModal matterId={matter.id} matterTitle={matter.title} clientName={client?.name ?? null} />
+          </div>
+          <DocumentsList matterId={matter.id} initialDocuments={documents} />
+        </section>
+
+        <section aria-labelledby="chat-heading">
+          <h2 id="chat-heading" style={{ fontSize: "var(--font-size-xl)", margin: "var(--space-5) 0 var(--space-3)" }}>Chat</h2>
+          <ChatPanel matterId={matter.id} initialMessages={messages} hasReadyDocuments={hasReadyDocuments} />
+        </section>
+      </main>
+    </>
   );
 }

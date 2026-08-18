@@ -26,7 +26,7 @@ function todayISO(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
-export function DeadlinesList({ deadlines }: { deadlines: Deadline[] }) {
+export function DeadlinesList({ deadlines, onUpdated }: { deadlines: Deadline[]; onUpdated?: () => void }) {
   const router = useRouter();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const today = todayISO();
@@ -42,7 +42,8 @@ export function DeadlinesList({ deadlines }: { deadlines: Deadline[] }) {
     setUpdatingId(null);
 
     if (res.ok) {
-      router.refresh();
+      if (onUpdated) onUpdated();
+      else router.refresh();
     } else {
       alert("Couldn't update this deadline — retry.");
     }

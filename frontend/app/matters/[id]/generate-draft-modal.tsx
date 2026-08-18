@@ -15,10 +15,12 @@ export function GenerateDraftModal({
   matterId,
   matterTitle,
   clientName,
+  onUpdated,
 }: {
   matterId: string;
   matterTitle: string;
   clientName: string | null;
+  onUpdated?: () => void;
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -81,7 +83,8 @@ export function GenerateDraftModal({
 
     reset();
     showToast("Document generated");
-    router.refresh();
+    if (onUpdated) onUpdated();
+    else router.refresh();
   }
 
   const selectedTemplate = templates?.find((t) => t.id === selectedId) ?? null;

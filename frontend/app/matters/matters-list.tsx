@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { SortDropdown } from "@/components/sort-dropdown";
+import { initials } from "@/lib/initials";
 
 type Matter = { id: string; title: string; status: "open" | "closed"; clientId: string };
 type Client = { id: string; name: string };
@@ -11,18 +12,43 @@ type Deadline = { id: string; matterId: string; dueDate: string; status: "open" 
 type SortMode = "default" | "nextDeadline";
 type ViewMode = "list" | "board";
 
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "default", label: "Default order" },
+  { value: "nextDeadline", label: "Next deadline" },
+];
+
 function formatDueDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function MatterRow({ matter, clientName, nextDeadline }: { matter: Matter; clientName: string | undefined; nextDeadline: string | undefined }) {
+function MatterRow({
+  matter,
+  clientName,
+  nextDeadline,
+  selected,
+  onSelect,
+}: {
+  matter: Matter;
+  clientName: string | undefined;
+  nextDeadline: string | undefined;
+  selected: boolean;
+  onSelect: (id: string) => void;
+}) {
   return (
-    <Link href={`/matters/${matter.id}`} className="card">
+    <button
+      type="button"
+      onClick={() => onSelect(matter.id)}
+      aria-current={selected ? "true" : undefined}
+      className={`card matter-row${selected ? " card-selected" : ""}`}
+    >
       <div className="row-between">
-        <div>
-          <div style={{ fontWeight: 500 }}>{matter.title}</div>
-          <div className="text-tertiary text-sm">{clientName}</div>
+        <div className="row" style={{ gap: "var(--space-3)" }}>
+          <span className="matter-avatar matter-row-avatar">{initials(matter.title)}</span>
+          <div>
+            <div className="matter-row-name" style={{ fontWeight: 500 }}>{matter.title}</div>
+            <div className="text-tertiary text-sm">{clientName}</div>
+          </div>
         </div>
         <div className="row" style={{ gap: "var(--space-3)" }}>
           {/* I-25: always shown, not just while sorted by it. */}
@@ -30,7 +56,7 @@ function MatterRow({ matter, clientName, nextDeadline }: { matter: Matter; clien
           <StatusBadge status={matter.status} />
         </div>
       </div>
-    </Link>
+    </button>
   );
 }
 
@@ -49,12 +75,16 @@ export function MattersList({
   deadlines,
   currentStatus,
   currentClientId,
+  selectedMatterId,
+  onSelectMatter,
 }: {
   matters: Matter[];
   clients: Client[];
   deadlines: Deadline[];
   currentStatus: string;
   currentClientId: string;
+  selectedMatterId: string | null;
+  onSelectMatter: (id: string) => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -92,52 +122,32 @@ export function MattersList({
   const openMatters = useMemo(() => sortedMatters.filter((m) => m.status === "open"), [sortedMatters]);
   const closedMatters = useMemo(() => sortedMatters.filter((m) => m.status === "closed"), [sortedMatters]);
 
+  const statusOptions = [
+    { value: "", label: "All statuses" },
+    { value: "open", label: "Open" },
+    { value: "closed", label: "Closed" },
+  ];
+  const clientOptions = [{ value: "", label: "All clients" }, ...clients.map((c) => ({ value: c.id, label: c.name }))];
+
   return (
     <>
       <div className="row-between" style={{ marginBottom: "var(--space-4)", flexWrap: "wrap", gap: "var(--space-3)" }}>
         <div className="row" style={{ gap: "var(--space-3)", flexWrap: "wrap" }}>
-          <div className="field" style={{ maxWidth: 180, marginBottom: 0 }}>
-            <label className="field-label" htmlFor="status-filter" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
-              Filter by status
-            </label>
-            <select
-              id="status-filter"
-              className="select"
-              value={currentStatus}
-              onChange={(e) => navigateWithFilters(e.target.value, currentClientId)}
-            >
-              <option value="">All statuses</option>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
-          <div className="field" style={{ maxWidth: 240, marginBottom: 0 }}>
-            <label className="field-label" htmlFor="client-filter-select" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
-              Filter by Client
-            </label>
-            <select
-              id="client-filter-select"
-              className="select"
-              value={currentClientId}
-              onChange={(e) => navigateWithFilters(currentStatus, e.target.value)}
-            >
-              <option value="">All clients</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field" style={{ maxWidth: 200, marginBottom: 0 }}>
-            <label className="field-label" htmlFor="matter-sort" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
-              Sort by
-            </label>
-            <select id="matter-sort" className="select" value={sortMode} onChange={(e) => setSortMode(e.target.value as SortMode)}>
-              <option value="default">Default order</option>
-              <option value="nextDeadline">Next deadline</option>
-            </select>
-          </div>
+          <SortDropdown
+            value={currentStatus}
+            options={statusOptions}
+            onChange={(status) => navigateWithFilters(status, currentClientId)}
+            menuLabel="Filter by status"
+            align="left"
+          />
+          <SortDropdown
+            value={currentClientId}
+            options={clientOptions}
+            onChange={(clientId) => navigateWithFilters(currentStatus, clientId)}
+            menuLabel="Filter by Client"
+            align="left"
+          />
+          <SortDropdown value={sortMode} options={SORT_OPTIONS} onChange={setSortMode} menuLabel="Sort Matters by" align="left" />
         </div>
 
         {/* I-26: a toggle, not a replacement -- list view stays the default. */}
@@ -166,7 +176,14 @@ export function MattersList({
       ) : viewMode === "list" ? (
         <div className="stack">
           {sortedMatters.map((matter) => (
-            <MatterRow key={matter.id} matter={matter} clientName={clientNameById.get(matter.clientId)} nextDeadline={nextDeadlineByMatter.get(matter.id)} />
+            <MatterRow
+              key={matter.id}
+              matter={matter}
+              clientName={clientNameById.get(matter.clientId)}
+              nextDeadline={nextDeadlineByMatter.get(matter.id)}
+              selected={matter.id === selectedMatterId}
+              onSelect={onSelectMatter}
+            />
           ))}
         </div>
       ) : (
@@ -178,7 +195,14 @@ export function MattersList({
                 <div className="card text-secondary">No open Matters.</div>
               ) : (
                 openMatters.map((matter) => (
-                  <MatterRow key={matter.id} matter={matter} clientName={clientNameById.get(matter.clientId)} nextDeadline={nextDeadlineByMatter.get(matter.id)} />
+                  <MatterRow
+                    key={matter.id}
+                    matter={matter}
+                    clientName={clientNameById.get(matter.clientId)}
+                    nextDeadline={nextDeadlineByMatter.get(matter.id)}
+                    selected={matter.id === selectedMatterId}
+                    onSelect={onSelectMatter}
+                  />
                 ))
               )}
             </div>
@@ -190,7 +214,14 @@ export function MattersList({
                 <div className="card text-secondary">No closed Matters.</div>
               ) : (
                 closedMatters.map((matter) => (
-                  <MatterRow key={matter.id} matter={matter} clientName={clientNameById.get(matter.clientId)} nextDeadline={nextDeadlineByMatter.get(matter.id)} />
+                  <MatterRow
+                    key={matter.id}
+                    matter={matter}
+                    clientName={clientNameById.get(matter.clientId)}
+                    nextDeadline={nextDeadlineByMatter.get(matter.id)}
+                    selected={matter.id === selectedMatterId}
+                    onSelect={onSelectMatter}
+                  />
                 ))
               )}
             </div>

@@ -1,12 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useListSearch } from "@/components/list-search-context";
+import { SortDropdown } from "@/components/sort-dropdown";
+import { initials } from "@/lib/initials";
 
 type Client = { id: string; name: string; contactEmail: string | null };
 type Matter = { id: string; clientId: string; status: "open" | "closed"; updatedAt: string };
 type SortMode = "name" | "recent" | "openMatters";
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "name", label: "Name (A–Z)" },
+  { value: "recent", label: "Most recent activity" },
+  { value: "openMatters", label: "Most open Matters" },
+];
 
 /**
  * I-13/I-14: pure client-side filter + sort over the already-fetched list —
@@ -14,7 +21,17 @@ type SortMode = "name" | "recent" | "openMatters";
  * the topbar search bar (NavBar, in its in-list-filter mode on this route)
  * via ListSearchContext, not a separate input on this page.
  */
-export function ClientsList({ clients, matters }: { clients: Client[]; matters: Matter[] }) {
+export function ClientsList({
+  clients,
+  matters,
+  selectedClientId,
+  onSelectClient,
+}: {
+  clients: Client[];
+  matters: Matter[];
+  selectedClientId: string | null;
+  onSelectClient: (id: string) => void;
+}) {
   const { query } = useListSearch();
   const [sortMode, setSortMode] = useState<SortMode>("name");
 
@@ -66,30 +83,31 @@ export function ClientsList({ clients, matters }: { clients: Client[]; matters: 
   return (
     <>
       <div className="row" style={{ gap: "var(--space-3)", marginBottom: "var(--space-4)", flexWrap: "wrap" }}>
-        <div className="field" style={{ maxWidth: 220, marginBottom: 0 }}>
-          <label className="field-label" htmlFor="client-sort" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
-            Sort clients by
-          </label>
-          <select id="client-sort" className="select" value={sortMode} onChange={(e) => setSortMode(e.target.value as SortMode)}>
-            <option value="name">Name (A–Z)</option>
-            <option value="recent">Most recent activity</option>
-            <option value="openMatters">Most open Matters</option>
-          </select>
-        </div>
+        <SortDropdown value={sortMode} options={SORT_OPTIONS} onChange={setSortMode} menuLabel="Sort clients by" align="left" />
       </div>
 
       {sortedClients.length === 0 ? (
-        <div className="card text-secondary">No clients match &quot;{query.trim()}&quot;.</div>
+        <div key={query} className="card text-secondary client-empty-fade">No clients match &quot;{query.trim()}&quot;.</div>
       ) : (
         <div className="stack">
           {sortedClients.map((c) => {
             const counts = matterCounts.get(c.id) ?? { open: 0, closed: 0 };
+            const selected = c.id === selectedClientId;
             return (
-              <Link key={c.id} href={`/clients/${c.id}`} className="card">
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => onSelectClient(c.id)}
+                aria-current={selected ? "true" : undefined}
+                className={`card client-row${selected ? " card-selected" : ""}`}
+              >
                 <div className="row-between">
-                  <div>
-                    <div style={{ fontWeight: 500 }}>{c.name}</div>
-                    {c.contactEmail && <div className="text-tertiary text-sm">{c.contactEmail}</div>}
+                  <div className="row" style={{ gap: "var(--space-3)" }}>
+                    <span className="matter-avatar client-row-avatar">{initials(c.name)}</span>
+                    <div>
+                      <div className="client-row-name" style={{ fontWeight: 500 }}>{c.name}</div>
+                      {c.contactEmail && <div className="text-tertiary text-sm">{c.contactEmail}</div>}
+                    </div>
                   </div>
                   <div className="text-tertiary text-sm">
                     {counts.open + counts.closed === 0
@@ -97,7 +115,7 @@ export function ClientsList({ clients, matters }: { clients: Client[]; matters: 
                       : `${counts.open} open · ${counts.closed} closed`}
                   </div>
                 </div>
-              </Link>
+              </button>
             );
           })}
         </div>

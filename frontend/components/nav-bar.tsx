@@ -14,6 +14,24 @@ const LIST_FILTER_PLACEHOLDER: Record<string, string> = {
   "/clients": "Filter clients by name…",
 };
 
+function isNavLinkActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function navLinkClass(pathname: string, href: string): string {
+  return isNavLinkActive(pathname, href) ? "app-nav-link app-nav-link-active" : "app-nav-link";
+}
+
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
 export function NavBar({ lawyerName, lawyerEmail }: { lawyerName: string; lawyerEmail: string }) {
   const pathname = usePathname();
   const { query, setQuery } = useListSearch();
@@ -47,33 +65,39 @@ export function NavBar({ lawyerName, lawyerEmail }: { lawyerName: string; lawyer
         Legal AI Assistant
       </Link>
       <div className="app-nav-links">
-        <Link href="/" className="nav-item">
+        <Link href="/" className={navLinkClass(pathname, "/")}>
           Dashboard
         </Link>
-        <Link href="/clients" className="nav-item">
+        <Link href="/clients" className={navLinkClass(pathname, "/clients")}>
           Clients
         </Link>
-        <Link href="/matters" className="nav-item">
+        <Link href="/matters" className={navLinkClass(pathname, "/matters")}>
           Matters
         </Link>
       </div>
 
       {isListFilterMode ? (
         <div className="app-nav-search" role="search">
+          <span className="app-nav-search-icon" aria-hidden="true">
+            <SearchIcon />
+          </span>
           <label htmlFor="global-search" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
             {filterPlaceholder}
           </label>
           <input
             id="global-search"
             type="text"
-            className="input"
+            className="app-nav-search-input"
             placeholder={filterPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
       ) : (
-        <form action="/search" method="GET" className="app-nav-search" role="search" style={{ position: "relative" }}>
+        <form action="/search" method="GET" className="app-nav-search" role="search">
+          <span className="app-nav-search-icon" aria-hidden="true">
+            <SearchIcon />
+          </span>
           <label htmlFor="global-search" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
             Search Clients and Matters
           </label>
@@ -82,7 +106,7 @@ export function NavBar({ lawyerName, lawyerEmail }: { lawyerName: string; lawyer
             type="text"
             name="q"
             placeholder="Search Clients & Matters…"
-            className="input"
+            className="app-nav-search-input"
             autoComplete="off"
             defaultValue=""
             onChange={(e) => setIsEmpty(e.target.value.trim() === "")}

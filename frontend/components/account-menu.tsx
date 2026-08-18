@@ -40,6 +40,7 @@ export function AccountMenu({ name, email }: { name: string; email: string }) {
         aria-label="Account menu"
         aria-haspopup="menu"
         aria-expanded={open}
+        className="account-avatar-btn"
         style={{
           width: 36,
           height: 36,

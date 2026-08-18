@@ -9,8 +9,13 @@ import { Modal } from "@/components/ui/modal";
 
 type Client = { id: string; name: string; contactEmail: string | null; contactPhone: string | null; notes: string | null };
 
-/** I-17: same field set as the New Client form (clients/new/page.tsx), pre-filled with the current values. */
-export function EditClientModal({ client }: { client: Client }) {
+/**
+ * I-17: same field set as the New Client form (clients/new/page.tsx), pre-filled with the current values.
+ * `onSaved` lets callers that hold their own copy of the client (e.g. the /clients
+ * master-detail panel, which fetches client-side) refetch instead of relying on
+ * router.refresh() — which only re-runs Server Component data, not client state.
+ */
+export function EditClientModal({ client, onSaved }: { client: Client; onSaved?: () => void }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(client.name);
@@ -55,7 +60,8 @@ export function EditClientModal({ client }: { client: Client }) {
     }
 
     setOpen(false);
-    router.refresh();
+    if (onSaved) onSaved();
+    else router.refresh();
   }
 
   if (!open) {

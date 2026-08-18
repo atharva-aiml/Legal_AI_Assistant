@@ -3,13 +3,14 @@ import { notFound, redirect } from "next/navigation";
 import { javaFetch } from "@/lib/api/java-client";
 import { NavBar } from "@/components/nav-bar";
 import { StatusBadge } from "@/components/status-badge";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { EditClientModal } from "./edit-client-modal";
+import { NewMatterModal } from "./new-matter-modal";
 
 type Lawyer = { name: string; email: string };
 type Client = { id: string; name: string; contactEmail: string | null; contactPhone: string | null; notes: string | null; createdAt: string };
+type ClientSummary = { id: string; name: string };
 type Matter = { id: string; title: string; status: "open" | "closed" };
 type Deadline = { id: string; matterId: string; dueDate: string; status: "open" | "complete" };
 
@@ -32,6 +33,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const mattersRes = await javaFetch(`/api/matters?clientId=${client.id}`);
   const { matters }: { matters: Matter[] } = mattersRes.ok ? await mattersRes.json() : { matters: [] };
+
+  // NewMatterModal's Client combobox needs the full list, same as /matters/new.
+  const clientsRes = await javaFetch("/api/clients");
+  const { clients }: { clients: ClientSummary[] } = clientsRes.ok ? await clientsRes.json() : { clients: [] };
 
   // I-19: a big-enough window to mean "every open Deadline," not just a near-term slice —
   // /api/deadlines/upcoming already scopes to status=open, so no further filtering needed.
@@ -80,11 +85,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
         <div className="section-header">
           <h2 style={{ fontSize: "var(--font-size-xl)" }}>Matters</h2>
-          <Button href={`/matters/new?clientId=${client.id}`}>+ New Matter</Button>
+          <NewMatterModal clientId={client.id} clients={clients} />
         </div>
 
         {matters.length === 0 ? (
-          <EmptyState title="No matters yet" body="Open the first Matter for this client to start uploading documents." action={<Button href={`/matters/new?clientId=${client.id}`}>+ New Matter</Button>} />
+          <EmptyState title="No matters yet" body="Open the first Matter for this client to start uploading documents." action={<NewMatterModal clientId={client.id} clients={clients} />} />
         ) : (
           <div className="stack">
             {matters.map((matter) => {

@@ -98,7 +98,7 @@ export function NewMatterForm({ clients, initialClientId }: { clients: Client[];
       <EmptyState
         title="No clients yet"
         body="A Matter always belongs to a Client — create one first."
-        action={<Button href="/clients/new">+ New Client</Button>}
+        action={<Button href="/clients/new" className="btn-hold-bg"><span className="btn-plus-icon">+</span> New Client</Button>}
       />
     );
   }
@@ -112,8 +112,8 @@ export function NewMatterForm({ clients, initialClientId }: { clients: Client[];
       </div>
 
       {!deadlineOpen ? (
-        <Button type="button" variant="secondary" onClick={() => setDeadlineOpen(true)} style={{ alignSelf: "flex-start" }}>
-          + Add a deadline
+        <Button type="button" variant="secondary" className="btn-hold-bg" onClick={() => setDeadlineOpen(true)} style={{ alignSelf: "flex-start" }}>
+          <span className="btn-plus-icon">+</span> Add a deadline
         </Button>
       ) : (
         <div className="card" style={{ background: "var(--color-bg-surface-hover)" }}>

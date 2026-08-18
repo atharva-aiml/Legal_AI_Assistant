@@ -26,7 +26,7 @@ const QUICK_PICKS: { label: string; compute: () => string }[] = [
 
 type Priority = "standard" | "critical";
 
-export function NewDeadlineForm({ matterId }: { matterId: string }) {
+export function NewDeadlineForm({ matterId, onUpdated }: { matterId: string; onUpdated?: () => void }) {
   const router = useRouter();
   const { showToast } = useToast();
   const [open, setOpen] = useState(false);
@@ -75,13 +75,14 @@ export function NewDeadlineForm({ matterId }: { matterId: string }) {
     setLeadDays("");
     setOpen(false);
     showToast("Deadline created");
-    router.refresh();
+    if (onUpdated) onUpdated();
+    else router.refresh();
   }
 
   if (!open) {
     return (
-      <Button variant="secondary" onClick={() => setOpen(true)}>
-        + New Deadline
+      <Button variant="secondary" className="btn-hold-bg" onClick={() => setOpen(true)}>
+        <span className="btn-plus-icon">+</span> New Deadline
       </Button>
     );
   }

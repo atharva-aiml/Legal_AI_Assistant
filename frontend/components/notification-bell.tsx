@@ -44,7 +44,7 @@ export function NotificationBell() {
         borderRadius: "var(--radius-md)",
         color: "var(--color-neutral-700)",
       }}
-      className="nav-item"
+      className="nav-item nav-bell-btn"
     >
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -58,6 +58,8 @@ export function NotificationBell() {
       </svg>
       {unreadCount !== null && unreadCount > 0 && (
         <span
+          key={unreadCount}
+          className="nav-bell-badge"
           style={{
             position: "absolute",
             top: 2,
