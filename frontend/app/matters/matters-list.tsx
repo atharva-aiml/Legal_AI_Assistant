@@ -93,10 +93,14 @@ export function MattersList({
 
   const clientNameById = useMemo(() => new Map(clients.map((c) => [c.id, c.name])), [clients]);
 
-  // /api/deadlines/upcoming already scopes to status=open, so no further filtering needed.
+  // /api/deadlines/upcoming initially returns only status=open ones, but this
+  // list is now kept live from the detail panel's own complete-toggle too
+  // (see MattersMasterDetail), so a completed deadline can show up here in
+  // the same array — filter explicitly rather than relying on the fetch scope.
   const nextDeadlineByMatter = useMemo(() => {
     const map = new Map<string, string>();
     for (const d of deadlines) {
+      if (d.status !== "open") continue;
       const current = map.get(d.matterId);
       if (!current || d.dueDate < current) map.set(d.matterId, d.dueDate);
     }
@@ -131,7 +135,7 @@ export function MattersList({
 
   return (
     <>
-      <div className="row-between" style={{ marginBottom: "var(--space-4)", flexWrap: "wrap", gap: "var(--space-3)" }}>
+      <div className="row-between master-detail-col-header" style={{ marginBottom: "var(--space-4)", flexWrap: "wrap", gap: "var(--space-3)" }}>
         <div className="row" style={{ gap: "var(--space-3)", flexWrap: "wrap" }}>
           <SortDropdown
             value={currentStatus}
@@ -171,63 +175,65 @@ export function MattersList({
         </div>
       </div>
 
-      {sortedMatters.length === 0 ? (
-        <div className="card text-secondary">No matters match these filters.</div>
-      ) : viewMode === "list" ? (
-        <div className="stack">
-          {sortedMatters.map((matter) => (
-            <MatterRow
-              key={matter.id}
-              matter={matter}
-              clientName={clientNameById.get(matter.clientId)}
-              nextDeadline={nextDeadlineByMatter.get(matter.id)}
-              selected={matter.id === selectedMatterId}
-              onSelect={onSelectMatter}
-            />
-          ))}
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "var(--space-4)", alignItems: "start" }}>
-          <div>
-            <h2 style={{ fontSize: "var(--font-size-lg)", margin: "0 0 var(--space-3)" }}>Open ({openMatters.length})</h2>
-            <div className="stack">
-              {openMatters.length === 0 ? (
-                <div className="card text-secondary">No open Matters.</div>
-              ) : (
-                openMatters.map((matter) => (
-                  <MatterRow
-                    key={matter.id}
-                    matter={matter}
-                    clientName={clientNameById.get(matter.clientId)}
-                    nextDeadline={nextDeadlineByMatter.get(matter.id)}
-                    selected={matter.id === selectedMatterId}
-                    onSelect={onSelectMatter}
-                  />
-                ))
-              )}
+      <div className="master-detail-col-scroll">
+        {sortedMatters.length === 0 ? (
+          <div className="card text-secondary">No matters match these filters.</div>
+        ) : viewMode === "list" ? (
+          <div className="stack">
+            {sortedMatters.map((matter) => (
+              <MatterRow
+                key={matter.id}
+                matter={matter}
+                clientName={clientNameById.get(matter.clientId)}
+                nextDeadline={nextDeadlineByMatter.get(matter.id)}
+                selected={matter.id === selectedMatterId}
+                onSelect={onSelectMatter}
+              />
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "var(--space-4)", alignItems: "start" }}>
+            <div>
+              <h2 style={{ fontSize: "var(--font-size-lg)", margin: "0 0 var(--space-3)" }}>Open ({openMatters.length})</h2>
+              <div className="stack">
+                {openMatters.length === 0 ? (
+                  <div className="card text-secondary">No open Matters.</div>
+                ) : (
+                  openMatters.map((matter) => (
+                    <MatterRow
+                      key={matter.id}
+                      matter={matter}
+                      clientName={clientNameById.get(matter.clientId)}
+                      nextDeadline={nextDeadlineByMatter.get(matter.id)}
+                      selected={matter.id === selectedMatterId}
+                      onSelect={onSelectMatter}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            <div>
+              <h2 style={{ fontSize: "var(--font-size-lg)", margin: "0 0 var(--space-3)" }}>Closed ({closedMatters.length})</h2>
+              <div className="stack">
+                {closedMatters.length === 0 ? (
+                  <div className="card text-secondary">No closed Matters.</div>
+                ) : (
+                  closedMatters.map((matter) => (
+                    <MatterRow
+                      key={matter.id}
+                      matter={matter}
+                      clientName={clientNameById.get(matter.clientId)}
+                      nextDeadline={nextDeadlineByMatter.get(matter.id)}
+                      selected={matter.id === selectedMatterId}
+                      onSelect={onSelectMatter}
+                    />
+                  ))
+                )}
+              </div>
             </div>
           </div>
-          <div>
-            <h2 style={{ fontSize: "var(--font-size-lg)", margin: "0 0 var(--space-3)" }}>Closed ({closedMatters.length})</h2>
-            <div className="stack">
-              {closedMatters.length === 0 ? (
-                <div className="card text-secondary">No closed Matters.</div>
-              ) : (
-                closedMatters.map((matter) => (
-                  <MatterRow
-                    key={matter.id}
-                    matter={matter}
-                    clientName={clientNameById.get(matter.clientId)}
-                    nextDeadline={nextDeadlineByMatter.get(matter.id)}
-                    selected={matter.id === selectedMatterId}
-                    onSelect={onSelectMatter}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }

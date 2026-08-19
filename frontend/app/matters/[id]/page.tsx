@@ -170,7 +170,7 @@ export default async function MatterDetailPage({ params }: { params: Promise<{ i
         </section>
 
         <section aria-labelledby="chat-heading">
-          <h2 id="chat-heading" style={{ fontSize: "var(--font-size-xl)", margin: "var(--space-5) 0 var(--space-3)" }}>Chat</h2>
+          <h2 id="chat-heading" style={{ fontSize: "var(--font-size-xl)", margin: "var(--space-5) 0 var(--space-3)" }}>AI Chat</h2>
           <ChatPanel matterId={matter.id} initialMessages={messages} hasReadyDocuments={hasReadyDocuments} />
         </section>
       </main>

@@ -82,44 +82,46 @@ export function ClientsList({
 
   return (
     <>
-      <div className="row" style={{ gap: "var(--space-3)", marginBottom: "var(--space-4)", flexWrap: "wrap" }}>
+      <div className="row master-detail-col-header" style={{ gap: "var(--space-3)", marginBottom: "var(--space-4)", flexWrap: "wrap" }}>
         <SortDropdown value={sortMode} options={SORT_OPTIONS} onChange={setSortMode} menuLabel="Sort clients by" align="left" />
       </div>
 
-      {sortedClients.length === 0 ? (
-        <div key={query} className="card text-secondary client-empty-fade">No clients match &quot;{query.trim()}&quot;.</div>
-      ) : (
-        <div className="stack">
-          {sortedClients.map((c) => {
-            const counts = matterCounts.get(c.id) ?? { open: 0, closed: 0 };
-            const selected = c.id === selectedClientId;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => onSelectClient(c.id)}
-                aria-current={selected ? "true" : undefined}
-                className={`card client-row${selected ? " card-selected" : ""}`}
-              >
-                <div className="row-between">
-                  <div className="row" style={{ gap: "var(--space-3)" }}>
-                    <span className="matter-avatar client-row-avatar">{initials(c.name)}</span>
-                    <div>
-                      <div className="client-row-name" style={{ fontWeight: 500 }}>{c.name}</div>
-                      {c.contactEmail && <div className="text-tertiary text-sm">{c.contactEmail}</div>}
+      <div className="master-detail-col-scroll">
+        {sortedClients.length === 0 ? (
+          <div key={query} className="card text-secondary client-empty-fade">No clients match &quot;{query.trim()}&quot;.</div>
+        ) : (
+          <div className="stack">
+            {sortedClients.map((c) => {
+              const counts = matterCounts.get(c.id) ?? { open: 0, closed: 0 };
+              const selected = c.id === selectedClientId;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => onSelectClient(c.id)}
+                  aria-current={selected ? "true" : undefined}
+                  className={`card client-row${selected ? " card-selected" : ""}`}
+                >
+                  <div className="row-between">
+                    <div className="row" style={{ gap: "var(--space-3)" }}>
+                      <span className="matter-avatar client-row-avatar">{initials(c.name)}</span>
+                      <div>
+                        <div className="client-row-name" style={{ fontWeight: 500 }}>{c.name}</div>
+                        {c.contactEmail && <div className="text-tertiary text-sm">{c.contactEmail}</div>}
+                      </div>
+                    </div>
+                    <div className="text-tertiary text-sm">
+                      {counts.open + counts.closed === 0
+                        ? "No matters"
+                        : `${counts.open} open · ${counts.closed} closed`}
                     </div>
                   </div>
-                  <div className="text-tertiary text-sm">
-                    {counts.open + counts.closed === 0
-                      ? "No matters"
-                      : `${counts.open} open · ${counts.closed} closed`}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </>
   );
 }

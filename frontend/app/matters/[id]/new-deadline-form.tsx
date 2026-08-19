@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/toast-context";
 
 function todayISO(): string {
@@ -26,6 +27,7 @@ const QUICK_PICKS: { label: string; compute: () => string }[] = [
 
 type Priority = "standard" | "critical";
 
+/** Opens as a modal, mirroring NewMatterModal/EditClientModal, instead of expanding inline into the Deadlines section. */
 export function NewDeadlineForm({ matterId, onUpdated }: { matterId: string; onUpdated?: () => void }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -37,6 +39,15 @@ export function NewDeadlineForm({ matterId, onUpdated }: { matterId: string; onU
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const minDate = todayISO();
+
+  function close() {
+    setOpen(false);
+    setTitle("");
+    setDueDate("");
+    setPriority("standard");
+    setLeadDays("");
+    setError(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,11 +80,7 @@ export function NewDeadlineForm({ matterId, onUpdated }: { matterId: string; onU
       return;
     }
 
-    setTitle("");
-    setDueDate("");
-    setPriority("standard");
-    setLeadDays("");
-    setOpen(false);
+    close();
     showToast("Deadline created");
     if (onUpdated) onUpdated();
     else router.refresh();
@@ -88,49 +95,51 @@ export function NewDeadlineForm({ matterId, onUpdated }: { matterId: string; onU
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card stack-4" style={{ width: "100%", flexBasis: "100%" }}>
-      <div className="field">
-        <label className="field-label" htmlFor="deadline-title">Title *</label>
-        <input id="deadline-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor="deadline-due-date">Due date *</label>
-        <div className="row" style={{ gap: "var(--space-2)", marginBottom: "var(--space-2)", flexWrap: "wrap" }}>
-          {QUICK_PICKS.map((pick) => (
-            <button
-              key={pick.label}
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => setDueDate(pick.compute())}
-            >
-              {pick.label}
-            </button>
-          ))}
+    <Modal title="New Deadline" onClose={close} width={480}>
+      <form onSubmit={handleSubmit} className="stack-4">
+        <div className="field">
+          <label className="field-label" htmlFor="deadline-title">Title *</label>
+          <input id="deadline-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </div>
-        <input id="deadline-due-date" className="input" type="date" value={dueDate} min={minDate} onChange={(e) => setDueDate(e.target.value)} required />
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor="deadline-priority">Priority</label>
-        <select id="deadline-priority" className="select" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
-          <option value="standard">Standard</option>
-          <option value="critical">Critical</option>
-        </select>
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor="deadline-lead-days">Notify how many days before? (default 3)</label>
-        <input id="deadline-lead-days" className="input" type="number" min={0} value={leadDays} onChange={(e) => setLeadDays(e.target.value)} placeholder="3" />
-      </div>
+        <div className="field">
+          <label className="field-label" htmlFor="deadline-due-date">Due date *</label>
+          <div className="row" style={{ gap: "var(--space-2)", marginBottom: "var(--space-2)", flexWrap: "wrap" }}>
+            {QUICK_PICKS.map((pick) => (
+              <button
+                key={pick.label}
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setDueDate(pick.compute())}
+              >
+                {pick.label}
+              </button>
+            ))}
+          </div>
+          <input id="deadline-due-date" className="input" type="date" value={dueDate} min={minDate} onChange={(e) => setDueDate(e.target.value)} required />
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="deadline-priority">Priority</label>
+          <select id="deadline-priority" className="select" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+            <option value="standard">Standard</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="deadline-lead-days">Notify how many days before? (default 3)</label>
+          <input id="deadline-lead-days" className="input" type="number" min={0} value={leadDays} onChange={(e) => setLeadDays(e.target.value)} placeholder="3" />
+        </div>
 
-      {error && <ErrorBanner>{error}</ErrorBanner>}
+        {error && <ErrorBanner>{error}</ErrorBanner>}
 
-      <div className="row">
-        <Button type="submit" loading={submitting} disabled={!title.trim() || !dueDate}>
-          {submitting ? "Saving…" : "Save"}
-        </Button>
-        <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={submitting}>
-          Cancel
-        </Button>
-      </div>
-    </form>
+        <div className="row">
+          <Button type="submit" loading={submitting} disabled={!title.trim() || !dueDate}>
+            {submitting ? "Saving…" : "Save"}
+          </Button>
+          <Button type="button" variant="ghost" onClick={close} disabled={submitting}>
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

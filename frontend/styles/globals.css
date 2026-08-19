@@ -1111,17 +1111,207 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
   .client-row, .client-empty-fade, .banner, .matter-row { animation: none; }
 }
 
-/* Master-detail layout — shared by /clients and /matters. */
-.master-detail-grid { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: var(--space-5); align-items: start; }
-.master-detail-list { min-width: 0; }
-.master-detail-panel-col { min-width: 0; position: sticky; top: calc(var(--nav-height) + var(--space-4)); animation: cal-cell-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* Master-detail layout — shared by /clients and /matters. The page itself
+   never scrolls (matches the Dashboard's single-screen shell pattern);
+   each column scrolls independently within the fixed viewport height. */
+.master-detail-shell {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--nav-height));
+  overflow: hidden;
+}
+.master-detail-grid { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: var(--space-5); flex: 1; min-height: 0; }
+/* The list column no longer scrolls as a whole — its title/filter controls
+   (master-detail-col-header) stay fixed, only the tile area beneath them
+   (master-detail-col-scroll, rendered inside MattersList/ClientsList) scrolls. */
+.master-detail-list { min-width: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.master-detail-col-header { flex-shrink: 0; }
+.master-detail-col-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+/* Same fixed-header/scrolling-body split as the list column — Matter/Client
+   name (master-detail-col-header) stays fixed, Deadlines/Documents/Chat
+   (master-detail-col-scroll) scroll beneath it. */
+.master-detail-panel-col { min-width: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; animation: cal-cell-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 @media (prefers-reduced-motion: reduce) {
   .master-detail-panel-col { animation: none; }
 }
 @media (max-width: 900px) {
+  .master-detail-shell { height: auto; overflow: visible; }
   .master-detail-grid { grid-template-columns: 1fr; }
-  .master-detail-panel-col { position: static; }
+  .master-detail-list { height: auto; overflow: visible; }
+  .master-detail-col-scroll { overflow-y: visible; flex: none; }
+  .master-detail-panel-col { height: auto; overflow: visible; }
 }
+
+/* Matter Detail panel's simplified Deadlines/Documents rows — plain text, no card tiles. */
+.panel-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border-default);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.panel-list-row:last-child { border-bottom: none; }
+a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
+.panel-list-row-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-sm); }
+.panel-file-icon { flex-shrink: 0; color: var(--color-text-tertiary); }
+.panel-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-default);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.panel-add-btn:hover:not(:disabled) { background: var(--color-bg-surface-hover); border-color: var(--color-border-strong); transform: scale(1.08); }
+.panel-add-btn:active:not(:disabled) { transform: scale(0.94); }
+.panel-add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* AI Chat (matter Chat tab) — Assistant messages: avatar on the left, neutral
+   bubble. User messages: right-aligned, no avatar (WhatsApp-style) — icon-
+   button actions, pill input bar. */
+.chat-row { display: flex; align-items: flex-start; gap: var(--space-3); }
+.chat-row-user { justify-content: flex-end; }
+.chat-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* Still --color-ai-* tokens, same as .text-ai elsewhere — the AI-origin marker
+   moved from a text label onto this avatar badge, not removed. */
+.chat-avatar-ai { background: var(--color-ai-50); color: var(--color-ai-500); }
+.chat-bubble {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface-sunken);
+  border: 1px solid var(--color-border-default);
+  font-size: var(--font-size-sm);
+}
+.chat-row-user .chat-bubble { background: var(--color-bg-selected); border-color: var(--color-primary-200); }
+.chat-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.chat-icon-btn:hover:not(:disabled) { background: var(--color-bg-surface-hover); color: var(--color-text-secondary); border-color: var(--color-border-default); }
+.chat-icon-btn[aria-pressed="true"] { color: var(--color-warning-base); }
+.chat-icon-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-full);
+  padding: var(--space-1);
+  padding-left: var(--space-4);
+  background: var(--color-bg-surface);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.chat-input-bar:focus-within { border-color: var(--color-border-focus); box-shadow: var(--focus-ring); }
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+.chat-input::placeholder { color: var(--color-text-tertiary); }
+.chat-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  border: none;
+  background: var(--color-primary-500);
+  color: var(--color-text-on-brand);
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chat-send-btn:hover:not(:disabled) { background: var(--color-primary-600); transform: scale(1.06); }
+.chat-send-btn:disabled { background: var(--color-neutral-200); color: var(--color-text-disabled); cursor: not-allowed; }
+
+/* .chat-frame's own message list (chat-messages-scroll, flex:1) scrolls within
+   this bounded height — used by the standalone Matter Detail page's in-flow
+   Chat section. The inline panel's AI Chat is full-height instead (chat-frame-full,
+   opened via the toggle icon next to the Matter name), not bounded like this. */
+.chat-frame { max-height: calc(100dvh - var(--nav-height) - 32px); }
+.chat-messages-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+
+/* Toggled full-panel AI Chat (opened via the icon next to the Matter name) —
+   fills the rest of the column instead of the viewport-relative max-height above. */
+.chat-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-ai-500);
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chat-toggle-btn:hover { background: var(--color-ai-50); border-color: var(--color-ai-200); transform: scale(1.08); }
+.chat-toggle-btn[aria-pressed="true"] { background: var(--color-ai-50); border-color: var(--color-ai-200); }
+.chat-fullpanel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.chat-frame.chat-frame-full { max-height: none; height: 100%; }
+
+/* AI Chat mode's header: Matter title/status/Client stays fixed-width on the
+   left, Documents shifts up beside it as a Chrome-tab-style strip on the
+   right (replacing the full Documents section for this view). */
+.chat-mode-header-row { display: flex; align-items: flex-start; gap: var(--space-5); }
+.chat-mode-title-block { flex-shrink: 0; max-width: 45%; }
+.doc-tabs-strip { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: hidden; padding-top: var(--space-1); }
+.doc-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1 1 0;
+  min-width: 36px;
+  max-width: 170px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  text-decoration: none;
+  overflow: hidden;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.doc-tab:hover { background: var(--color-bg-surface-hover); border-color: var(--color-border-strong); color: var(--color-text-primary); text-decoration: none; }
+.doc-tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.doc-tabs-strip .panel-add-btn, .doc-tabs-strip .chat-toggle-btn { flex-shrink: 0; }
 
 /* ==========================================================================
    Responsive

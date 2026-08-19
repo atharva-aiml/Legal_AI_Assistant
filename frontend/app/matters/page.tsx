@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { javaFetch } from "@/lib/api/java-client";
 import { NavBar } from "@/components/nav-bar";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { NewMatterModal } from "@/app/clients/[id]/new-matter-modal";
 import { MattersMasterDetail } from "./matters-master-detail";
 
 type Lawyer = { name: string; email: string };
@@ -38,22 +38,34 @@ export default async function MattersPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <NavBar lawyerName={lawyer.name} lawyerEmail={lawyer.email} />
-      <main className="page-wide">
-        <div className="page-header">
-          <div className="row">
-            <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Matters</h1>
-            <Button href="/matters/new" className="btn-hold-bg btn-xs"><span className="btn-plus-icon">+</span> New Matter</Button>
-          </div>
-        </div>
-
+      <main className="page-wide master-detail-shell" style={{ paddingTop: "var(--space-3)" }}>
+        {/* MattersMasterDetail renders its own "Matters" title (aligned with
+            the detail panel's Matter title) — this header only covers the
+            error/empty states, where that component isn't rendered at all. */}
         {!mattersRes.ok ? (
-          <ErrorBanner>Couldn&apos;t load matters — retry.</ErrorBanner>
+          <>
+            <div className="page-header" style={{ marginTop: 0, marginBottom: "var(--space-2)" }}>
+              <div className="row">
+                <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Matters</h1>
+                <NewMatterModal clients={clients} buttonClassName="btn-hold-bg btn-xs" />
+              </div>
+            </div>
+            <ErrorBanner>Couldn&apos;t load matters — retry.</ErrorBanner>
+          </>
         ) : hasAnyMattersAtAll ? (
-          <EmptyState
-            title="No matters yet"
-            body="Create a Matter from a Client's page, or start one here."
-            action={<Button href="/matters/new" className="btn-hold-bg"><span className="btn-plus-icon">+</span> New Matter</Button>}
-          />
+          <>
+            <div className="page-header" style={{ marginTop: 0, marginBottom: "var(--space-2)" }}>
+              <div className="row">
+                <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Matters</h1>
+                <NewMatterModal clients={clients} buttonClassName="btn-hold-bg btn-xs" />
+              </div>
+            </div>
+            <EmptyState
+              title="No matters yet"
+              body="Create a Matter from a Client's page, or start one here."
+              action={<NewMatterModal clients={clients} />}
+            />
+          </>
         ) : (
           <MattersMasterDetail
             matters={matters}

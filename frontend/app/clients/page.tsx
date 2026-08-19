@@ -22,8 +22,8 @@ export default async function ClientsPage() {
   return (
     <>
       <NavBar lawyerName={lawyer.name} lawyerEmail={lawyer.email} />
-      <main className="page">
-        <div className="page-header">
+      <main className="page master-detail-shell">
+        <div className="page-header" style={{ flexShrink: 0 }}>
           <div className="row">
             <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Clients</h1>
             <Button href="/clients/new" className="btn-hold-bg btn-xs"><span className="btn-plus-icon">+</span> New Client</Button>
