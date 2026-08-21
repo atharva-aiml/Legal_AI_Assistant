@@ -13,6 +13,9 @@ class ChunkResult:
     file_name: str
     page_number: int | None
     content: str
+    section: str | None = None
+    chunk_type: str = "prose"
+    element_number: int | None = None
 
 
 class SqlAlchemyChatRepository:
@@ -56,7 +59,7 @@ class SqlAlchemyChatRepository:
         with engine.connect() as conn:
             rows = conn.execute(
                 text(
-                    "SELECT dc.id, dc.document_id, d.file_name, dc.page_number, dc.content "
+                    "SELECT dc.id, dc.document_id, d.file_name, dc.page_number, dc.section, dc.chunk_type, dc.element_number, dc.content "
                     "FROM document_chunks dc JOIN documents d ON d.id = dc.document_id "
                     "WHERE d.matter_id = :matter_id AND d.status = 'ready' "
                     "ORDER BY d.created_at, dc.page_number, dc.created_at"
@@ -70,7 +73,7 @@ class SqlAlchemyChatRepository:
         with engine.connect() as conn:
             rows = conn.execute(
                 text(
-                    "SELECT dc.id, dc.document_id, d.file_name, dc.page_number, dc.content "
+                    "SELECT dc.id, dc.document_id, d.file_name, dc.page_number, dc.section, dc.chunk_type, dc.element_number, dc.content "
                     "FROM document_chunks dc JOIN documents d ON d.id = dc.document_id "
                     "WHERE d.matter_id = :matter_id AND d.status = 'ready' "
                     "ORDER BY dc.embedding <=> CAST(:query_embedding AS vector) "
@@ -91,14 +94,22 @@ class SqlAlchemyChatRepository:
         # any one matching word is enough — ts_rank still scores chunks
         # matching more words higher than chunks matching only one.
         or_query = "to_tsquery('english', replace(plainto_tsquery('english', :query)::text, ' & ', ' | '))"
+        # 2026-08-20: section is folded into the searchable text, not just
+        # dc.content — a section HEADING's own words (e.g. "Access to
+        # Justice") never appear in its body prose (extraction strips
+        # heading paragraphs out of chunk content, keeping them only as
+        # metadata), so without this a section-name question could never
+        # match via keyword search once a Matter outgrows the full-context
+        # path, no matter how relevant the section actually is.
+        searchable_text = "to_tsvector('english', coalesce(dc.section, '') || ' ' || dc.content)"
         with engine.connect() as conn:
             rows = conn.execute(
                 text(
-                    "SELECT dc.id, dc.document_id, d.file_name, dc.page_number, dc.content "
+                    "SELECT dc.id, dc.document_id, d.file_name, dc.page_number, dc.section, dc.chunk_type, dc.element_number, dc.content "
                     "FROM document_chunks dc JOIN documents d ON d.id = dc.document_id "
                     "WHERE d.matter_id = :matter_id AND d.status = 'ready' "
-                    f"AND to_tsvector('english', dc.content) @@ {or_query} "
-                    f"ORDER BY ts_rank(to_tsvector('english', dc.content), {or_query}) DESC "
+                    f"AND {searchable_text} @@ {or_query} "
+                    f"ORDER BY ts_rank({searchable_text}, {or_query}) DESC "
                     "LIMIT :top_k"
                 ),
                 {"matter_id": matter_id, "query": query, "top_k": top_k},
@@ -118,7 +129,7 @@ class SqlAlchemyChatRepository:
             return _to_message(row)
 
     def save_assistant_message(
-        self, matter_id: str, content: str, citations: list[tuple[str | None, int | None, str | None, str | None]]
+        self, matter_id: str, content: str, citations: list[tuple[str | None, int | None, str | None, str | None, str | None]]
     ) -> tuple[ChatMessage, list[Citation]]:
         with engine.begin() as conn:
             message_row = conn.execute(
@@ -132,17 +143,18 @@ class SqlAlchemyChatRepository:
             message = _to_message(message_row)
 
             created_citations = []
-            for document_id, page_number, excerpt, file_name in citations:
+            for document_id, page_number, excerpt, file_name, section in citations:
                 citation_row = conn.execute(
                     text(
-                        "INSERT INTO citations (id, chat_message_id, document_id, page_number, excerpt, created_at) "
-                        "VALUES (gen_random_uuid(), :chat_message_id, :document_id, :page_number, :excerpt, now()) "
-                        "RETURNING id, chat_message_id, document_id, page_number, excerpt, created_at"
+                        "INSERT INTO citations (id, chat_message_id, document_id, page_number, section, excerpt, created_at) "
+                        "VALUES (gen_random_uuid(), :chat_message_id, :document_id, :page_number, :section, :excerpt, now()) "
+                        "RETURNING id, chat_message_id, document_id, page_number, section, excerpt, created_at"
                     ),
                     {
                         "chat_message_id": message.id,
                         "document_id": document_id,
                         "page_number": page_number,
+                        "section": section,
                         "excerpt": excerpt,
                     },
                 ).mappings().first()
@@ -214,7 +226,7 @@ class SqlAlchemyChatRepository:
     def _citations_by_message(conn, matter_id: str) -> dict[str, list[Citation]]:
         citation_rows = conn.execute(
             text(
-                "SELECT c.id, c.chat_message_id, c.document_id, d.file_name, c.page_number, c.excerpt, c.created_at "
+                "SELECT c.id, c.chat_message_id, c.document_id, d.file_name, c.page_number, c.section, c.excerpt, c.created_at "
                 "FROM citations c JOIN chat_messages m ON m.id = c.chat_message_id "
                 # LEFT JOIN, not JOIN: REQ-027 lets a Document be deleted unconditionally,
                 # and a Citation must survive that (AI Architecture §4, "persisted permanently").
@@ -250,5 +262,6 @@ def _to_citation(row) -> Citation:
         page_number=row["page_number"],
         excerpt=row["excerpt"],
         file_name=row.get("file_name"),
+        section=row.get("section"),
         created_at=row["created_at"],
     )

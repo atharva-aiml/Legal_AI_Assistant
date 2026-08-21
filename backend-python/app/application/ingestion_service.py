@@ -25,7 +25,10 @@ class IngestionService:
                 return
 
             embeddings = self.embedder.embed([c.content for c in chunks])
-            rows = [(c.content, embedding, c.page_number) for c, embedding in zip(chunks, embeddings)]
+            rows = [
+                (c.content, embedding, c.page_number, c.metadata.section, c.metadata.chunk_type, c.metadata.element_number)
+                for c, embedding in zip(chunks, embeddings)
+            ]
 
             self.repository.save_chunks(document_id, rows)
             self.repository.mark_ready(document_id)

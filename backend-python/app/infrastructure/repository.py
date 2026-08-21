@@ -10,16 +10,24 @@ class SqlAlchemyIngestionRepository:
     Raw SQL with an explicit ::vector cast, rather than fighting an ORM's
     type system for a Postgres extension type it doesn't know natively."""
 
-    def save_chunks(self, document_id: str, chunks: list[tuple[str, list[float], int | None]]) -> None:
+    def save_chunks(self, document_id: str, chunks: list[tuple[str, list[float], int | None, str | None, str, int | None]]) -> None:
         with engine.begin() as conn:
-            for content, embedding, page_number in chunks:
+            for content, embedding, page_number, section, chunk_type, element_number in chunks:
                 vector_literal = "[" + ",".join(str(x) for x in embedding) + "]"
                 conn.execute(
                     text(
-                        "INSERT INTO document_chunks (id, document_id, page_number, content, embedding, created_at) "
-                        "VALUES (gen_random_uuid(), :document_id, :page_number, :content, CAST(:embedding AS vector), now())"
+                        "INSERT INTO document_chunks (id, document_id, page_number, section, chunk_type, element_number, content, embedding, created_at) "
+                        "VALUES (gen_random_uuid(), :document_id, :page_number, :section, :chunk_type, :element_number, :content, CAST(:embedding AS vector), now())"
                     ),
-                    {"document_id": document_id, "page_number": page_number, "content": content, "embedding": vector_literal},
+                    {
+                        "document_id": document_id,
+                        "page_number": page_number,
+                        "section": section,
+                        "chunk_type": chunk_type,
+                        "element_number": element_number,
+                        "content": content,
+                        "embedding": vector_literal,
+                    },
                 )
 
     def mark_ready(self, document_id: str) -> None:

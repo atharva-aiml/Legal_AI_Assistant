@@ -11,7 +11,7 @@ import java.util.UUID;
  * chat_messages/citations belong to Python, not Java).
  */
 public class ChatDtos {
-    public record CitationDto(UUID id, UUID documentId, String fileName, Integer pageNumber, String excerpt) {
+    public record CitationDto(UUID id, UUID documentId, String fileName, Integer pageNumber, String section, String excerpt) {
     }
 
     public record ChatMessageDto(

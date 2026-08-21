@@ -52,6 +52,51 @@ SYSTEM_PROMPT = (
     "question asks for a comprehensive result (a complete chronology, all dates, every "
     "instance of something), include every one the context actually supports — do not "
     "silently select a subset.\n\n"
+    "A context item's section/page/table/image label (see below) tells you WHERE it is "
+    "located, never WHAT it says. Never state, imply, or elaborate on a fact just "
+    "because it's the kind of thing a section with that name would typically discuss — "
+    "e.g. a section titled \"Corporate Governance Lessons\" does NOT license you to say "
+    "anything about parent-company accountability, safety standards, or communication "
+    "practices unless a context item's own body text actually says so. Every fact in "
+    "your answer must trace to a specific item's actual text, never to a theme implied "
+    "by its label or heading name.\n\n"
+    "Every specific, concrete detail present in a context item you draw from — a "
+    "monetary amount, date, percentage, calculation, statute/section number, party "
+    "name, company name, or other proper noun — must be reproduced exactly as written "
+    "in that item, never paraphrased into something vaguer, rounded, or generalized "
+    "away. \"US$470 million\" must appear as \"US$470 million\", not \"a substantial "
+    "settlement amount\"; \"the Supreme Court of India\" must be named, not \"the "
+    "reviewing court\"; a specific year or date must be given, not \"around that time\". "
+    "When answering a question about a specific section/topic, this means every such "
+    "concrete detail present in that section's real context item(s) must actually "
+    "appear in your answer — never silently drop a specific fact for a vaguer summary "
+    "sentence, and never state a specific fact (a number, date, name) that isn't "
+    "literally present in a context item, even if it sounds plausible for the topic.\n\n"
+    "When asked to \"explain\", \"detail\", or \"brief\" a specific section, page, table, "
+    "or image, you must cover EVERY context item that belongs to it — not a selective "
+    "subset. Do not decide, on your own judgment, that one item's content is \"too "
+    "generic\", \"already covered by another item\", or \"less important\" and leave it "
+    "out — if it's a real context item under that section/page/table/image, state its "
+    "actual content. A specific fact (a figure, date, or name) is never optional to "
+    "include just because a nearby item also has generic commentary — state BOTH, not "
+    "instead of each other. This document's own text sometimes repeats the same wording "
+    "under several different sections — that repetition is NOT a reason to treat a fact "
+    "as too generic, not truly specific to this section, or safe to skip: if it is the "
+    "real content of a context item under the section asked about, it must be stated, "
+    "with its own citation marker, exactly the same as if it appeared nowhere else.\n\n"
+    "Every individual sentence that states a fact needs its OWN citation marker — not "
+    "just the last sentence of a paragraph. If you write three sentences from the same "
+    "context item, all three get that item's marker (e.g. [7]); do not write several "
+    "unmarked sentences and only tag the final one, since every sentence without its "
+    "own marker is discarded as unsupported regardless of how the paragraph around it "
+    "was cited. This is checked mechanically, sentence by sentence, after you answer — "
+    "repeating the same marker on consecutive sentences is correct and expected, never "
+    "redundant. For example, if item [7] says \"The 1989 settlement required US$470 "
+    "million. The settlement was reviewed by the Supreme Court in 1991.\", write: \"The "
+    "1989 settlement required US$470 million [7]. The settlement was reviewed by the "
+    "Supreme Court in 1991 [7].\" — NOT: \"The 1989 settlement required US$470 million. "
+    "The settlement was reviewed by the Supreme Court in 1991 [7].\", which silently "
+    "loses the first, unmarked sentence (and its dollar figure) to verification.\n\n"
     "Two common request types get a structured, labeled format, in addition to full "
     "cited detail — do not shorten the substance to fit the labels, and every factual "
     "sentence inside these sections STILL needs its own citation marker, exactly like "
@@ -70,6 +115,44 @@ SYSTEM_PROMPT = (
     "in this Matter, prefer the metadata items over anything a document's own text says "
     "about itself, since a document's self-description can be wrong (e.g. a mislabeled "
     "page header).\n\n"
+    "Some numbered items begin with a parenthetical location label, e.g. "
+    "\"[7] (Page 12) ...\", \"[7] (Section: \\\"Claims processing architecture\\\") ...\", "
+    "\"[7] (Table 3) ...\", or \"[7] (Image 2) ...\" — these labels are the ONLY real, "
+    "verified page/section/table/image identifiers in this document. A section label can "
+    "be a full breadcrumb through nested headings, e.g. \"Section: \\\"53. Access to "
+    "Justice > Mass claims and vulnerable populations\\\"\" — a lawyer asking about EITHER "
+    "\"53. Access to Justice\" (the outer/parent heading) OR \"Mass claims and vulnerable "
+    "populations\" (the inner/child heading) is referring to a real part of that same "
+    "label; match against any part of the breadcrumb, not only the whole string. The "
+    "bracketed "
+    "number itself (the \"7\" in \"[7]\") is never a real page, section, table, or image "
+    "number — it is only that item's position in this list, and must never be treated "
+    "as if it matched a number the lawyer mentioned. If a lawyer asks about a specific "
+    "page number, section NUMBER (e.g. \"section 54\"), table number, or image number, "
+    "find it ONLY by matching their number against a real parenthetical label above — "
+    "never by assuming the citation index [N] sharing that digit is the answer, and "
+    "never by substituting a different item. If none exists (e.g. this document has no "
+    "page numbers at all, or no section/table/image with that exact number), say so "
+    "plainly — e.g. \"this document doesn't have page numbers\" — rather than "
+    "guessing.\n\n"
+    "A section asked about BY NAME is different from a section number, and gets more "
+    "latitude: real section names are written by a human and a lawyer's own phrasing "
+    "will rarely match one word-for-word. If no section's real name is an exact match, "
+    "but one or more sections are clearly the closest real match on the actual topic "
+    "asked about, explain the closest matching section(s) instead of refusing — but you "
+    "MUST say plainly, in your own words, that this isn't the exact section name they "
+    "used and name the real section you're using instead (e.g. \"There's no section "
+    "literally titled 'Access to Justice', but the closest matching section is 'Why "
+    "ordinary litigation was insufficient', which covers...\"). Never extend this "
+    "same latitude to a page, section NUMBER, table, or image number — those are exact "
+    "identifiers with no meaningful 'closest' one, and guessing among them is exactly "
+    "the mistake the rule above forbids.\n\n"
+    "When a question specifically asks to identify or explain what's on a page, or what "
+    "a section is/contains, name the real section (from its label) explicitly in your "
+    "answer text itself — e.g. \"Page 54 falls under Section 53. Access to Justice "
+    "(specifically 'Mass claims and vulnerable populations')\" — don't just cite it "
+    "silently and describe the content in generic terms; the section identity itself is "
+    "part of what's being asked for.\n\n"
     "Every sentence that states a fact must end with a citation marker like [1] "
     "pointing at the specific numbered item it came from; a sentence with no marker is "
     "treated as unsupported and will be discarded. Only use the fixed response "
@@ -110,8 +193,30 @@ class AskResult:
     low_confidence: bool
 
 
+def _label_for(c) -> str:
+    """The real, verified location identifiers for one chunk — page_number/
+    section/element_number were previously computed and stored (for
+    citations) but never actually shown to the model, so it had no way to
+    answer "what's on page N" / "explain section X" / "describe table N"
+    except by coincidence (see the 2026-08-20 bug: the model latched onto a
+    citation index sharing digits with a number the lawyer asked about).
+    This is the fix — put the real identifiers directly in the prompt."""
+    parts = []
+    if c.page_number is not None:
+        parts.append(f"Page {c.page_number}")
+    if getattr(c, "section", None):
+        parts.append(f'Section: "{c.section}"')
+    element_number = getattr(c, "element_number", None)
+    chunk_type = getattr(c, "chunk_type", "prose")
+    if element_number is not None and chunk_type == "table_or_list":
+        parts.append(f"Table {element_number}")
+    elif element_number is not None and chunk_type == "image":
+        parts.append(f"Image {element_number}")
+    return f"({', '.join(parts)}) " if parts else ""
+
+
 def _format_context(chunks: list, metadata: list[DocumentMetadata]) -> str:
-    parts = [f"[{i}] {c.content}" for i, c in enumerate(chunks, start=1)]
+    parts = [f"[{i}] {_label_for(c)}{c.content}" for i, c in enumerate(chunks, start=1)]
     if metadata:
         offset = len(chunks)
         parts.append(
@@ -231,20 +336,20 @@ class ChatService:
         return self._persist_answer(matter_id, verified.text, citation_data, low_confidence=low_confidence)
 
     @staticmethod
-    def _citation_for(n: int, chunks: list, metadata: list[DocumentMetadata]) -> tuple[str, int | None, str, str]:
+    def _citation_for(n: int, chunks: list, metadata: list[DocumentMetadata]) -> tuple[str, int | None, str, str, str | None]:
         if n <= len(chunks):
             c = chunks[n - 1]
-            return c.document_id, c.page_number, c.content[:300], c.file_name
+            return c.document_id, c.page_number, c.content[:300], c.file_name, c.section
         m = metadata[n - len(chunks) - 1]
-        return m.document_id, None, metadata_excerpt(m), m.file_name
+        return m.document_id, None, metadata_excerpt(m), m.file_name, None
 
     def _persist_answer(
-        self, matter_id: str, content: str, citation_data: list[tuple[str, int | None, str, str]], low_confidence: bool
+        self, matter_id: str, content: str, citation_data: list[tuple[str, int | None, str, str, str | None]], low_confidence: bool
     ) -> AskResult:
         # BR-006, enforced as a real gate on the write path — not just documented.
         pending = [
-            Citation(id="", chat_message_id="", document_id=d, page_number=p, excerpt=e, file_name=f)
-            for d, p, e, f in citation_data
+            Citation(id="", chat_message_id="", document_id=d, page_number=p, excerpt=e, file_name=f, section=s)
+            for d, p, e, f, s in citation_data
         ]
         validate_assistant_message(content, pending)
 

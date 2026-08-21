@@ -22,7 +22,7 @@ type Doc = {
   errorMessage: string | null;
   createdAt: string;
 };
-type Citation = { id: string; documentId: string | null; fileName: string | null; pageNumber: number | null; excerpt: string | null };
+type Citation = { id: string; documentId: string | null; fileName: string | null; pageNumber: number | null; section: string | null; excerpt: string | null };
 type ChatMsg = { id: string; role: "user" | "assistant"; content: string; createdAt: string; citations: Citation[]; lowConfidence: boolean | null; pinned: boolean };
 type Deadline = {
   id: string;

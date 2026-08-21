@@ -6,12 +6,15 @@ from app.domain.chat import ChatMessage, Citation, DocumentMetadata, NOT_FOUND_R
 
 
 class FakeChunk:
-    def __init__(self, id, document_id, file_name, page_number, content):
+    def __init__(self, id, document_id, file_name, page_number, content, section=None, chunk_type="prose", element_number=None):
         self.id = id
         self.document_id = document_id
         self.file_name = file_name
         self.page_number = page_number
         self.content = content
+        self.section = section
+        self.chunk_type = chunk_type
+        self.element_number = element_number
 
 
 class InMemoryChatRetrievalRepository:
@@ -71,7 +74,7 @@ class InMemoryChatMessageRepository:
         msg = ChatMessage(id=self._next_id(), matter_id=matter_id, lawyer_id=None, role="assistant", content=content)
         self.messages.append(msg)
         created = []
-        for document_id, page_number, excerpt, file_name in citations:
+        for document_id, page_number, excerpt, file_name, section in citations:
             c = Citation(
                 id=self._next_id(),
                 chat_message_id=msg.id,
@@ -79,6 +82,7 @@ class InMemoryChatMessageRepository:
                 page_number=page_number,
                 excerpt=excerpt,
                 file_name=file_name,
+                section=section,
             )
             self.citations.append(c)
             created.append(c)
@@ -177,8 +181,8 @@ def test_full_context_path_includes_every_ready_chunk_with_no_ranking_or_search_
     assert len(result.citations) == 2
     assert retrieval.vector_search_called is False
     assert retrieval.keyword_search_called is False
-    assert "[1] Page one content." in llm.calls[0]
-    assert "[2] Page two content." in llm.calls[0]
+    assert "[1] (Page 1) Page one content." in llm.calls[0]
+    assert "[2] (Page 2) Page two content." in llm.calls[0]
 
 
 def test_full_context_path_offers_metadata_numbered_after_all_content_chunks():
@@ -193,7 +197,7 @@ def test_full_context_path_offers_metadata_numbered_after_all_content_chunks():
 
     assert "11 pages" in result.message.content
     assert result.citations[0].page_number is None
-    assert "[1] Test Page 1 of 10" in llm.calls[0]
+    assert "[1] (Page 1) Test Page 1 of 10" in llm.calls[0]
     assert "[2] matter.pdf has 11 pages." in llm.calls[0]
 
 
@@ -243,6 +247,68 @@ def test_full_context_path_returns_out_of_scope_for_a_legal_strategy_question():
     assert result.message.content == OUT_OF_SCOPE_RESPONSE
     assert result.message.content != NOT_FOUND_RESPONSE
     assert result.citations == []
+
+
+# --- Context labeling (2026-08-20 fix): real location identifiers must reach the
+# LLM's prompt, not just the citation it builds after the fact — otherwise the
+# model has no way to answer "what's on page/section/table/image N" except by
+# coincidentally matching a citation index sharing digits with the question. ---
+
+
+def test_a_docx_chunk_with_no_page_number_gets_no_page_label():
+    # DOCX chunks always have page_number=None — must never fabricate a label.
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    retrieval.all_chunks_by_matter[MATTER] = [FakeChunk("c1", "doc-1", "matter.docx", None, "Some DOCX content.")]
+    llm = ScriptedLLM(["Some DOCX content is stated [1]."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    service.ask(MATTER, LAWYER, "What does it say?")
+
+    assert "[1] Some DOCX content." in llm.calls[0]
+    assert "(Page" not in llm.calls[0]
+
+
+def test_a_chunk_with_a_section_is_labeled_with_its_section_in_the_prompt():
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    retrieval.all_chunks_by_matter[MATTER] = [
+        FakeChunk("c1", "doc-1", "matter.docx", None, "Claims are processed via a fund.", section="Claims processing architecture")
+    ]
+    llm = ScriptedLLM(["Claims are processed via a fund [1]."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    service.ask(MATTER, LAWYER, "Explain the claims processing architecture section.")
+
+    assert '[1] (Section: "Claims processing architecture") Claims are processed via a fund.' in llm.calls[0]
+
+
+def test_a_table_chunk_is_labeled_with_its_table_number_not_a_page_number():
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    retrieval.all_chunks_by_matter[MATTER] = [
+        FakeChunk("c1", "doc-1", "matter.docx", None, "Row: value", section="Records", chunk_type="table_or_list", element_number=3)
+    ]
+    llm = ScriptedLLM(["The table shows a value [1]."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    service.ask(MATTER, LAWYER, "Explain table 3.")
+
+    assert '[1] (Section: "Records", Table 3) Row: value' in llm.calls[0]
+
+
+def test_an_image_chunk_is_labeled_with_its_image_number():
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    retrieval.all_chunks_by_matter[MATTER] = [
+        FakeChunk("c1", "doc-1", "matter.docx", None, "Site plan diagram text.", chunk_type="image", element_number=2)
+    ]
+    llm = ScriptedLLM(["The site plan shows the layout [1]."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    service.ask(MATTER, LAWYER, "Describe image 2.")
+
+    assert "[1] (Image 2) Site plan diagram text." in llm.calls[0]
 
 
 # --- Ranked-retrieval fallback path (only once a Matter's real corpus exceeds the cap) ---
@@ -318,7 +384,7 @@ def test_metadata_is_offered_alongside_content_chunks_numbered_after_them(monkey
     assert len(result.citations) == 1
     assert result.citations[0].document_id == "doc-1"
     assert result.citations[0].page_number is None
-    assert "[1] Test Page 1 of 10" in llm.calls[0]
+    assert "[1] (Page 1) Test Page 1 of 10" in llm.calls[0]
     assert "[2] lease.pdf has 11 pages." in llm.calls[0]
 
 
@@ -421,7 +487,7 @@ def test_generation_failure_raises_assistant_unavailable_not_a_fabricated_answer
 def test_history_returns_messages_with_their_citations():
     messages = InMemoryChatMessageRepository()
     messages.save_user_message(MATTER, LAWYER, "What is the rent?")
-    messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf")])
+    messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf", None)])
     service = make_service(messages=messages)
 
     history = service.history(MATTER)
@@ -439,7 +505,7 @@ def test_history_returns_messages_with_their_citations():
 
 def test_pinning_an_assistant_message_marks_it_pinned():
     messages = InMemoryChatMessageRepository()
-    assistant_msg, _ = messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf")])
+    assistant_msg, _ = messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf", None)])
     service = make_service(messages=messages)
 
     updated = service.toggle_pin(MATTER, assistant_msg.id, True)
@@ -450,7 +516,7 @@ def test_pinning_an_assistant_message_marks_it_pinned():
 
 def test_unpinning_clears_the_flag():
     messages = InMemoryChatMessageRepository()
-    assistant_msg, _ = messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf")])
+    assistant_msg, _ = messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf", None)])
     service = make_service(messages=messages)
     service.toggle_pin(MATTER, assistant_msg.id, True)
 
@@ -479,9 +545,9 @@ def test_pinning_a_message_from_a_different_matter_is_not_found():
 
 def test_pinned_lists_only_pinned_messages_most_pin_order_preserved():
     messages = InMemoryChatMessageRepository()
-    first, _ = messages.save_assistant_message(MATTER, "First answer [1].", [("doc-1", 1, "a", "f.pdf")])
-    messages.save_assistant_message(MATTER, "Second answer, never pinned [1].", [("doc-1", 1, "a", "f.pdf")])
-    third, _ = messages.save_assistant_message(MATTER, "Third answer [1].", [("doc-1", 1, "a", "f.pdf")])
+    first, _ = messages.save_assistant_message(MATTER, "First answer [1].", [("doc-1", 1, "a", "f.pdf", None)])
+    messages.save_assistant_message(MATTER, "Second answer, never pinned [1].", [("doc-1", 1, "a", "f.pdf", None)])
+    third, _ = messages.save_assistant_message(MATTER, "Third answer [1].", [("doc-1", 1, "a", "f.pdf", None)])
     service = make_service(messages=messages)
     service.toggle_pin(MATTER, first.id, True)
     service.toggle_pin(MATTER, third.id, True)

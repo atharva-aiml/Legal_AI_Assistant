@@ -11,6 +11,7 @@ type Citation = {
   documentId: string | null;
   fileName: string | null;
   pageNumber: number | null;
+  section: string | null;
   excerpt: string | null;
 };
 
@@ -233,6 +234,7 @@ export function ChatPanel({
                           <a className="text-citation" href={`${JAVA_API_URL_PUBLIC}/api/documents/${c.documentId}/download`} target="_blank" rel="noreferrer">
                             {c.fileName ?? "source document"}
                             {c.pageNumber != null ? `, p.${c.pageNumber}` : ""}
+                            {c.section ? `, ${c.section}` : ""}
                           </a>
                         ) : (
                           <span className="text-tertiary">{c.fileName ?? "source document"} (deleted)</span>

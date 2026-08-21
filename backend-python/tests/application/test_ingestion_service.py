@@ -28,12 +28,16 @@ class FakeEmbedder:
 
 class InMemoryRepository:
     def __init__(self):
-        self.saved_chunks: list[tuple[str, str, list[float], int | None]] = []  # (document_id, content, embedding, page_number)
+        # (document_id, content, embedding, page_number, section, chunk_type, element_number)
+        self.saved_chunks: list[tuple] = []
         self.status: dict[str, str] = {}
         self.error_messages: dict[str, str] = {}
 
     def save_chunks(self, document_id, chunks):
-        self.saved_chunks.extend((document_id, content, emb, page_number) for content, emb, page_number in chunks)
+        self.saved_chunks.extend(
+            (document_id, content, emb, page_number, section, chunk_type, element_number)
+            for content, emb, page_number, section, chunk_type, element_number in chunks
+        )
 
     def mark_ready(self, document_id):
         self.status[document_id] = "ready"
@@ -60,7 +64,7 @@ def test_ingest_extracts_chunks_embeds_and_marks_ready():
 
     assert repo.status["doc-1"] == "ready"
     assert len(repo.saved_chunks) == 1
-    _, content, embedding, page_number = repo.saved_chunks[0]
+    _, content, embedding, page_number, _, _, _ = repo.saved_chunks[0]
     assert content == "A short lease clause about rent."
     assert page_number == 1
     assert len(embedding) == 3
@@ -111,7 +115,7 @@ def test_ingest_tags_every_chunk_with_its_real_source_page_not_a_chunk_index():
     service.ingest("doc-6", "key1", "application/pdf")
 
     assert repo.status["doc-6"] == "ready"
-    page_numbers = {page_number for _, _, _, page_number in repo.saved_chunks}
+    page_numbers = {page_number for _, _, _, page_number, _, _, _ in repo.saved_chunks}
     assert page_numbers == {1, 2}
 
 

@@ -1,0 +1,1 @@
+ALTER TABLE "document_chunks" ADD COLUMN "element_number" integer;

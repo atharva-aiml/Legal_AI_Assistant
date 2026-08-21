@@ -123,6 +123,21 @@ export const documentChunks = pgTable("document_chunks", {
     .notNull()
     .references(() => documents.id, { onDelete: "cascade" }), // REQ-027: deleting a Document cleans up its chunks at the DB level
   pageNumber: integer("page_number"),
+  // DOCX-adaptive chunking (2026-08-19 spike): the deepest active heading a
+  // chunk was extracted under — DOCX's analog of pageNumber (which is always
+  // null for DOCX, since the format has no page concept at all). Null for
+  // every chunk from the plain extraction path (PDF/image/text, or a DOCX
+  // with no heading structure) — same honest-null convention as pageNumber.
+  section: text("section"),
+  // "prose" | "table_or_list" | "image" — which segmentation path produced
+  // this chunk (AI Architecture §2 addendum). Always populated (defaults to
+  // "prose" for the plain path too) since every chunk has one, unlike section.
+  chunkType: text("chunk_type").notNull().default("prose"),
+  // 2026-08-20 addendum: the Nth table, or the Nth image, in the document
+  // (document-wide, 1-indexed, counted only among tables/images that
+  // actually produced content) — lets a chunk be addressed as "Table 3" or
+  // "Image 2" the way a lawyer would ask about it. Null for prose.
+  elementNumber: integer("element_number"),
   content: text("content").notNull(),
   embedding: vector384("embedding").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -185,6 +200,12 @@ export const citations = pgTable("citations", {
   // just with document_id nulled out rather than being deleted itself.
   documentId: uuid("document_id").references(() => documents.id, { onDelete: "set null" }),
   pageNumber: integer("page_number"),
+  // DOCX-adaptive chunking's section, copied from the source chunk at
+  // citation-creation time — same permanence rule as the rest of this row
+  // (AI Architecture §4: "persisted permanently... never recomputed later"),
+  // so a citation keeps its real section even after the source Document/
+  // chunk is gone.
+  section: text("section"),
   excerpt: text("excerpt"), // quoted snippet backing the claim (BR-006)
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -17,9 +17,9 @@ class Embedder(Protocol):
 
 
 class IngestionRepository(Protocol):
-    """chunks: list of (content, embedding, page_number)."""
+    """chunks: list of (content, embedding, page_number, section, chunk_type, element_number)."""
 
-    def save_chunks(self, document_id: str, chunks: list[tuple[str, list[float], int | None]]) -> None: ...
+    def save_chunks(self, document_id: str, chunks: list[tuple[str, list[float], int | None, str | None, str, int | None]]) -> None: ...
 
     def mark_ready(self, document_id: str) -> None: ...
 
@@ -32,6 +32,9 @@ class RetrievedChunk(Protocol):
     file_name: str
     page_number: int | None
     content: str
+    section: str | None
+    chunk_type: str
+    element_number: int | None
 
 
 class ChatRetrievalRepository(Protocol):
@@ -55,7 +58,7 @@ class ChatMessageRepository(Protocol):
     def save_user_message(self, matter_id: str, lawyer_id: str, content: str) -> ChatMessage: ...
 
     def save_assistant_message(
-        self, matter_id: str, content: str, citations: list[tuple[str, int | None, str, str]]
+        self, matter_id: str, content: str, citations: list[tuple[str, int | None, str, str, str | None]]
     ) -> tuple[ChatMessage, list[Citation]]: ...
 
     def recent_messages(self, matter_id: str, limit: int) -> list[ChatMessage]: ...

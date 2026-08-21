@@ -34,6 +34,7 @@ class Citation:
     page_number: int | None
     excerpt: str | None
     file_name: str | None = None  # AI Architecture §4: "so the lawyer knows which uploaded file to check" — joined in, not a citations-table column
+    section: str | None = None  # DOCX-adaptive chunking's analog of page_number — a real citations-table column, same permanence rule
     created_at: datetime | None = None
 
 

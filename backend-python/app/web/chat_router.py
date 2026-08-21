@@ -29,6 +29,7 @@ def _citation_dict(citation: Citation) -> dict:
         "documentId": citation.document_id,
         "fileName": citation.file_name,
         "pageNumber": citation.page_number,
+        "section": citation.section,
         "excerpt": citation.excerpt,
     }
 
