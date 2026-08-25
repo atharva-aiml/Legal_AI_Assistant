@@ -68,6 +68,47 @@ class SqlAlchemyChatRepository:
             ).mappings().all()
             return [ChunkResult(**dict(r)) for r in rows]
 
+    def exact_match_chunks(self, matter_id: str, refs: list[tuple[str, int]]) -> list[ChunkResult]:
+        """RAG-Pipeline-Development-History.md gap #1: a page/section/table/
+        image number named in the question is a real, verifiable identifier,
+        not a fuzzy-relevance guess — so it's fetched with a direct filter on
+        the real column that stores it, never left to vector/keyword ranking
+        to maybe surface. Not capped at any top-K: a page or table's own
+        chunk count is naturally small and bounded, so truncating it would
+        just reintroduce the incompleteness this method exists to fix.
+        Every branch stays scoped to matter_id/status='ready', same as every
+        other retrieval method here (BR-005)."""
+        if not refs:
+            return []
+
+        base_columns = "dc.id, dc.document_id, d.file_name, dc.page_number, dc.section, dc.chunk_type, dc.element_number, dc.content"
+        base_from = "FROM document_chunks dc JOIN documents d ON d.id = dc.document_id WHERE d.matter_id = :matter_id AND d.status = 'ready'"
+
+        branches = []
+        params: dict = {"matter_id": matter_id}
+        for i, (kind, number) in enumerate(refs):
+            key = f"n_{i}"
+            if kind == "page":
+                branches.append(f"SELECT {base_columns} {base_from} AND dc.page_number = :{key}")
+                params[key] = number
+            elif kind == "table":
+                branches.append(f"SELECT {base_columns} {base_from} AND dc.element_number = :{key} AND dc.chunk_type = 'table_or_list'")
+                params[key] = number
+            elif kind == "image":
+                branches.append(f"SELECT {base_columns} {base_from} AND dc.element_number = :{key} AND dc.chunk_type = 'image'")
+                params[key] = number
+            elif kind == "section":
+                # section stores the full heading breadcrumb ("53. Access to Justice > ...",
+                # see chunk.py) — a real heading number always appears as "N." immediately
+                # after the string start or a "> " separator, spiked against real ingested
+                # breadcrumbs to confirm this doesn't false-match e.g. "1" against "10.".
+                branches.append(f"SELECT {base_columns} {base_from} AND dc.section ~ ('(^|> )' || :{key} || '\\.')")
+                params[key] = str(number)
+
+        with engine.connect() as conn:
+            rows = conn.execute(text(" UNION ".join(branches)), params).mappings().all()
+            return [ChunkResult(**dict(r)) for r in rows]
+
     def vector_search(self, matter_id: str, query_embedding: list[float], top_k: int) -> list[ChunkResult]:
         vector_literal = "[" + ",".join(str(x) for x in query_embedding) + "]"
         with engine.connect() as conn:

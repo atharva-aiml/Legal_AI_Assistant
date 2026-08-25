@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from app.application.ports import ChatLLM, ChatMessageRepository, ChatRetrievalRepository, Embedder
 from app.domain.chat import ChatMessage, Citation, DocumentMetadata, NOT_FOUND_RESPONSE, OUT_OF_SCOPE_RESPONSE, metadata_excerpt, validate_assistant_message
 from app.domain.citation_verification import verify_citations
+from app.domain.identifier_query import extract_identifier_refs
 from app.domain.retrieval import reciprocal_rank_fusion, top_n_by_score
 
 # AI Architecture §2: top 6-8 fused chunks passed to the LLM (only reached
@@ -267,17 +268,23 @@ class ChatService:
             # that simply wasn't in a relevance-ranked top-K.
             return self._generate_and_persist(matter_id, question, chunks=all_chunks, metadata=metadata, low_confidence=False)
 
+        identifier_refs = extract_identifier_refs(question)
         try:
+            # RAG-Pipeline-Development-History.md gap #1: a page/section/table/image
+            # number named in the question is a real, verifiable identifier, not a
+            # fuzzy-relevance guess — fetched directly so it can never be left out
+            # by an unlucky RRF ranking, on top of (not instead of) normal hybrid search.
+            exact_chunks = self.retrieval.exact_match_chunks(matter_id, identifier_refs) if identifier_refs else []
             query_embedding = self.embedder.embed([question])[0]
             vector_hits = self.retrieval.vector_search(matter_id, query_embedding, top_k=CANDIDATE_POOL_SIZE)
             keyword_hits = self.retrieval.keyword_search(matter_id, question, top_k=CANDIDATE_POOL_SIZE)
         except Exception as e:
             raise AssistantUnavailableError("retrieval failed") from e
 
-        by_id = {c.id: c for c in [*vector_hits, *keyword_hits]}
+        by_id = {c.id: c for c in [*exact_chunks, *vector_hits, *keyword_hits]}
         fused_scores = reciprocal_rank_fusion([c.id for c in vector_hits], [c.id for c in keyword_hits])
 
-        if not fused_scores or max(fused_scores.values()) < RELEVANCE_THRESHOLD:
+        if not exact_chunks and (not fused_scores or max(fused_scores.values()) < RELEVANCE_THRESHOLD):
             # Grounding Rule 2 still holds for document CONTENT: no chunk
             # content is ever shown to the LLM when nothing content-relevant
             # was found. Real system metadata (page counts, file names) is a
@@ -290,9 +297,18 @@ class ChatService:
                 return self._generate_and_persist(matter_id, question, chunks=[], metadata=metadata, low_confidence=False)
             return self._persist_answer(matter_id, NOT_FOUND_RESPONSE, [], low_confidence=False)
 
-        top_ids = top_n_by_score(fused_scores, CONTEXT_SIZE)
-        chunks = [by_id[chunk_id] for chunk_id in top_ids]
-        low_confidence = max(fused_scores.values()) < CONFIDENT_THRESHOLD
+        # Exact-identifier chunks are never capped at CONTEXT_SIZE — a page or
+        # table's own chunk count is naturally small and bounded, so truncating
+        # it would just reintroduce the incompleteness this fix exists to solve.
+        # Ranking only fills whatever budget is left over, for surrounding context.
+        exact_ids = {c.id for c in exact_chunks}
+        remaining_slots = max(CONTEXT_SIZE - len(exact_chunks), 0)
+        ranked_ids = [cid for cid in top_n_by_score(fused_scores, len(fused_scores)) if cid not in exact_ids][:remaining_slots]
+        chunks = exact_chunks + [by_id[chunk_id] for chunk_id in ranked_ids]
+        # A guaranteed exact match is a certain, structural hit, not a fuzzy
+        # score — it's never "low confidence" the way an ambiguous ranked
+        # match can be, even if fused_scores itself is thin or empty.
+        low_confidence = False if exact_chunks else max(fused_scores.values()) < CONFIDENT_THRESHOLD
 
         return self._generate_and_persist(matter_id, question, chunks=chunks, metadata=metadata, low_confidence=low_confidence)
 

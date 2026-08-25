@@ -10,7 +10,9 @@ from docx.oxml.ns import qn
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 from pypdf import PdfReader
+from pypdf.generic import ContentStream, IndirectObject
 
+from app.application.ports import ImageCaptioner
 from app.domain.chunk import ExtractedPage, Segment, _segments_for
 
 _ocr_reader: easyocr.Reader | None = None
@@ -33,6 +35,14 @@ class DocumentTextExtractor:
     'failed' Document rather than silently producing nothing. Only plain
     image uploads (REQ-003's "scanned images") go through OCR in V0.3."""
 
+    def __init__(self, captioner: ImageCaptioner):
+        # RAG-Pipeline-Development-History.md gap #2: only embedded
+        # diagrams (PDF/DOCX) get vision-captioned — a standalone scanned-
+        # image upload is a full document page, already well served by OCR
+        # alone, so it's left untouched (deliberate scope limit, not an
+        # oversight).
+        self.captioner = captioner
+
     def extract(self, file_bytes: bytes, mime_type: str) -> list[ExtractedPage]:
         if mime_type == "application/pdf":
             return self._extract_pdf(file_bytes)
@@ -44,8 +54,7 @@ class DocumentTextExtractor:
             return self._extract_text(file_bytes)
         raise ValueError(f"Unsupported mime type for extraction: {mime_type}")
 
-    @staticmethod
-    def _extract_pdf(file_bytes: bytes) -> list[ExtractedPage]:
+    def _extract_pdf(self, file_bytes: bytes) -> list[ExtractedPage]:
         # Adaptive (2026-08-20 spike, merged): PDF has no `paragraph.style`
         # to read the way DOCX does, but pdfplumber exposes real per-
         # character font size/weight, which a text-regex heading heuristic
@@ -57,11 +66,10 @@ class DocumentTextExtractor:
         # structure — simpler than DOCX, which had to infer them from
         # explicit page-break markers because DOCX has none of its own.
         ocr_reader = _get_ocr_reader()
-        segments = _extract_pdf_segments(file_bytes, ocr_reader)
+        segments = _extract_pdf_segments(file_bytes, ocr_reader, self.captioner)
         return [ExtractedPage(page_number=None, text="", segments=segments)]
 
-    @staticmethod
-    def _extract_docx(file_bytes: bytes) -> list[ExtractedPage]:
+    def _extract_docx(self, file_bytes: bytes) -> list[ExtractedPage]:
         # DOCX has no page concept in the file itself — pages only exist at
         # Word's render time. Treated as one page with page_number=None
         # (honest "not determinable") rather than fabricating "page 1").
@@ -78,7 +86,7 @@ class DocumentTextExtractor:
         # size-bounded packer regardless of source (one fixed output shape).
         document = docx.Document(io.BytesIO(file_bytes))
         ocr_reader = _get_ocr_reader()
-        segments = _extract_docx_segments(document, ocr_reader)
+        segments = _extract_docx_segments(document, ocr_reader, self.captioner)
         return [ExtractedPage(page_number=None, text="", segments=segments)]
 
     @staticmethod
@@ -181,6 +189,20 @@ def _rows_to_table_segments(
     return segments
 
 
+def _combine_ocr_and_caption(ocr_text: str, caption: str | None) -> str:
+    """RAG-Pipeline-Development-History.md gap #2: OCR alone is exact for
+    legible characters but loses a diagram's structure; a vision caption
+    recovers structure but is a paraphrase, not a character-exact read —
+    combining both keeps OCR's exactness (the SYSTEM_PROMPT's "reproduce
+    every concrete detail exactly" rule) while adding the structural
+    narrative OCR alone can never provide. Falls back to whichever one
+    exists; empty only when NEITHER found anything real (same "don't embed
+    an empty placeholder chunk" convention as before this fix)."""
+    if ocr_text and caption:
+        return f"{ocr_text} Visual description: {caption}"
+    return caption or ocr_text
+
+
 def _prose_segments(text: str, heading_path: tuple[str, ...], page_number: int | None) -> list[Segment]:
     # Reuses chunk.py's own paragraph/sentence splitter — the same tested
     # logic the plain (non-adaptive) path uses, just tagged with a heading
@@ -192,7 +214,7 @@ def _document_has_any_page_break(document: DocxDocumentType) -> bool:
     return any(_paragraph_has_page_break(p) for p in document.paragraphs)
 
 
-def _extract_docx_segments(document: DocxDocumentType, ocr_reader) -> list[Segment]:
+def _extract_docx_segments(document: DocxDocumentType, ocr_reader, captioner: ImageCaptioner) -> list[Segment]:
     segments: list[Segment] = []
     stack: list[tuple[int, str]] = []
     # Sequential, document-wide, 1-indexed — "Table 3"/"Image 2" the way a
@@ -203,6 +225,15 @@ def _extract_docx_segments(document: DocxDocumentType, ocr_reader) -> list[Segme
     # consume a number and leave a confusing gap in the visible sequence.
     table_count = 0
     image_count = 0
+    # RAG-Pipeline-Development-History.md gap #6 investigation surfaced an
+    # adjacent DOCX cost issue: unlike the PDF path, DOCX had no hash-based
+    # cache, so the SAME image genuinely embedded in several real paragraphs
+    # re-invoked the paid vision captioner on identical bytes every time.
+    # Cached by content hash: (content, its element_number) once computed,
+    # or None meaning "checked, nothing meaningful" -- every real occurrence
+    # still gets its own segment/page attribution, only the OCR+caption call
+    # itself is deduplicated.
+    image_content_cache: dict[bytes, tuple[str, int] | None] = {}
     # Real page number, tracked only when the document has at least one
     # explicit page-break marker — otherwise every chunk would get a
     # fabricated "page 1", which is worse than the honest `None` this
@@ -224,15 +255,24 @@ def _extract_docx_segments(document: DocxDocumentType, ocr_reader) -> list[Segme
 
             path_now = tuple(text for _, text in stack)
             for blob in _paragraph_image_blobs(block, document):
-                ocr_text = " ".join(ocr_reader.readtext(blob, detail=0)).strip()
-                if ocr_text:
-                    image_count += 1
+                img_hash = hashlib.sha256(blob).digest()
+                if img_hash not in image_content_cache:
+                    ocr_text = " ".join(ocr_reader.readtext(blob, detail=0)).strip()
+                    content = _combine_ocr_and_caption(ocr_text, captioner.caption(blob))
+                    if content:
+                        image_count += 1
+                        image_content_cache[img_hash] = (content, image_count)
+                    else:
+                        image_content_cache[img_hash] = None
+                cached = image_content_cache[img_hash]
+                if cached is not None:
+                    content, element_num = cached
                     segments.append(
-                        Segment(text=ocr_text, heading_path=path_now, chunk_type="image", element_number=image_count, page_number=page_number)
+                        Segment(text=content, heading_path=path_now, chunk_type="image", element_number=element_num, page_number=page_number)
                     )
-                # An image with no extractable text contributes nothing to
-                # text retrieval and is dropped, not embedded as an empty
-                # placeholder chunk.
+                # An image with no extractable text AND no meaningful vision
+                # caption contributes nothing to text retrieval and is
+                # dropped, not embedded as an empty placeholder chunk.
 
             if block.text.strip():
                 segments.extend(_prose_segments(block.text, path_now, page_number))
@@ -330,7 +370,43 @@ def _pdf_heading_candidate_sizes(pages_lines: list[list[_PdfLine]], body_size: f
     return sorted(sizes, reverse=True)
 
 
-def _extract_pdf_segments(file_bytes: bytes, ocr_reader) -> list[Segment]:
+def _truly_drawn_xobject_identities(page, reader: PdfReader) -> set[tuple[int, int]]:
+    """RAG-Pipeline-Development-History.md gap #6: `page.images` lists every
+    image reachable via the page's (possibly INHERITED) `/Resources`
+    dictionary, regardless of whether that page's own content stream
+    actually draws it — real PDF page trees can share one `/Resources` node
+    across many pages. The real, verifiable signal is whether this page's
+    own content stream contains a `Do` operator actually invoking that
+    XObject. Real indirect-object identity (idnum, generation) is compared,
+    not the resolved dict content — two distinct images can share identical
+    metadata (width/height/colorspace), so comparing resolved dicts would
+    give false matches; only the underlying indirect reference is reliable
+    (spike-verified 2026-08-25 against real Apex Meridian fixtures)."""
+    contents = page.get_contents()
+    if contents is None:
+        return set()
+    resources = page.get("/Resources")
+    xobjects = resources.get("/XObject") if resources else None
+    if not xobjects:
+        return set()
+    raw_xobjects = resources.raw_get("/XObject")
+    raw_xobjects = raw_xobjects.get_object() if isinstance(raw_xobjects, IndirectObject) else raw_xobjects
+    name_to_identity: dict[str, tuple[int, int]] = {}
+    for name in xobjects.keys():
+        raw_ref = raw_xobjects.raw_get(name)
+        if isinstance(raw_ref, IndirectObject):
+            name_to_identity[str(name)] = (raw_ref.idnum, raw_ref.generation)
+
+    drawn: set[tuple[int, int]] = set()
+    for operands, operator in ContentStream(contents, reader).operations:
+        if operator == b"Do" and operands:
+            identity = name_to_identity.get(str(operands[0]))
+            if identity is not None:
+                drawn.add(identity)
+    return drawn
+
+
+def _extract_pdf_segments(file_bytes: bytes, ocr_reader, captioner: ImageCaptioner) -> list[Segment]:
     segments: list[Segment] = []
     reader = PdfReader(io.BytesIO(file_bytes))
 
@@ -352,14 +428,24 @@ def _extract_pdf_segments(file_bytes: bytes, ocr_reader) -> list[Segment]:
         # stream actually draws it. A real 60-page fixture hit this hard:
         # 3 real diagrams reported 60 times each (180 total) — OCR-ing
         # every "occurrence" made ingestion take 5+ minutes and read as a
-        # hung/failed upload. Deduplicating by real content hash, across
-        # the whole document, means each unique image is OCR'd exactly
-        # once — real content is still captured, just without the
-        # 60x-redundant cost. The tradeoff: a page-inherited image gets
-        # attributed to whichever page it's first encountered on, which
-        # may not be its one true visual page — an honest, minor imprecision
-        # against a real, severe performance/availability bug.
-        seen_image_hashes: set[bytes] = set()
+        # hung/failed upload.
+        #
+        # RAG-Pipeline-Development-History.md gap #6 (2026-08-25): the fix
+        # above (dedup by content hash, keep only the first-encountered
+        # page) traded that performance bug for a correctness one — a real
+        # spike against the real Apex Meridian fixtures found the same few
+        # template images are genuinely, truly drawn on several distinct
+        # real pages each (confirmed via `_truly_drawn_xobject_identities`'s
+        # content-stream `Do`-check, not just resource-dict reachability),
+        # and every occurrence after the first was being silently dropped —
+        # not "attributed to the wrong page," genuinely absent for every
+        # page but the first. Fixed properly: OCR+caption is still computed
+        # once per unique image hash (preserving the performance fix), but
+        # now every page real Do-check confirms as a true drawing page gets
+        # its own segment sharing that cached content and `element_number`
+        # — an image resource-reachable but never actually drawn anywhere
+        # is correctly dropped entirely, same as before.
+        image_content_cache: dict[bytes, tuple[str, int] | None] = {}
 
         for pnum, page in enumerate(pdf.pages, start=1):
             tables = page.find_tables()
@@ -449,20 +535,35 @@ def _extract_pdf_segments(file_bytes: bytes, ocr_reader) -> list[Segment]:
             # end of the page, the same approximation DOCX makes implicitly
             # by tying an image to its containing paragraph's heading.
             path_now = tuple(t for _, t in stack)
+            truly_drawn = _truly_drawn_xobject_identities(reader.pages[pnum - 1], reader)
             for img in reader.pages[pnum - 1].images:
-                img_hash = hashlib.sha256(img.data).digest()
-                if img_hash in seen_image_hashes:
+                ref = img.indirect_reference
+                identity = (ref.idnum, ref.generation) if isinstance(ref, IndirectObject) else None
+                if identity is None or identity not in truly_drawn:
+                    # Resource-reachable via the (possibly inherited) page
+                    # tree, but this page's own content stream never actually
+                    # draws it — a real PDF-structure artifact, not a real
+                    # occurrence on this page.
                     continue
-                seen_image_hashes.add(img_hash)
 
-                ocr_text = " ".join(ocr_reader.readtext(img.data, detail=0)).strip()
-                if ocr_text:
-                    image_count += 1
+                img_hash = hashlib.sha256(img.data).digest()
+                if img_hash not in image_content_cache:
+                    ocr_text = " ".join(ocr_reader.readtext(img.data, detail=0)).strip()
+                    content = _combine_ocr_and_caption(ocr_text, captioner.caption(img.data))
+                    if content:
+                        image_count += 1
+                        image_content_cache[img_hash] = (content, image_count)
+                    else:
+                        image_content_cache[img_hash] = None
+                cached = image_content_cache[img_hash]
+                if cached is not None:
+                    content, element_num = cached
                     segments.append(
-                        Segment(text=ocr_text, heading_path=path_now, chunk_type="image", element_number=image_count, page_number=pnum)
+                        Segment(text=content, heading_path=path_now, chunk_type="image", element_number=element_num, page_number=pnum)
                     )
-                # An image with no extractable text contributes nothing to
-                # text retrieval and is dropped, not embedded as an empty
-                # placeholder chunk — same convention as DOCX.
+                # An image with no extractable text AND no meaningful vision
+                # caption contributes nothing to text retrieval and is
+                # dropped, not embedded as an empty placeholder chunk — same
+                # convention as DOCX.
 
     return segments

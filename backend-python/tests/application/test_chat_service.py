@@ -25,9 +25,11 @@ class InMemoryChatRetrievalRepository:
         self.keyword_order: dict[str, list[str]] = {}
         self.metadata: dict[str, list[DocumentMetadata]] = {}
         self.all_chunks_by_matter: dict[str, list[FakeChunk]] = {}
+        self.exact_match_by_matter: dict[str, dict[tuple[str, int], list[FakeChunk]]] = {}
         self.fail = False
         self.vector_search_called = False
         self.keyword_search_called = False
+        self.exact_match_refs_seen: list[tuple[str, int]] | None = None
 
     def ready_document_count(self, matter_id):
         return self.ready_documents.get(matter_id, 0)
@@ -53,6 +55,20 @@ class InMemoryChatRetrievalRepository:
         if self.fail:
             raise RuntimeError("db unreachable")
         return self.all_chunks_by_matter.get(matter_id, [])
+
+    def exact_match_chunks(self, matter_id, refs):
+        self.exact_match_refs_seen = refs
+        if self.fail:
+            raise RuntimeError("db unreachable")
+        by_ref = self.exact_match_by_matter.get(matter_id, {})
+        seen_ids = set()
+        result = []
+        for ref in refs:
+            for c in by_ref.get(ref, []):
+                if c.id not in seen_ids:
+                    seen_ids.add(c.id)
+                    result.append(c)
+        return result
 
 
 class InMemoryChatMessageRepository:
@@ -422,6 +438,84 @@ def test_low_confidence_flag_set_when_only_one_retrieval_method_found_it(monkeyp
     result = service.ask(MATTER, LAWYER, "Is there a related clause?")
 
     assert result.low_confidence is True
+
+
+# --- Exact-match identifier retrieval (RAG-Pipeline-Development-History.md gap #1) ---
+
+
+def test_a_page_asked_by_number_is_included_even_though_ranking_never_found_it(monkeypatch):
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    force_large_corpus(monkeypatch, retrieval, MATTER)
+    # Deliberately NOT in vector_order/keyword_order -> ranking alone would never surface it.
+    page54 = FakeChunk("c-page54", "doc-1", "matter.pdf", 54, "Content that lives on page 54.")
+    retrieval.exact_match_by_matter[MATTER] = {("page", 54): [page54]}
+
+    llm = ScriptedLLM(["Page 54 says the content that lives there [1]."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    result = service.ask(MATTER, LAWYER, "What is on page 54?")
+
+    assert retrieval.exact_match_refs_seen == [("page", 54)]
+    assert "[1] (Page 54) Content that lives on page 54." in llm.calls[0]
+    assert result.low_confidence is False
+    assert len(result.citations) == 1
+
+
+def test_exact_match_bypasses_the_not_found_refusal_even_with_no_fused_score_hits(monkeypatch):
+    # No vector/keyword hits at all (fused_scores empty) would normally trigger
+    # NOT_FOUND_RESPONSE without calling the LLM -- a real, verified exact
+    # identifier match must still get through, since it's a provable hit.
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    force_large_corpus(monkeypatch, retrieval, MATTER)
+    table3 = FakeChunk("c-table3", "doc-1", "matter.pdf", 17, "Row: settlement amount.", chunk_type="table_or_list", element_number=3)
+    retrieval.exact_match_by_matter[MATTER] = {("table", 3): [table3]}
+
+    llm = ScriptedLLM(["Table 3 shows the settlement amount [1]."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    result = service.ask(MATTER, LAWYER, "What does table 3 say?")
+
+    assert result.message.content != NOT_FOUND_RESPONSE
+    assert len(llm.calls) == 1
+
+
+def test_exact_matches_are_never_truncated_by_context_size(monkeypatch):
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    force_large_corpus(monkeypatch, retrieval, MATTER)
+    # More exact matches than CONTEXT_SIZE (8) -- all of them belong to the
+    # same asked-about section and must all still reach the prompt.
+    section_chunks = [
+        FakeChunk(f"c-sec-{i}", "doc-1", "matter.pdf", i, f"Section content {i}.", section="53. Access to Justice")
+        for i in range(10)
+    ]
+    retrieval.exact_match_by_matter[MATTER] = {("section", 53): section_chunks}
+
+    llm = ScriptedLLM(["Section 53 covers ten points " + " ".join(f"[{i+1}]" for i in range(10)) + "."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    service.ask(MATTER, LAWYER, "Explain section 53 in full.")
+
+    for i in range(10):
+        assert f"[{i + 1}] (Page {i}, Section: \"53. Access to Justice\") Section content {i}." in llm.calls[0]
+
+
+def test_a_question_with_no_identifier_never_calls_exact_match(monkeypatch):
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    force_large_corpus(monkeypatch, retrieval, MATTER)
+    retrieval.chunks["c1"] = FakeChunk("c1", "doc-1", "lease.pdf", 1, "The monthly rent is Rs. 85,000.")
+    retrieval.vector_order[MATTER] = ["c1"]
+    retrieval.keyword_order[MATTER] = ["c1"]
+
+    llm = ScriptedLLM(["The monthly rent is Rs. 85,000 [1]."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    service.ask(MATTER, LAWYER, "What is the monthly rent?")
+
+    assert retrieval.exact_match_refs_seen is None, "no identifier in the question -> exact_match_chunks should never be called"
 
 
 def test_an_uncited_answer_triggers_one_corrective_regeneration(monkeypatch):

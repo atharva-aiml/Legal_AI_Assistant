@@ -12,6 +12,19 @@ class TextExtractor(Protocol):
     def extract(self, file_bytes: bytes, mime_type: str) -> list[ExtractedPage]: ...
 
 
+class ImageCaptioner(Protocol):
+    """RAG-Pipeline-Development-History.md gap #2: OCR alone either finds
+    nothing (a textless diagram is silently dropped, genuinely absent from
+    the corpus) or returns a lossy bag of disconnected words (a flowchart's
+    actual structure/relationships are lost). A vision-capable caption
+    recovers both. Returns None when the image is blank/decorative with
+    nothing meaningful to describe (never fabricated content for real
+    nothing) — this is the resolved form of the model's own NO_CONTENT
+    sentinel, decided once at the infrastructure boundary."""
+
+    def caption(self, image_bytes: bytes) -> str | None: ...
+
+
 class Embedder(Protocol):
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
@@ -52,6 +65,14 @@ class ChatRetrievalRepository(Protocol):
     def document_metadata(self, matter_id: str) -> list[DocumentMetadata]: ...
 
     def all_ready_chunks(self, matter_id: str) -> list: ...
+
+    def exact_match_chunks(self, matter_id: str, refs: list[tuple[str, int]]) -> list:
+        """refs: (kind, number) pairs from app.domain.identifier_query,
+        kind in {"page", "section", "table", "image"}. Guarantees every
+        chunk that really carries that identifier is returned (not subject
+        to ranking or a top-K cutoff) — the fix for RAG-Pipeline-Development-
+        History.md gap #1."""
+        ...
 
 
 class ChatMessageRepository(Protocol):

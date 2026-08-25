@@ -5,6 +5,7 @@ from app.infrastructure.embedding import SentenceTransformerEmbedder
 from app.infrastructure.extraction import DocumentTextExtractor
 from app.infrastructure.repository import SqlAlchemyIngestionRepository
 from app.infrastructure.storage import LocalFileStorage
+from app.infrastructure.vision import OpenAIImageCaptioner
 
 router = APIRouter()
 
@@ -25,7 +26,7 @@ def ingest(document_id: str):
 
     service = IngestionService(
         storage=LocalFileStorage(),
-        extractor=DocumentTextExtractor(),
+        extractor=DocumentTextExtractor(captioner=OpenAIImageCaptioner()),
         embedder=SentenceTransformerEmbedder(),
         repository=repository,
     )
