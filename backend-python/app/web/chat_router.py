@@ -74,6 +74,7 @@ def ask(matter_id: str, body: dict):
 
     response = _message_dict(result.message, result.citations)
     response["lowConfidence"] = result.low_confidence
+    response["fullContext"] = result.full_context
     return response
 
 

@@ -1,18 +1,32 @@
 package com.legalai.backend.application.matter;
 
+import com.legalai.backend.application.chat.ChatMessageRepository;
 import com.legalai.backend.application.deadline.DeadlineRepository;
+import com.legalai.backend.application.document.DocumentRepository;
+import com.legalai.backend.application.document.DocumentService;
+import com.legalai.backend.application.document.IngestionTrigger;
+import com.legalai.backend.application.document.StorageService;
+import com.legalai.backend.application.matterview.MatterViewRepository;
 import com.legalai.backend.domain.Deadline;
 import com.legalai.backend.domain.DeadlinePriority;
 import com.legalai.backend.domain.DeadlineStatus;
+import com.legalai.backend.domain.Document;
+import com.legalai.backend.domain.DocumentStatus;
 import com.legalai.backend.domain.InvalidMatterException;
 import com.legalai.backend.domain.Matter;
+import com.legalai.backend.domain.MatterView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -90,6 +104,11 @@ class MatterServiceTest {
             }
             return Optional.empty();
         }
+
+        @Override
+        public boolean delete(UUID firmId, UUID id) {
+            return matters.removeIf(m -> m.firmId().equals(firmId) && m.id().equals(id));
+        }
     }
 
     /** Minimal fake — MatterService only ever calls listByMatter on this port. */
@@ -125,10 +144,114 @@ class MatterServiceTest {
         public List<DeadlineWithFirm> listAllOpenWithFirm() {
             throw new UnsupportedOperationException("not needed for MatterServiceTest");
         }
+
+        @Override
+        public void deleteByMatter(UUID matterId) {
+            deadlines.removeIf(d -> d.matterId().equals(matterId));
+        }
+    }
+
+    static class InMemoryDocumentRepository implements DocumentRepository {
+        final List<Document> documents = new ArrayList<>();
+
+        @Override
+        public Document create(Document.NewDocument r) {
+            Document doc = new Document(UUID.randomUUID(), r.matterId(), r.uploadedBy(), r.fileName(), r.storageKey(),
+                    r.mimeType(), r.sizeBytes(), DocumentStatus.uploading, false, null, null, Instant.now());
+            documents.add(doc);
+            return doc;
+        }
+
+        @Override
+        public Document createDraft(Document.NewDraftDocument r) {
+            throw new UnsupportedOperationException("not needed for MatterServiceTest");
+        }
+
+        @Override
+        public List<Document> listByMatter(UUID firmId, UUID matterId) {
+            return documents.stream().filter(d -> d.matterId().equals(matterId)).toList();
+        }
+
+        @Override
+        public Optional<Document> findById(UUID firmId, UUID id) {
+            return documents.stream().filter(d -> d.id().equals(id)).findFirst();
+        }
+
+        @Override
+        public void updateStatus(UUID id, DocumentStatus status, String errorMessage) {
+            // not needed for MatterServiceTest
+        }
+
+        @Override
+        public boolean delete(UUID firmId, UUID id) {
+            return documents.removeIf(d -> d.id().equals(id));
+        }
+    }
+
+    static class InMemoryStorageService implements StorageService {
+        final Map<String, byte[]> files = new HashMap<>();
+
+        @Override
+        public String store(String originalFileName, InputStream content) throws IOException {
+            String key = UUID.randomUUID().toString();
+            files.put(key, content.readAllBytes());
+            return key;
+        }
+
+        @Override
+        public InputStream retrieve(String storageKey) {
+            return new ByteArrayInputStream(files.get(storageKey));
+        }
+
+        @Override
+        public void delete(String storageKey) {
+            files.remove(storageKey);
+        }
+    }
+
+    static class NoopIngestionTrigger implements IngestionTrigger {
+        @Override
+        public void triggerIngestion(UUID documentId) {
+            // not needed for MatterServiceTest
+        }
+    }
+
+    /** Minimal fake — MatterService only ever calls deleteByMatter on this port. */
+    static class InMemoryChatMessageRepository implements ChatMessageRepository {
+        /** matterId -> how many "rows" are seeded for it, standing in for real chat_messages content Java never reads. */
+        final Map<UUID, Integer> messageCountByMatter = new HashMap<>();
+
+        @Override
+        public void deleteByMatter(UUID matterId) {
+            messageCountByMatter.remove(matterId);
+        }
+    }
+
+    static class InMemoryMatterViewRepository implements MatterViewRepository {
+        final List<MatterView> views = new ArrayList<>();
+
+        @Override
+        public void recordView(UUID lawyerId, UUID matterId) {
+            views.add(new MatterView(lawyerId, matterId, Instant.now()));
+        }
+
+        @Override
+        public List<MatterView> listRecentlyViewed(UUID lawyerId, int limit) {
+            throw new UnsupportedOperationException("not needed for MatterServiceTest");
+        }
+
+        @Override
+        public void deleteByMatter(UUID matterId) {
+            views.removeIf(v -> v.matterId().equals(matterId));
+        }
     }
 
     private InMemoryMatterRepository repo;
     private InMemoryDeadlineRepository deadlineRepo;
+    private InMemoryDocumentRepository documentRepo;
+    private InMemoryStorageService storage;
+    private InMemoryChatMessageRepository chatMessageRepo;
+    private InMemoryMatterViewRepository matterViewRepo;
     private MatterService service;
     private final UUID firm1 = UUID.randomUUID();
     private final UUID firm2 = UUID.randomUUID();
@@ -139,7 +262,12 @@ class MatterServiceTest {
     void setUp() {
         repo = new InMemoryMatterRepository();
         deadlineRepo = new InMemoryDeadlineRepository();
-        service = new MatterService(repo, deadlineRepo);
+        documentRepo = new InMemoryDocumentRepository();
+        storage = new InMemoryStorageService();
+        chatMessageRepo = new InMemoryChatMessageRepository();
+        matterViewRepo = new InMemoryMatterViewRepository();
+        DocumentService documentService = new DocumentService(documentRepo, storage, new NoopIngestionTrigger());
+        service = new MatterService(repo, deadlineRepo, documentService, chatMessageRepo, matterViewRepo);
     }
 
     @Test
@@ -304,5 +432,83 @@ class MatterServiceTest {
         Matter created = service.create(firm1, client1, "Private");
         service.close(firm1, created.id());
         assertTrue(service.reopen(firm2, created.id()).isEmpty());
+    }
+
+    // --- deleteCascade: irreversible per-Matter cascade delete ---
+
+    @Test
+    void deleteCascadeRemovesTheMatterItself() {
+        Matter created = service.create(firm1, client1, "No children");
+
+        assertTrue(service.deleteCascade(firm1, created.id()));
+
+        assertTrue(service.get(firm1, created.id()).isEmpty());
+        assertTrue(repo.matters.isEmpty());
+    }
+
+    @Test
+    void deleteCascadeDeletesEachDocumentThroughDocumentService_soStoredFilesAreCleanedUpToo() {
+        Matter matter = service.create(firm1, client1, "Matter With Docs");
+        Document doc1 = documentRepo.create(new Document.NewDocument(matter.id(), UUID.randomUUID(), "a.pdf", "keyA", "application/pdf", 10));
+        Document doc2 = documentRepo.create(new Document.NewDocument(matter.id(), UUID.randomUUID(), "b.pdf", "keyB", "application/pdf", 20));
+        storage.files.put("keyA", "hello".getBytes());
+        storage.files.put("keyB", "world".getBytes());
+
+        service.deleteCascade(firm1, matter.id());
+
+        assertTrue(documentRepo.documents.isEmpty(), "Document rows must be gone");
+        assertFalse(storage.files.containsKey("keyA"), "stored file for doc1 must be cleaned up, not orphaned");
+        assertFalse(storage.files.containsKey("keyB"), "stored file for doc2 must be cleaned up, not orphaned");
+    }
+
+    @Test
+    void deleteCascadeRemovesDeadlinesForTheMatter() {
+        Matter matter = service.create(firm1, client1, "Matter With Deadlines");
+        deadlineRepo.deadlines.add(new Deadline(UUID.randomUUID(), matter.id(), "File response", LocalDate.now(), DeadlineStatus.open, DeadlinePriority.standard, 3, Instant.now(), Instant.now()));
+
+        service.deleteCascade(firm1, matter.id());
+
+        assertTrue(deadlineRepo.deadlines.isEmpty());
+    }
+
+    @Test
+    void deleteCascadeRemovesChatHistoryForTheMatter() {
+        Matter matter = service.create(firm1, client1, "Matter With Chat");
+        chatMessageRepo.messageCountByMatter.put(matter.id(), 5);
+
+        service.deleteCascade(firm1, matter.id());
+
+        assertFalse(chatMessageRepo.messageCountByMatter.containsKey(matter.id()));
+    }
+
+    @Test
+    void deleteCascadeRemovesMatterViewsForTheMatter() {
+        Matter matter = service.create(firm1, client1, "Matter With Recent Views");
+        matterViewRepo.recordView(UUID.randomUUID(), matter.id());
+
+        service.deleteCascade(firm1, matter.id());
+
+        assertTrue(matterViewRepo.views.isEmpty());
+    }
+
+    @Test
+    void deleteCascadeReturnsFalseForAnUnknownMatter() {
+        assertFalse(service.deleteCascade(firm1, UUID.randomUUID()));
+    }
+
+    @Test
+    void deleteCascadeOnAMatterOutsideTheCallersFirmReturnsFalseAndDeletesNothing_BR008() {
+        Matter matter = service.create(firm1, client1, "Private Matter");
+        Document doc = documentRepo.create(new Document.NewDocument(matter.id(), UUID.randomUUID(), "a.pdf", "keyA", "application/pdf", 10));
+        storage.files.put("keyA", "hello".getBytes());
+        deadlineRepo.deadlines.add(new Deadline(UUID.randomUUID(), matter.id(), "File response", LocalDate.now(), DeadlineStatus.open, DeadlinePriority.standard, 3, Instant.now(), Instant.now()));
+
+        // firm2 attempting to delete firm1's Matter — must 404-equivalent (false), not leak existence via a partial delete.
+        assertFalse(service.deleteCascade(firm2, matter.id()));
+
+        assertTrue(service.get(firm1, matter.id()).isPresent(), "the Matter must be untouched");
+        assertTrue(documentRepo.documents.stream().anyMatch(d -> d.id().equals(doc.id())), "its Document must be untouched");
+        assertTrue(storage.files.containsKey("keyA"), "its stored file must be untouched");
+        assertFalse(deadlineRepo.deadlines.isEmpty(), "its Deadlines must be untouched");
     }
 }

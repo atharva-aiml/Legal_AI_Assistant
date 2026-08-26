@@ -34,6 +34,11 @@ class MatterViewServiceTest {
                     .limit(limit)
                     .toList();
         }
+
+        @Override
+        public void deleteByMatter(UUID matterId) {
+            views.removeIf(v -> v.matterId().equals(matterId));
+        }
     }
 
     private InMemoryMatterViewRepository repo;

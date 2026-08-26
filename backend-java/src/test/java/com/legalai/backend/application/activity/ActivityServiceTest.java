@@ -96,6 +96,11 @@ class ActivityServiceTest {
         public List<DeadlineWithFirm> listAllOpenWithFirm() {
             throw new UnsupportedOperationException("not needed for ActivityServiceTest");
         }
+
+        @Override
+        public void deleteByMatter(UUID matterId) {
+            throw new UnsupportedOperationException("not needed for ActivityServiceTest");
+        }
     }
 
     static class NoopStorageService implements StorageService {
@@ -169,7 +174,7 @@ class ActivityServiceTest {
 
         documentRepo.documents.add(new Document(UUID.randomUUID(), matterId, UUID.randomUUID(), "lease.pdf", "key", "application/pdf", 100, DocumentStatus.ready, false, null, null, t1));
         chatGateway.historyResponse = new ChatHistoryDto(List.of(
-                new ChatMessageDto(UUID.randomUUID(), matterId, UUID.randomUUID(), "user", "What is the rent?", t2, List.of(), null, false)
+                new ChatMessageDto(UUID.randomUUID(), matterId, UUID.randomUUID(), "user", "What is the rent?", t2, List.of(), null, null, false)
         ));
         deadlineRepo.deadlines.add(new Deadline(UUID.randomUUID(), matterId, "File response", LocalDate.now(), DeadlineStatus.complete, DeadlinePriority.standard, 3, t1, t3));
 
@@ -187,8 +192,8 @@ class ActivityServiceTest {
     @Test
     void onlyUserChatMessagesBecomeEntries_notAssistantAnswers() {
         chatGateway.historyResponse = new ChatHistoryDto(List.of(
-                new ChatMessageDto(UUID.randomUUID(), matterId, UUID.randomUUID(), "user", "What is the rent?", Instant.now(), List.of(), null, false),
-                new ChatMessageDto(UUID.randomUUID(), matterId, null, "assistant", "Rs. 85,000 [1].", Instant.now(), List.of(), false, false)
+                new ChatMessageDto(UUID.randomUUID(), matterId, UUID.randomUUID(), "user", "What is the rent?", Instant.now(), List.of(), null, null, false),
+                new ChatMessageDto(UUID.randomUUID(), matterId, null, "assistant", "Rs. 85,000 [1].", Instant.now(), List.of(), false, true, false)
         ));
 
         List<ActivityEntry> entries = service.forMatter(firmId, matterId);

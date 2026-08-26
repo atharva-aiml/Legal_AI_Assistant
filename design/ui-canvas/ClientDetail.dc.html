@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+body { margin:0; background:#F7F8F9; font-family:'Inter',-apple-system,'Segoe UI',sans-serif; color:#1B1F24; }
+a { color:#2A6E9C; text-decoration:none; }
+.cd-btn-secondary { height:36px; padding:0 14px; border-radius:8px; border:1px solid #E1E4E8; background:#FFFFFF; color:#313740; font-size:13px; font-weight:500; }
+.cd-btn-secondary:hover { background:#EEF0F2; border-color:#C9CED4; }
+.cd-btn-secondary:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.cd-btn-primary { height:36px; padding:0 14px; border-radius:8px; border:none; background:#1F567C; color:#FFFFFF; font-size:13px; font-weight:500; }
+.cd-btn-primary:hover { background:#17415F; }
+.cd-btn-primary:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.cd-field-label { font-size:12px; font-weight:500; color:#838C97; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:5px; }
+.cd-field-value { font-size:14px; color:#1B1F24; line-height:1.5; }
+.cd-row { display:flex; align-items:center; gap:16px; padding:15px 12px; border-radius:10px; text-decoration:none; color:inherit; }
+.cd-row:hover { background:#FFFFFF; text-decoration:none; }
+.cd-row:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.cd-badge { font-size:11px; font-weight:500; padding:2px 10px; border-radius:9999px; border:1px solid; display:inline-block; flex-shrink:0; }
+@keyframes cd-shimmer { 0% { background-position:-200px 0; } 100% { background-position:200px 0; } }
+.cd-skel { border-radius:6px; background:linear-gradient(90deg,#EEF0F2 25%,#E1E4E8 37%,#EEF0F2 63%); background-size:400px 100%; animation:cd-shimmer 1.4s ease infinite; }
+@media (prefers-reduced-motion: reduce) { .cd-skel { animation:none; background:#EEF0F2; } }
+</style>
+</helmet>
+
+<div style="min-height:100dvh; display:flex; flex-direction:column;">
+  <dc-import name="NavBar" active="clients" lawyer-name="Vikram Desai" initials="VD" has-notif="{{true}}" hint-size="100%,64px"></dc-import>
+
+  <div style="max-width:900px; width:100%; margin:0 auto; padding:32px 32px 64px; box-sizing:border-box; flex:1;">
+
+    <a href="#" style="font-size:13px; color:#838C97; margin-bottom:16px; display:inline-block;">← Clients</a>
+
+    <sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+      <div style="text-align:center; padding:100px 24px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B3261E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <p style="font-size:14px; color:#7C1A14; margin:0 0 16px;">Couldn&#39;t load this client.</p>
+        <button type="button" class="cd-btn-primary">Retry</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isNotError}}" hint-placeholder-val="{{true}}">
+    <div>
+
+      <sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+        <div class="cd-skel" style="height:32px; width:280px; margin-bottom:32px;"></div>
+        <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:28px; margin-bottom:44px;">
+          <div class="cd-skel" style="height:44px;"></div>
+          <div class="cd-skel" style="height:44px;"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="cd-skel" style="height:52px;"></div>
+          <div class="cd-skel" style="height:52px;"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isNotLoading}}" hint-placeholder-val="{{true}}">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; gap:16px;">
+          <h1 style="font-size:26px; font-weight:700; margin:0; letter-spacing:-0.01em;">Meridian Textiles Pvt. Ltd.</h1>
+          <button type="button" class="cd-btn-secondary">Edit</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:28px; margin-bottom:44px;">
+          <div>
+            <div class="cd-field-label">Contact</div>
+            <div class="cd-field-value">Rekha Iyer, General Counsel<br/>rekha.iyer@meridiantextiles.in<br/>+91 98450 12233</div>
+          </div>
+          <div>
+            <div class="cd-field-label">Notes</div>
+            <div class="cd-field-value">Prefers email over calls. Billing contact is separate — copy accounts@meridiantextiles.in on invoices.</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h2 style="font-size:16px; font-weight:600; margin:0;">Matters ({{matterCount}})</h2>
+          <button type="button" class="cd-btn-primary">+ New Matter</button>
+        </div>
+
+        <sc-if value="{{hasMatters}}" hint-placeholder-val="{{true}}">
+          <div style="display:flex; flex-direction:column;">
+            <sc-for list="{{matters}}" as="m" hint-placeholder-count="3">
+              <a href="#" class="cd-row">
+                <span style="flex:1; min-width:0; font-size:14px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{m.title}}</span>
+                <span class="cd-badge" style="background:{{m.badgeBg}}; border-color:{{m.badgeBorder}}; color:{{m.badgeText}};">{{m.badgeLabel}}</span>
+                <span style="font-size:12px; color:#838C97; width:110px; text-align:right; flex-shrink:0;">{{m.lastActivity}}</span>
+              </a>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{hasNoMatters}}" hint-placeholder-val="{{false}}">
+          <div style="text-align:center; padding:56px 24px;">
+            <p style="font-size:14px; color:#626B76; margin:0 0 20px;">This client doesn&#39;t have any Matters yet.</p>
+            <button type="button" class="cd-btn-primary" style="margin:0 auto;">+ New Matter</button>
+          </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"state":{"editor":"enum","default":"Populated","options":["Populated","No matters yet","Loading","Error"],"section":"Screen state"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const state = this.props.state ?? 'Populated';
+    const isLoading = state === 'Loading';
+    const isError = state === 'Error';
+    const hasNoMatters = state === 'No matters yet';
+
+    const allMatters = [
+      { title: 'Meridian Textiles — Trademark Opposition', badgeLabel: 'Open', badgeBg: '#E5F3F4', badgeBorder: '#A9D6DA', badgeText: '#0A5960', lastActivity: 'Active 2h ago' },
+      { title: 'Meridian Textiles — Vendor NDA Review', badgeLabel: 'Open', badgeBg: '#E5F3F4', badgeBorder: '#A9D6DA', badgeText: '#0A5960', lastActivity: 'Active 4d ago' },
+      { title: 'Meridian Textiles — GST Refund Advisory', badgeLabel: 'Closed', badgeBg: '#EEF0F2', badgeBorder: '#C9CED4', badgeText: '#48505A', lastActivity: 'Closed Jun 2026' },
+    ];
+    const matters = hasNoMatters ? [] : allMatters;
+
+    return {
+      isLoading, isNotLoading: !isLoading,
+      isError, isNotError: !isError,
+      hasNoMatters, hasMatters: !hasNoMatters,
+      matterCount: matters.length,
+      matters,
+    };
+  }
+}
+</script>
+</body>
+</html>

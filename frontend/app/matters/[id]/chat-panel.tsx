@@ -22,6 +22,7 @@ type ChatMsg = {
   createdAt: string;
   citations: Citation[];
   lowConfidence: boolean | null;
+  fullContext: boolean | null;
   pinned: boolean;
 };
 
@@ -148,6 +149,7 @@ export function ChatPanel({
       createdAt: new Date().toISOString(),
       citations: [],
       lowConfidence: null,
+      fullContext: null,
       pinned: false,
     };
     setMessages((prev) => [...prev, optimisticUserMessage]);
@@ -224,6 +226,13 @@ export function ChatPanel({
                 {m.lowConfidence && (
                   <div className="text-xs text-tertiary" style={{ marginTop: "var(--space-2)" }}>
                     This answer is based on limited matching content — verify against the source documents.
+                  </div>
+                )}
+                {m.fullContext === false && (
+                  <div className="text-xs text-tertiary" style={{ marginTop: "var(--space-2)" }}>
+                    This Matter is large — this answer used the most relevant sections rather than the
+                    entire document. For a guaranteed complete answer, ask about a specific page, section,
+                    table, or image.
                   </div>
                 )}
                 {m.citations.length > 0 && (

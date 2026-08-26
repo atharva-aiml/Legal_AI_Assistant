@@ -182,6 +182,26 @@ public class MatterController {
         }
     }
 
+    /**
+     * Irreversible, cascade-deletes this Matter's own Documents/Deadlines/
+     * chat-history/matter_views — see MatterService.deleteCascade for the
+     * full deletion order. Same policy as ClientController's cascade
+     * delete, just scoped to one Matter instead of a whole Client's
+     * Matters. No confirmation step here; that's the frontend's
+     * responsibility before this endpoint is ever called.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable UUID id, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+
+        boolean deleted = matterService.deleteCascade(lawyer.get().firmId(), id);
+        if (!deleted) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Matter not found"));
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     private ResponseEntity<?> unauthenticated() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiError.unauthenticated());
     }

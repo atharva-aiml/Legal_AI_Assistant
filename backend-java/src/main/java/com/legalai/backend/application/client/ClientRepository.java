@@ -15,4 +15,7 @@ public interface ClientRepository {
 
     /** I-17: caller (ClientService) has already validated the fields — empty Optional means the Client wasn't found (BR-008). */
     Optional<Client> update(UUID firmId, UUID id, String name, String contactEmail, String contactPhone, String notes);
+
+    /** Cascade-delete only — caller (ClientService.deleteCascade) has already removed every child row. Returns false if not found for this firm (BR-008). */
+    boolean delete(UUID firmId, UUID id);
 }

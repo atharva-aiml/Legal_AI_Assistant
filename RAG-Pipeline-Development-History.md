@@ -256,6 +256,7 @@ Two real bugs, found by the user's own real upload attempt — the first a sever
 | 2026-08-25 | `element_number`-to-printed-numbering bridging — investigated, deliberately not built; zero real fixtures show the gap causing a wrong answer (gap #3 deferred with evidence) | Investigation |
 | 2026-08-25 | Real-Postgres regression test for `keyword_search`'s OR-flip, spike-validated against a temporarily-reverted AND-only version (gap #4 closed) | Bug-class audit + test |
 | 2026-08-25 | PDF images attributed to every real drawing page via content-stream `Do`-check (not just the first-encountered page); DOCX image captioning cached by content hash too (gap #6 closed) | Bug fix |
+| 2026-08-25 | `FULL_CONTEXT_CHAR_CAP` raised 150K→400K (real spike against the real API); `full_context` transparency signal threaded Python→Java→frontend (gap #7 closed) | Architecture change + new feature |
 
 ---
 
@@ -310,9 +311,26 @@ Two real bugs, found by the user's own real upload attempt — the first a sever
 
 ---
 
-## Still-open, as of today (not yet addressed by any dated fix above)
+## Phase 8 — Raised the full-context ceiling with real evidence, and told the lawyer which regime answered (2026-08-25)
 
-These surfaced from directly reading the current code, not from the historical log — they're gaps the timeline above hasn't reached yet, not regressions. This is the working list — numbered so each one can be discussed and fixed individually, in order, starting from the next session.
+**Closes gap #7's immediate real case, and its transparency half unconditionally.** A real Matter already live in this database (`ad5872f7…`, 378 chunks) had already grown to 353,336 chars — 2.35x over the original 150,000-char `FULL_CONTEXT_CHAR_CAP` — silently losing its completeness guarantee for any broad question, with nothing telling the lawyer.
+
+**Spiked the real ceiling before picking a number, per standing rule — three real API calls, not assumption:**
+1. A real 712,694-char prompt **failed** with the API's own error: *"This model's maximum context length is 128000 tokens. However, your messages resulted in 142,948 tokens."* — confirms gpt-4o-mini's real limit and this corpus's real ~4.99 chars/token ratio directly, not from memory.
+2. A real ~464K-char full prompt (content + formatting + system prompt) succeeded in 37.1s.
+3. A real ~416K-char full prompt succeeded in 10.6s — **not a clean function of size** (real latency here is dominated by API variance, not a smooth curve), so the exact number was chosen for real margin under the hard 128K-token ceiling (~34% headroom) rather than chasing a latency curve that didn't scale predictably.
+
+**Built:** `FULL_CONTEXT_CHAR_CAP` raised from 150,000 to **400,000** chars — comfortably covers the real Matter that motivated this (353,336 chars) with ~13% headroom to grow further before falling back to ranked retrieval again. Separately, `AskResult` gained a `full_context: bool` field (mirroring `low_confidence`'s exact shape and ephemeral-not-persisted lifecycle) — `True` when every Ready chunk was genuinely considered, `False` when ranked retrieval was used instead. Threaded end-to-end: Python's `/chat/{matter_id}` response (`fullContext`) → Java's `ChatMessageDto` (pure pass-through, Jackson auto-maps by field name, same as `lowConfidence`) → the frontend's `ChatMsg` type and chat panel, which now shows a note — *"This Matter is large — this answer used the most relevant sections rather than the entire document..."* — whenever `fullContext === false`, mirroring the existing `lowConfidence` note's exact styling and always-conditional-on-the-worse-case convention.
+
+**Deliberately not built:** a map-reduce/chunked multi-call architecture for arbitrarily large corpora (the only way to get a true completeness guarantee at *any* scale). No real Matter in this database needs it — even the largest (353,336 chars) fit in a single real call — so building it now would be exactly the speculative engineering CLAUDE.md warns against. Logged as a deliberately deferred option, same posture as gap #3; revisit only if a real Matter is ever observed to genuinely exceed the new 400K cap.
+
+**Live-verified through the real production code path:** the real Matter (`ad5872f7…`, 353,336 chars) now correctly takes the full-context branch (`total_chars <= FULL_CONTEXT_CHAR_CAP` is now `True`, was `False` before this fix) — a live question through the real `ChatService` returned `full_context=True`, `low_confidence=False`, and a fully correct, fully cited structured matter-overview answer. `pnpm typecheck` clean; all 108 backend-python tests and the full Java test suite pass (5 positional `ChatMessageDto` test constructions updated for the new field). Verification chat messages cleaned up afterward.
+
+---
+
+## Working list status (updated 2026-08-25)
+
+These originally surfaced from directly reading the current code, not from the historical log — gaps the timeline hadn't reached yet, not regressions. As of 2026-08-25, all 7 have been investigated and closed one way or another: #1, #2 (Tier 1), #4, #6, and #7 shipped real, live-verified code changes; #3 was investigated and deliberately deferred with real evidence (zero real fixtures show it causing a wrong answer); #2's Tier 2 (persisted image bytes + live vision Q&A) and #7's map-reduce option were likewise deliberately deferred — real, bigger engineering with no real Matter currently needing them. None were closed by assumption — every one has a real spike, a real audit, or a real live verification behind the outcome recorded below.
 
 **1 — No exact-match retrieval for numbered identifiers.** ~~Page/table/image/section-number questions rely on vector or keyword search accidentally surfacing the right chunk once a Matter exceeds the 150K-char full-context cap.~~ **Closed 2026-08-25 — see Phase 5 above.** Clause/paragraph/exhibit/annexure numbers remain unaddressed (no storage column exists for them yet), deliberately deferred rather than folded into this fix.
 
@@ -332,7 +350,7 @@ These surfaced from directly reading the current code, not from the historical l
 
 **6 — PDF images can be attributed to the wrong page.** ~~A real quirk of PDF's shared-`/Resources` page tree means one embedded image can appear to belong to every page in the file; the current fix (Section 4.7 above) deduplicates by content hash and keeps whichever page it's first encountered on — an honest approximation, not a guarantee that's the image's true visual page.~~ **Closed 2026-08-25 — see Phase 7 above.** Turned out worse than "wrong page": every real occurrence after the first was silently dropped entirely, not mis-cited. Now uses real content-stream `Do`-operator verification to attribute every real drawing page correctly, at no extra OCR/vision cost.
 
-**7 — Document-wide questions can't guarantee completeness once a Matter is large.** For small Matters, full-context sends the entire document to the LLM, so "explain the entire document" can genuinely consider all content. For large Matters (over the 150K-char cap), the system switches to top-K hybrid retrieval, which only sends the highest-ranked ~8 chunks. So the exact same question — "explain the entire document," "summarize everything," "list every clause" — gets a structurally different guarantee depending purely on corpus size: complete below the cap, best-effort above it. Nothing currently tells the lawyer which regime their answer came from.
+**7 — Document-wide questions can't guarantee completeness once a Matter is large.** ~~For small Matters, full-context sends the entire document to the LLM, so "explain the entire document" can genuinely consider all content. For large Matters (over the 150K-char cap), the system switches to top-K hybrid retrieval, which only sends the highest-ranked ~8 chunks. So the exact same question — "explain the entire document," "summarize everything," "list every clause" — gets a structurally different guarantee depending purely on corpus size: complete below the cap, best-effort above it. Nothing currently tells the lawyer which regime their answer came from.~~ **Closed 2026-08-25 — see Phase 8 above** for every real Matter today (cap raised 150K→400K with real spike evidence) and unconditionally going forward (a `fullContext` signal now tells the lawyer which regime answered, however large a Matter eventually grows). True unlimited completeness at any scale would need a map-reduce architecture — deliberately not built; no real Matter needs it yet.
 
 ---
 

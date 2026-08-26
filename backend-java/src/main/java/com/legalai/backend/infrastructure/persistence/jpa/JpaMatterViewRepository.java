@@ -25,4 +25,7 @@ public interface JpaMatterViewRepository extends JpaRepository<MatterViewEntity,
     void upsertView(@Param("lawyerId") UUID lawyerId, @Param("matterId") UUID matterId);
 
     List<MatterViewEntity> findByLawyerIdOrderByViewedAtDesc(UUID lawyerId, Pageable pageable);
+
+    /** Spring Data derived delete query — cascade-delete cleanup only, see MatterViewRepository.deleteByMatter. */
+    void deleteByMatterId(UUID matterId);
 }

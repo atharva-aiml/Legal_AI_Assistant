@@ -11,4 +11,7 @@ public interface MatterViewRepository {
 
     /** Most-recently-viewed first, capped at limit. */
     List<MatterView> listRecentlyViewed(UUID lawyerId, int limit);
+
+    /** Cascade-delete only — caller (ClientService.deleteCascade) has already verified Matter ownership. */
+    void deleteByMatter(UUID matterId);
 }

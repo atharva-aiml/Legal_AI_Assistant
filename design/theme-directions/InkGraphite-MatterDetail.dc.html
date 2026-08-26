@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+:root {
+  --color-neutral-0:#FFFFFF; --color-neutral-50:#F7F8F9; --color-neutral-100:#EEF0F2; --color-neutral-200:#E1E4E8;
+  --color-neutral-300:#C9CED4; --color-neutral-400:#A7AEB8; --color-neutral-500:#838C97; --color-neutral-600:#626B76;
+  --color-neutral-700:#48505A; --color-neutral-800:#313740; --color-neutral-900:#1B1F24;
+  --color-primary-50:#F4F4F5; --color-primary-100:#E4E4E7; --color-primary-200:#D4D4D8; --color-primary-300:#A1A1AA;
+  --color-primary-400:#71717A; --color-primary-500:#27272A; --color-primary-600:#18181B; --color-primary-700:#09090B;
+  --color-bg-page:#F7F8F9; --color-bg-surface:#FFFFFF; --color-bg-surface-hover:#EEF0F2; --color-bg-surface-sunken:#EEF0F2;
+  --color-bg-selected:#EFEBFB;
+  --color-text-primary:#1B1F24; --color-text-secondary:#626B76; --color-text-tertiary:#838C97; --color-text-disabled:#A7AEB8;
+  --color-text-link:#27272A; --color-text-link-hover:#18181B;
+  --color-border-default:#E1E4E8; --color-border-strong:#C9CED4; --color-border-focus:#27272A;
+  --font-family-ui:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-heading:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --radius-sm:6px; --radius-md:8px; --radius-lg:10px; --radius-full:9999px;
+  --shadow-sm: 0 1px 2px rgba(26,32,41,0.06);
+  --shadow-md: 0 4px 12px rgba(26,32,41,0.10);
+  --shadow-lg: 0 16px 40px rgba(26,32,41,0.18);
+  --focus-ring: 0 0 0 3px #D4D4D8;
+  
+  --color-success-base:#1E7B4D; --color-success-bg:#E8F5EE; --color-success-border:#B7E0C7; --color-success-text:#145C39;
+  --color-warning-base:#B5790A; --color-warning-bg:#FBF1DE; --color-warning-border:#EDCB86; --color-warning-text:#7A5107;
+  --color-error-base:#B3261E; --color-error-bg:#FBEAE9; --color-error-border:#E9B3AF; --color-error-text:#7C1A14;
+  --color-info-base:#0E7C86; --color-info-bg:#E5F3F4; --color-info-border:#A9D6DA; --color-info-text:#0A5960;
+  --color-ai-50:#EFEBF7; --color-ai-200:#CFC3E8; --color-ai-500:#5B4B9E; --color-ai-700:#40356F;
+  --color-citation-50:#E7F0EF; --color-citation-200:#B9D6D3; --color-citation-500:#3E6E6B; --color-citation-700:#2A4C4A;
+  --color-text-on-brand:#FFFFFF;
+  --font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+}
+
+* { box-sizing: border-box; }
+body { margin:0; background:var(--color-bg-page); color:var(--color-text-primary); font-family:var(--font-family-ui); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,h4 { font-family:var(--font-family-heading); font-weight:600; color:var(--color-text-primary); margin:0; line-height:1.25; }
+a { color:var(--color-text-link); text-decoration:none; }
+a:hover { color:var(--color-text-link-hover); text-decoration:underline; }
+.mono { font-family:var(--font-family-mono); font-size:0.925em; }
+.text-tertiary { color:var(--color-text-tertiary); }
+.text-secondary { color:var(--color-text-secondary); }
+.text-sm { font-size:14px; }
+.text-xs { font-size:12px; }
+
+/* Nav */
+.app-nav { display:flex; align-items:center; gap:24px; height:64px; padding:0 32px; background:var(--color-bg-surface); border-bottom:1px solid var(--color-border-default); }
+.app-nav-brand { font-family:var(--font-family-heading); font-weight:600; font-size:19px; color:var(--color-text-primary); }
+.app-nav-links { display:flex; align-items:center; gap:16px; }
+.app-nav-link { display:inline-flex; align-items:center; height:36px; font-size:14px; color:var(--color-text-tertiary); border-bottom:2px solid transparent; }
+.app-nav-link-active { color:var(--color-text-primary); font-weight:600; border-bottom-color:var(--color-primary-600); }
+.app-nav-search { flex:1; max-width:280px; position:relative; }
+.app-nav-search-input { width:100%; height:38px; padding:0 12px 0 40px; border-radius:var(--radius-full); border:1px solid var(--color-border-default); background:var(--color-bg-surface); color:var(--color-text-primary); font-family:var(--font-family-ui); font-size:14px; }
+.app-nav-search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-neutral-500); display:flex; }
+.app-nav-actions { display:flex; align-items:center; gap:12px; margin-left:auto; }
+.nav-icon-btn { width:36px; height:36px; border-radius:var(--radius-full); display:inline-flex; align-items:center; justify-content:center; color:var(--color-text-secondary); background:none; border:none; }
+.nav-avatar { width:32px; height:32px; border-radius:50%; background:var(--color-primary-500); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 16px; border-radius:var(--radius-md); border:1px solid transparent; font-family:var(--font-family-ui); font-weight:500; font-size:14px; cursor:pointer; white-space:nowrap; }
+.btn-primary { background:var(--color-primary-500); color:#fff; border-color:var(--color-primary-500); }
+.btn-secondary { background:var(--color-bg-surface); color:var(--color-neutral-800); border-color:var(--color-border-default); }
+
+/* Cards */
+.card { background:var(--color-bg-surface); border:1px solid var(--color-border-default); border-radius:var(--radius-lg); padding:16px; box-shadow:var(--shadow-sm); }
+
+/* Badges */
+.badge { display:inline-flex; align-items:center; gap:4px; border-radius:var(--radius-full); padding:2px 8px; font-size:12px; font-weight:500; border:1px solid; line-height:1.4; white-space:nowrap; }
+.badge-info { background:var(--color-info-bg); border-color:var(--color-info-border); color:var(--color-info-text); }
+.badge-neutral { background:var(--color-neutral-100); border-color:var(--color-neutral-300); color:var(--color-neutral-700); }
+.badge-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+/* Dashboard */
+.page-wrap { max-width:1400px; margin:0 auto; padding:32px 32px 48px; }
+.dashboard-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:28px; }
+.stat-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:24px; }
+.stat-card { background:var(--color-bg-surface); border:1px solid var(--color-border-default); border-radius:var(--radius-lg); padding:12px; box-shadow:var(--shadow-sm); }
+.stat-icon-badge { width:28px; height:28px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.dashboard-grid { display:grid; grid-template-columns:1fr 360px; gap:16px; }
+.section-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+.active-matters-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.active-matter-card { display:flex; flex-direction:column; gap:8px; }
+.active-matter-title { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.active-matter-meta { font-size:12px; color:var(--color-text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.recent-row { display:flex; align-items:center; gap:10px; padding:8px 12px; }
+.matter-avatar { width:28px; height:28px; border-radius:50%; background:var(--color-primary-100); color:var(--color-primary-700); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; flex-shrink:0; }
+.cal-strip { display:flex; gap:8px; }
+.cal-day-cell { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px; border-radius:var(--radius-md); background:var(--color-bg-surface-sunken); border:1px solid transparent; }
+.cal-day-today { border-color:var(--color-primary-500); background:var(--color-bg-selected); }
+.cal-day-label { font-size:10px; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.04em; }
+.cal-day-number { font-family:var(--font-family-heading); font-weight:600; font-size:16px; }
+.cal-dot { width:4px; height:4px; border-radius:50%; background:var(--color-warning-base); }
+
+/* Matter Detail / Chat */
+.chat-header-row { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; padding:24px 32px 16px; border-bottom:1px solid var(--color-border-default); }
+.doc-tab { display:flex; align-items:center; gap:4px; padding:6px 10px; border-radius:var(--radius-md); background:var(--color-bg-surface); border:1px solid var(--color-border-default); color:var(--color-text-secondary); font-size:12px; }
+.chat-toggle-btn { width:28px; height:28px; border-radius:var(--radius-full); border:1px solid var(--color-ai-200); background:var(--color-ai-50); color:var(--color-ai-500); display:inline-flex; align-items:center; justify-content:center; }
+.chat-body { padding:20px 32px; display:flex; flex-direction:column; gap:16px; }
+.chat-row { display:flex; align-items:flex-start; gap:12px; }
+.chat-row-user { justify-content:flex-end; }
+.chat-avatar { width:28px; height:28px; border-radius:50%; background:var(--color-ai-50); color:var(--color-ai-500); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.chat-bubble { padding:12px; border-radius:var(--radius-lg); background:var(--color-bg-surface-sunken); border:1px solid var(--color-border-default); font-size:14px; max-width:560px; }
+.chat-row-user .chat-bubble { background:var(--color-bg-selected); border-color:var(--color-primary-200); }
+.text-citation { color:var(--color-citation-500); }
+.text-citation:hover { color:var(--color-citation-700); }
+.chat-input-bar { display:flex; align-items:center; gap:8px; border:1px solid var(--color-border-default); border-radius:var(--radius-full); padding:6px 6px 6px 16px; background:var(--color-bg-surface); margin:0 32px 24px; }
+.chat-input-text { flex:1; font-size:14px; color:var(--color-text-tertiary); }
+.chat-send-btn { width:34px; height:34px; border-radius:var(--radius-full); background:var(--color-primary-500); color:#fff; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pin-icon { color:var(--color-warning-base); }
+
+/* Login */
+.login-wrap { min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; }
+.login-brand { margin-bottom:32px; text-align:center; }
+.login-card { width:100%; max-width:380px; display:flex; flex-direction:column; gap:16px; }
+.field { display:flex; flex-direction:column; gap:8px; }
+.field-label { font-size:14px; font-weight:500; color:var(--color-text-secondary); }
+.input { width:100%; height:40px; padding:0 12px; border-radius:var(--radius-sm); border:1px solid var(--color-border-default); background:var(--color-bg-surface-sunken); color:var(--color-text-primary); font-family:var(--font-family-ui); font-size:14px; }
+
+</style>
+</helmet>
+<div>
+
+<nav class="app-nav">
+  <span class="app-nav-brand">Legal AI Assistant</span>
+  <div class="app-nav-links">
+    <a href="#" class="app-nav-link">Dashboard</a>
+    <a href="#" class="app-nav-link">Clients</a>
+    <a href="#" class="app-nav-link app-nav-link-active">Matters</a>
+  </div>
+  <div class="app-nav-search">
+    <span class="app-nav-search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+    <input class="app-nav-search-input" placeholder="Search Clients &amp; Matters…" />
+  </div>
+  <div class="app-nav-actions">
+    <button type="button" class="nav-icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></button>
+    <span class="nav-avatar">VD</span>
+  </div>
+</nav>
+<div class="chat-header-row">
+  <div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <h1 style="font-size:24px;">Meridian Textiles — Trademark Opposition</h1>
+      <span class="badge badge-info"><span class="badge-dot"></span>Open</span>
+    </div>
+    <div class="text-tertiary text-sm" style="margin-top:8px;">Client: <a href="#">Meridian Textiles Pvt. Ltd.</a></div>
+  </div>
+  <div style="display:flex; align-items:center; gap:6px; flex:1; justify-content:flex-end; flex-wrap:wrap;">
+    <span class="doc-tab"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg><span>Opposition_Notice.pdf</span></span>
+    <span class="doc-tab"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg><span>TM_Application_2024.pdf</span></span>
+    <span class="doc-tab"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg><span>Evidence_Bundle.docx</span></span>
+    <button type="button" class="chat-toggle-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.4 2.9 1.1 4.9 2.1 5.9s3 1.7 5.9 2.1c-2.9.4-4.9 1.1-5.9 2.1s-1.7 3-2.1 5.9c-.4-2.9-1.1-4.9-2.1-5.9S6.9 11 4 10.6c2.9-.4 4.9-1.1 5.9-2.1S11.6 5.4 12 2.5Z"/></svg></button>
+  </div>
+</div>
+
+<div class="chat-body">
+  <div class="chat-row">
+    <span class="chat-avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.4 2.9 1.1 4.9 2.1 5.9s3 1.7 5.9 2.1c-2.9.4-4.9 1.1-5.9 2.1s-1.7 3-2.1 5.9c-.4-2.9-1.1-4.9-2.1-5.9S6.9 11 4 10.6c2.9-.4 4.9-1.1 5.9-2.1S11.6 5.4 12 2.5Z"/></svg></span>
+    <div>
+      <div class="chat-bubble" style="white-space:pre-wrap;">The opposition was filed under Section 21 of the Trade Marks Act on the grounds of deceptive similarity to an earlier registered mark. The counter-statement is due within two months of receiving the notice.</div>
+      <div style="margin-top:8px; display:flex; align-items:center; gap:4px;"><span class="pin-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z"/></svg></span></div>
+      <div class="text-xs mono" style="margin-top:8px;">
+        <a href="#" class="text-citation">Opposition_Notice.pdf, p.2, Grounds for Opposition</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-row chat-row-user">
+    <div class="chat-bubble">When is the counter-statement due exactly?</div>
+  </div>
+
+  <div class="chat-row">
+    <span class="chat-avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.4 2.9 1.1 4.9 2.1 5.9s3 1.7 5.9 2.1c-2.9.4-4.9 1.1-5.9 2.1s-1.7 3-2.1 5.9c-.4-2.9-1.1-4.9-2.1-5.9S6.9 11 4 10.6c2.9-.4 4.9-1.1 5.9-2.1S11.6 5.4 12 2.5Z"/></svg></span>
+    <div>
+      <div class="chat-bubble" style="white-space:pre-wrap;">Two months from the date of receipt of the opposition notice, which was 14 March — so the counter-statement is due by 14 May.</div>
+      <div class="text-xs mono" style="margin-top:8px;">
+        <a href="#" class="text-citation">Opposition_Notice.pdf, p.1, Filing Details</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chat-input-bar">
+  <span class="chat-input-text">Send a message</span>
+  <span class="chat-send-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg></span>
+</div></div>
+</x-dc>
+</body>
+</html>

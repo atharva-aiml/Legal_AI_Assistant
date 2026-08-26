@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+body { margin:0; background:#F7F8F9; font-family:'Inter',-apple-system,'Segoe UI',sans-serif; color:#1B1F24; }
+a { color:#2A6E9C; text-decoration:none; } a:hover { color:#1F567C; text-decoration:underline; }
+.db-btn-primary { height:38px; padding:0 16px; border-radius:8px; border:none; background:#1F567C; color:#FFFFFF; font-size:13px; font-weight:500; display:inline-flex; align-items:center; gap:6px; }
+.db-btn-primary:hover { background:#17415F; }
+.db-btn-primary:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.db-btn-secondary { height:38px; padding:0 16px; border-radius:8px; border:1px solid #E1E4E8; background:#FFFFFF; color:#313740; font-size:13px; font-weight:500; display:inline-flex; align-items:center; gap:6px; }
+.db-btn-secondary:hover { background:#EEF0F2; border-color:#C9CED4; }
+.db-btn-secondary:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.db-row { display:flex; align-items:center; gap:14px; padding:12px 4px; border-radius:8px; text-decoration:none; color:inherit; }
+.db-row:hover { background:#EEF0F2; text-decoration:none; }
+.db-row:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.db-see-all { font-size:13px; font-weight:500; color:#2A6E9C; }
+.db-retry { font-size:13px; font-weight:500; color:#2A6E9C; background:none; border:none; padding:0; cursor:pointer; }
+@keyframes db-shimmer { 0% { background-position:-200px 0; } 100% { background-position:200px 0; } }
+.db-skel { border-radius:6px; background:linear-gradient(90deg,#EEF0F2 25%,#E1E4E8 37%,#EEF0F2 63%); background-size:400px 100%; animation:db-shimmer 1.4s ease infinite; }
+@media (prefers-reduced-motion: reduce) { .db-skel { animation:none; background:#EEF0F2; } }
+</style>
+</helmet>
+
+<div style="min-height:100dvh; display:flex; flex-direction:column;">
+  <dc-import name="NavBar" active="dashboard" lawyer-name="Vikram Desai" initials="VD" has-notif="{{true}}" hint-size="100%,64px"></dc-import>
+
+  <div style="max-width:1400px; width:100%; margin:0 auto; padding:40px 32px 64px; box-sizing:border-box; flex:1;">
+
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:36px;">
+      <div>
+        <h1 style="font-size:30px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;">Good afternoon, Vikram</h1>
+        <p style="font-size:15px; color:#626B76; margin:0;">Here&#39;s what needs attention today.</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="db-btn-secondary">+ New Client</button>
+        <button type="button" class="db-btn-primary">+ New Matter</button>
+      </div>
+    </div>
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+      <div style="text-align:center; padding:80px 24px; max-width:420px; margin:0 auto;">
+        <div style="width:48px; height:48px; border-radius:9999px; background:#EAF1F6; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#17415F" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h2 style="font-size:18px; font-weight:600; margin:0 0 8px;">Add your first client to get started</h2>
+        <p style="font-size:14px; color:#626B76; margin:0 0 24px; line-height:1.5;">Every Matter and document lives under a Client. Create one to begin building your firm&#39;s workspace.</p>
+        <button type="button" class="db-btn-primary" style="margin:0 auto;">+ New Client</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isNotEmpty}}" hint-placeholder-val="{{true}}">
+    <div>
+      <sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+        <div style="display:flex; gap:48px; margin-bottom:44px; flex-wrap:wrap;">
+          <div class="db-skel" style="width:120px; height:52px;"></div>
+          <div class="db-skel" style="width:120px; height:52px;"></div>
+          <div class="db-skel" style="width:120px; height:52px;"></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{isNotLoading}}" hint-placeholder-val="{{true}}">
+        <div style="display:flex; gap:56px; margin-bottom:44px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="width:40px; height:40px; border-radius:9999px; background:#EAF1F6; display:flex; align-items:center; justify-content:center; color:#2A6E9C; flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5a1 1 0 0 0 1 1h5"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 13h6M9 17h6"/></svg>
+            </div>
+            <div>
+              <div style="font-size:24px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums;">4</div>
+              <div style="font-size:13px; color:#626B76;">Active matters</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="width:40px; height:40px; border-radius:9999px; background:#FBF1DE; display:flex; align-items:center; justify-content:center; color:#B5790A; flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3v3M16 3v3"/><path d="M8.5 13.5h2M8.5 17h2M13.5 13.5h2M13.5 17h2"/></svg>
+            </div>
+            <div>
+              <div style="font-size:24px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums;">3</div>
+              <div style="font-size:13px; color:#626B76;">Upcoming deadlines</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="width:40px; height:40px; border-radius:9999px; background:#E5F3F4; display:flex; align-items:center; justify-content:center; color:#0E7C86; flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+            </div>
+            <div>
+              <div style="font-size:24px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums;">2</div>
+              <div style="font-size:13px; color:#626B76;">Unread notifications</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:56px; align-items:start;">
+
+        <section aria-labelledby="dl-heading">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+            <h2 id="dl-heading" style="font-size:18px; font-weight:600; margin:0;">Upcoming deadlines</h2>
+            <a href="#" class="db-see-all">See all</a>
+          </div>
+
+          <sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+            <div style="display:flex; flex-direction:column; gap:16px; padding-top:14px;">
+              <div class="db-skel" style="height:44px;"></div>
+              <div class="db-skel" style="height:44px;"></div>
+              <div class="db-skel" style="height:44px;"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isDeadlinesError}}" hint-placeholder-val="{{false}}">
+            <div style="display:flex; align-items:center; gap:10px; padding:20px 4px; font-size:13px; color:#7C1A14;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B3261E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+              <span>Couldn&#39;t load deadlines.</span>
+              <button type="button" class="db-retry">Retry</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isDeadlinesOk}}" hint-placeholder-val="{{true}}">
+            <div style="display:flex; flex-direction:column;">
+              <sc-for list="{{deadlines}}" as="d" hint-placeholder-count="4">
+                <a href="#" class="db-row">
+                  <span style="width:8px; height:8px; border-radius:9999px; background:{{d.dotColor}}; flex-shrink:0;"></span>
+                  <span style="flex:1; min-width:0;">
+                    <span style="display:block; font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{d.title}}</span>
+                    <span style="display:block; font-size:12px; color:#838C97; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{d.matter}}</span>
+                  </span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500; color:{{d.dueColor}}; flex-shrink:0;">{{d.due}}</span>
+                </a>
+              </sc-for>
+            </div>
+          </sc-if>
+        </section>
+
+        <section aria-labelledby="am-heading">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+            <h2 id="am-heading" style="font-size:18px; font-weight:600; margin:0;">Active matters</h2>
+            <a href="#" class="db-see-all">See all</a>
+          </div>
+
+          <sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+            <div style="display:flex; flex-direction:column; gap:16px; padding-top:14px;">
+              <div class="db-skel" style="height:44px;"></div>
+              <div class="db-skel" style="height:44px;"></div>
+              <div class="db-skel" style="height:44px;"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isNotLoading}}" hint-placeholder-val="{{true}}">
+            <div style="display:flex; flex-direction:column;">
+              <sc-for list="{{matters}}" as="m" hint-placeholder-count="4">
+                <a href="#" class="db-row">
+                  <span style="flex:1; min-width:0;">
+                    <span style="display:block; font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{m.title}}</span>
+                    <span style="display:block; font-size:12px; color:#838C97; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{m.client}}</span>
+                  </span>
+                  <span style="font-size:11px; font-weight:500; padding:2px 9px; border-radius:9999px; background:{{m.badgeBg}}; color:{{m.badgeText}}; flex-shrink:0;">{{m.badgeLabel}}</span>
+                </a>
+              </sc-for>
+            </div>
+          </sc-if>
+        </section>
+
+      </div>
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"state":{"editor":"enum","default":"Populated","options":["Populated","First-time empty","Loading","Deadlines widget error"],"section":"Screen state"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const state = this.props.state ?? 'Populated';
+    const isEmpty = state === 'First-time empty';
+    const isLoading = state === 'Loading';
+    const isDeadlinesError = state === 'Deadlines widget error';
+
+    const deadlines = [
+      { title: 'File written statement', matter: 'Meridian Textiles — Trademark Opposition', due: 'In 3d', dueColor: '#7A5107', dotColor: '#B5790A' },
+      { title: 'Reply to legal notice', matter: 'Priya Nair — Tenancy Dispute', due: 'Overdue 1d', dueColor: '#7C1A14', dotColor: '#B3261E' },
+      { title: 'Submit discovery documents', matter: 'Sundaram Logistics — Supply Breach', due: 'In 12d', dueColor: '#838C97', dotColor: '#0E7C86' },
+      { title: 'Client review call', matter: 'Meridian Textiles — Trademark Opposition', due: 'In 15d', dueColor: '#838C97', dotColor: '#0E7C86' },
+    ];
+
+    const matters = [
+      { title: 'Meridian Textiles — Trademark Opposition', client: 'Meridian Textiles Pvt. Ltd.', badgeLabel: 'Open', badgeBg: '#E5F3F4', badgeText: '#0A5960' },
+      { title: 'Priya Nair — Tenancy Dispute', client: 'Priya Nair', badgeLabel: 'Open', badgeBg: '#E5F3F4', badgeText: '#0A5960' },
+      { title: 'Sundaram Logistics — Supply Breach', client: 'Sundaram Logistics Pvt. Ltd.', badgeLabel: 'Open', badgeBg: '#E5F3F4', badgeText: '#0A5960' },
+      { title: 'Kabir Malhotra — Will & Probate', client: 'Kabir Malhotra', badgeLabel: 'Closed', badgeBg: '#EEF0F2', badgeText: '#48505A' },
+    ];
+
+    return {
+      isEmpty, isNotEmpty: !isEmpty,
+      isLoading, isNotLoading: !isLoading,
+      isDeadlinesError, isDeadlinesOk: !isDeadlinesError,
+      deadlines, matters,
+    };
+  }
+}
+</script>
+</body>
+</html>

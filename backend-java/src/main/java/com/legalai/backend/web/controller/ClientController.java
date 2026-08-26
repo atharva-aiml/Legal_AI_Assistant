@@ -77,6 +77,25 @@ public class ClientController {
         }
     }
 
+    /**
+     * Irreversible, cascade-deletes every Matter under this Client (and
+     * every Document/Deadline/chat-message/matter_view under each of
+     * those) — see ClientService.deleteCascade for the full deletion
+     * order. No confirmation step here; that's the frontend's
+     * responsibility before this endpoint is ever called.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable UUID id, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+
+        boolean deleted = clientService.deleteCascade(lawyer.get().firmId(), id);
+        if (!deleted) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Client not found"));
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     private ResponseEntity<?> unauthenticated() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiError.unauthenticated());
     }

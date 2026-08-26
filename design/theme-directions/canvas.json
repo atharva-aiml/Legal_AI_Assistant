@@ -1,0 +1,164 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Ink & Graphite — Dashboard"
+    },
+    {
+      "file": "InkGraphite-MatterDetail.dc.html",
+      "x": 0,
+      "y": 1040,
+      "w": 1440,
+      "h": 900,
+      "title": "Ink & Graphite — Matter Detail"
+    },
+    {
+      "file": "InkGraphite-Login.dc.html",
+      "x": 0,
+      "y": 2080,
+      "w": 1440,
+      "h": 900,
+      "title": "Ink & Graphite — Login"
+    },
+    {
+      "file": "NavyChancery-Dashboard.dc.html",
+      "x": 1560,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Navy Chancery — Dashboard"
+    },
+    {
+      "file": "NavyChancery-MatterDetail.dc.html",
+      "x": 1560,
+      "y": 1040,
+      "w": 1440,
+      "h": 900,
+      "title": "Navy Chancery — Matter Detail"
+    },
+    {
+      "file": "NavyChancery-Login.dc.html",
+      "x": 1560,
+      "y": 2080,
+      "w": 1440,
+      "h": 900,
+      "title": "Navy Chancery — Login"
+    },
+    {
+      "file": "CobaltClarity-Dashboard.dc.html",
+      "x": 3120,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Cobalt Clarity — Dashboard"
+    },
+    {
+      "file": "CobaltClarity-MatterDetail.dc.html",
+      "x": 3120,
+      "y": 1040,
+      "w": 1440,
+      "h": 900,
+      "title": "Cobalt Clarity — Matter Detail"
+    },
+    {
+      "file": "CobaltClarity-Login.dc.html",
+      "x": 3120,
+      "y": 2080,
+      "w": 1440,
+      "h": 900,
+      "title": "Cobalt Clarity — Login"
+    },
+    {
+      "file": "ForestCourt-Dashboard.dc.html",
+      "x": 4680,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Forest Court — Dashboard"
+    },
+    {
+      "file": "ForestCourt-MatterDetail.dc.html",
+      "x": 4680,
+      "y": 1040,
+      "w": 1440,
+      "h": 900,
+      "title": "Forest Court — Matter Detail"
+    },
+    {
+      "file": "ForestCourt-Login.dc.html",
+      "x": 4680,
+      "y": 2080,
+      "w": 1440,
+      "h": 900,
+      "title": "Forest Court — Login"
+    },
+    {
+      "file": "AmberSlate-Dashboard.dc.html",
+      "x": 6240,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Amber Slate — Dashboard"
+    },
+    {
+      "file": "AmberSlate-MatterDetail.dc.html",
+      "x": 6240,
+      "y": 1040,
+      "w": 1440,
+      "h": 900,
+      "title": "Amber Slate — Matter Detail"
+    },
+    {
+      "file": "AmberSlate-Login.dc.html",
+      "x": 6240,
+      "y": 2080,
+      "w": 1440,
+      "h": 900,
+      "title": "Amber Slate — Login"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "note-inkgraphite",
+      "x": 0,
+      "y": -110,
+      "w": 1440,
+      "text": "Ink & Graphite\nNear-black monochrome, today's direction refined. Calm and administrative, zero decoration."
+    },
+    {
+      "id": "note-navychancery",
+      "x": 1560,
+      "y": -110,
+      "w": 1440,
+      "text": "Navy Chancery\nClassic legal navy with serif headings on warm paper. Heritage and authority."
+    },
+    {
+      "id": "note-cobaltclarity",
+      "x": 3120,
+      "y": -110,
+      "w": 1440,
+      "text": "Cobalt Clarity\nCrisp white canvas, confident cobalt accent, rounder corners. Modern SaaS energy."
+    },
+    {
+      "id": "note-forestcourt",
+      "x": 4680,
+      "y": -110,
+      "w": 1440,
+      "text": "Forest Court\nDeep forest green on warm bone. Calm and trust-first, an alternative to navy."
+    },
+    {
+      "id": "note-amberslate",
+      "x": 6240,
+      "y": -110,
+      "w": 1440,
+      "text": "Amber Slate\nCool slate neutrals warmed by a restrained burnt-amber accent. Grounded and tactile."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

@@ -1,0 +1,254 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+:root {
+  --color-neutral-0:#FFFFFF; --color-neutral-50:#F7F8F9; --color-neutral-100:#EEF0F2; --color-neutral-200:#E1E4E8;
+  --color-neutral-300:#C9CED4; --color-neutral-400:#A7AEB8; --color-neutral-500:#838C97; --color-neutral-600:#626B76;
+  --color-neutral-700:#48505A; --color-neutral-800:#313740; --color-neutral-900:#1B1F24;
+  --color-primary-50:#F4F4F5; --color-primary-100:#E4E4E7; --color-primary-200:#D4D4D8; --color-primary-300:#A1A1AA;
+  --color-primary-400:#71717A; --color-primary-500:#27272A; --color-primary-600:#18181B; --color-primary-700:#09090B;
+  --color-bg-page:#F7F8F9; --color-bg-surface:#FFFFFF; --color-bg-surface-hover:#EEF0F2; --color-bg-surface-sunken:#EEF0F2;
+  --color-bg-selected:#EFEBFB;
+  --color-text-primary:#1B1F24; --color-text-secondary:#626B76; --color-text-tertiary:#838C97; --color-text-disabled:#A7AEB8;
+  --color-text-link:#27272A; --color-text-link-hover:#18181B;
+  --color-border-default:#E1E4E8; --color-border-strong:#C9CED4; --color-border-focus:#27272A;
+  --font-family-ui:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-heading:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --radius-sm:6px; --radius-md:8px; --radius-lg:10px; --radius-full:9999px;
+  --shadow-sm: 0 1px 2px rgba(26,32,41,0.06);
+  --shadow-md: 0 4px 12px rgba(26,32,41,0.10);
+  --shadow-lg: 0 16px 40px rgba(26,32,41,0.18);
+  --focus-ring: 0 0 0 3px #D4D4D8;
+  
+  --color-success-base:#1E7B4D; --color-success-bg:#E8F5EE; --color-success-border:#B7E0C7; --color-success-text:#145C39;
+  --color-warning-base:#B5790A; --color-warning-bg:#FBF1DE; --color-warning-border:#EDCB86; --color-warning-text:#7A5107;
+  --color-error-base:#B3261E; --color-error-bg:#FBEAE9; --color-error-border:#E9B3AF; --color-error-text:#7C1A14;
+  --color-info-base:#0E7C86; --color-info-bg:#E5F3F4; --color-info-border:#A9D6DA; --color-info-text:#0A5960;
+  --color-ai-50:#EFEBF7; --color-ai-200:#CFC3E8; --color-ai-500:#5B4B9E; --color-ai-700:#40356F;
+  --color-citation-50:#E7F0EF; --color-citation-200:#B9D6D3; --color-citation-500:#3E6E6B; --color-citation-700:#2A4C4A;
+  --color-text-on-brand:#FFFFFF;
+  --font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+}
+
+* { box-sizing: border-box; }
+body { margin:0; background:var(--color-bg-page); color:var(--color-text-primary); font-family:var(--font-family-ui); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,h4 { font-family:var(--font-family-heading); font-weight:600; color:var(--color-text-primary); margin:0; line-height:1.25; }
+a { color:var(--color-text-link); text-decoration:none; }
+a:hover { color:var(--color-text-link-hover); text-decoration:underline; }
+.mono { font-family:var(--font-family-mono); font-size:0.925em; }
+.text-tertiary { color:var(--color-text-tertiary); }
+.text-secondary { color:var(--color-text-secondary); }
+.text-sm { font-size:14px; }
+.text-xs { font-size:12px; }
+
+/* Nav */
+.app-nav { display:flex; align-items:center; gap:24px; height:64px; padding:0 32px; background:var(--color-bg-surface); border-bottom:1px solid var(--color-border-default); }
+.app-nav-brand { font-family:var(--font-family-heading); font-weight:600; font-size:19px; color:var(--color-text-primary); }
+.app-nav-links { display:flex; align-items:center; gap:16px; }
+.app-nav-link { display:inline-flex; align-items:center; height:36px; font-size:14px; color:var(--color-text-tertiary); border-bottom:2px solid transparent; }
+.app-nav-link-active { color:var(--color-text-primary); font-weight:600; border-bottom-color:var(--color-primary-600); }
+.app-nav-search { flex:1; max-width:280px; position:relative; }
+.app-nav-search-input { width:100%; height:38px; padding:0 12px 0 40px; border-radius:var(--radius-full); border:1px solid var(--color-border-default); background:var(--color-bg-surface); color:var(--color-text-primary); font-family:var(--font-family-ui); font-size:14px; }
+.app-nav-search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-neutral-500); display:flex; }
+.app-nav-actions { display:flex; align-items:center; gap:12px; margin-left:auto; }
+.nav-icon-btn { width:36px; height:36px; border-radius:var(--radius-full); display:inline-flex; align-items:center; justify-content:center; color:var(--color-text-secondary); background:none; border:none; }
+.nav-avatar { width:32px; height:32px; border-radius:50%; background:var(--color-primary-500); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 16px; border-radius:var(--radius-md); border:1px solid transparent; font-family:var(--font-family-ui); font-weight:500; font-size:14px; cursor:pointer; white-space:nowrap; }
+.btn-primary { background:var(--color-primary-500); color:#fff; border-color:var(--color-primary-500); }
+.btn-secondary { background:var(--color-bg-surface); color:var(--color-neutral-800); border-color:var(--color-border-default); }
+
+/* Cards */
+.card { background:var(--color-bg-surface); border:1px solid var(--color-border-default); border-radius:var(--radius-lg); padding:16px; box-shadow:var(--shadow-sm); }
+
+/* Badges */
+.badge { display:inline-flex; align-items:center; gap:4px; border-radius:var(--radius-full); padding:2px 8px; font-size:12px; font-weight:500; border:1px solid; line-height:1.4; white-space:nowrap; }
+.badge-info { background:var(--color-info-bg); border-color:var(--color-info-border); color:var(--color-info-text); }
+.badge-neutral { background:var(--color-neutral-100); border-color:var(--color-neutral-300); color:var(--color-neutral-700); }
+.badge-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+/* Dashboard */
+.page-wrap { max-width:1400px; margin:0 auto; padding:32px 32px 48px; }
+.dashboard-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:28px; }
+.stat-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:24px; }
+.stat-card { background:var(--color-bg-surface); border:1px solid var(--color-border-default); border-radius:var(--radius-lg); padding:12px; box-shadow:var(--shadow-sm); }
+.stat-icon-badge { width:28px; height:28px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.dashboard-grid { display:grid; grid-template-columns:1fr 360px; gap:16px; }
+.section-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+.active-matters-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.active-matter-card { display:flex; flex-direction:column; gap:8px; }
+.active-matter-title { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.active-matter-meta { font-size:12px; color:var(--color-text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.recent-row { display:flex; align-items:center; gap:10px; padding:8px 12px; }
+.matter-avatar { width:28px; height:28px; border-radius:50%; background:var(--color-primary-100); color:var(--color-primary-700); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; flex-shrink:0; }
+.cal-strip { display:flex; gap:8px; }
+.cal-day-cell { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px; border-radius:var(--radius-md); background:var(--color-bg-surface-sunken); border:1px solid transparent; }
+.cal-day-today { border-color:var(--color-primary-500); background:var(--color-bg-selected); }
+.cal-day-label { font-size:10px; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.04em; }
+.cal-day-number { font-family:var(--font-family-heading); font-weight:600; font-size:16px; }
+.cal-dot { width:4px; height:4px; border-radius:50%; background:var(--color-warning-base); }
+
+/* Matter Detail / Chat */
+.chat-header-row { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; padding:24px 32px 16px; border-bottom:1px solid var(--color-border-default); }
+.doc-tab { display:flex; align-items:center; gap:4px; padding:6px 10px; border-radius:var(--radius-md); background:var(--color-bg-surface); border:1px solid var(--color-border-default); color:var(--color-text-secondary); font-size:12px; }
+.chat-toggle-btn { width:28px; height:28px; border-radius:var(--radius-full); border:1px solid var(--color-ai-200); background:var(--color-ai-50); color:var(--color-ai-500); display:inline-flex; align-items:center; justify-content:center; }
+.chat-body { padding:20px 32px; display:flex; flex-direction:column; gap:16px; }
+.chat-row { display:flex; align-items:flex-start; gap:12px; }
+.chat-row-user { justify-content:flex-end; }
+.chat-avatar { width:28px; height:28px; border-radius:50%; background:var(--color-ai-50); color:var(--color-ai-500); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.chat-bubble { padding:12px; border-radius:var(--radius-lg); background:var(--color-bg-surface-sunken); border:1px solid var(--color-border-default); font-size:14px; max-width:560px; }
+.chat-row-user .chat-bubble { background:var(--color-bg-selected); border-color:var(--color-primary-200); }
+.text-citation { color:var(--color-citation-500); }
+.text-citation:hover { color:var(--color-citation-700); }
+.chat-input-bar { display:flex; align-items:center; gap:8px; border:1px solid var(--color-border-default); border-radius:var(--radius-full); padding:6px 6px 6px 16px; background:var(--color-bg-surface); margin:0 32px 24px; }
+.chat-input-text { flex:1; font-size:14px; color:var(--color-text-tertiary); }
+.chat-send-btn { width:34px; height:34px; border-radius:var(--radius-full); background:var(--color-primary-500); color:#fff; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pin-icon { color:var(--color-warning-base); }
+
+/* Login */
+.login-wrap { min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; }
+.login-brand { margin-bottom:32px; text-align:center; }
+.login-card { width:100%; max-width:380px; display:flex; flex-direction:column; gap:16px; }
+.field { display:flex; flex-direction:column; gap:8px; }
+.field-label { font-size:14px; font-weight:500; color:var(--color-text-secondary); }
+.input { width:100%; height:40px; padding:0 12px; border-radius:var(--radius-sm); border:1px solid var(--color-border-default); background:var(--color-bg-surface-sunken); color:var(--color-text-primary); font-family:var(--font-family-ui); font-size:14px; }
+
+</style>
+</helmet>
+<div>
+
+<nav class="app-nav">
+  <span class="app-nav-brand">Legal AI Assistant</span>
+  <div class="app-nav-links">
+    <a href="#" class="app-nav-link app-nav-link-active">Dashboard</a>
+    <a href="#" class="app-nav-link">Clients</a>
+    <a href="#" class="app-nav-link">Matters</a>
+  </div>
+  <div class="app-nav-search">
+    <span class="app-nav-search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+    <input class="app-nav-search-input" placeholder="Search Clients &amp; Matters…" />
+  </div>
+  <div class="app-nav-actions">
+    <button type="button" class="nav-icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></button>
+    <span class="nav-avatar">VD</span>
+  </div>
+</nav>
+<div class="page-wrap">
+  <div class="dashboard-header">
+    <div>
+      <h1 style="font-size:30px;">Good afternoon, Vikram</h1>
+      <p class="text-secondary" style="margin-top:6px;">Here's what needs attention today.</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button type="button" class="btn btn-secondary">+ New Client</button>
+      <button type="button" class="btn btn-primary">+ New Matter</button>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="font-family:var(--font-family-heading); font-size:24px; font-weight:600;">4</div>
+        <div class="stat-icon-badge" style="background:var(--color-primary-50); color:var(--color-primary-500);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5a1 1 0 0 0 1 1h5"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 13h6M9 17h6"/></svg></div>
+      </div>
+      <div class="text-tertiary text-xs" style="margin-top:6px;">Open Matters</div>
+    </div>
+    <div class="stat-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="font-family:var(--font-family-heading); font-size:24px; font-weight:600;">3</div>
+        <div class="stat-icon-badge" style="background:var(--color-warning-bg); color:var(--color-warning-base);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3v3M16 3v3"/><path d="M8.5 13.5h2M8.5 17h2M13.5 13.5h2M13.5 17h2"/></svg></div>
+      </div>
+      <div class="text-tertiary text-xs" style="margin-top:6px;">Deadlines this week</div>
+    </div>
+    <div class="stat-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="font-family:var(--font-family-heading); font-size:24px; font-weight:600;">2</div>
+        <div class="stat-icon-badge" style="background:var(--color-info-bg); color:var(--color-info-base);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div>
+      </div>
+      <div class="text-tertiary text-xs" style="margin-top:6px;">Unread notifications</div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div>
+      <div class="section-head">
+        <h2 style="font-size:20px;">Active Matters</h2>
+        <a href="#" class="text-sm" style="font-weight:500;">See all →</a>
+      </div>
+      <div class="active-matters-grid">
+        <div class="card active-matter-card">
+          <div style="display:flex; justify-content:space-between;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg><span class="badge badge-info"><span class="badge-dot"></span>Open</span></div>
+          <div class="active-matter-title">Meridian Textiles — Trademark Opposition</div>
+          <div class="active-matter-meta mono">Meridian Textiles Pvt. Ltd. · Due in 3d</div>
+        </div>
+        <div class="card active-matter-card">
+          <div style="display:flex; justify-content:space-between;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg><span class="badge badge-info"><span class="badge-dot"></span>Open</span></div>
+          <div class="active-matter-title">Priya Nair — Tenancy Dispute</div>
+          <div class="active-matter-meta mono">Priya Nair · Overdue by 1d</div>
+        </div>
+        <div class="card active-matter-card">
+          <div style="display:flex; justify-content:space-between;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg><span class="badge badge-info"><span class="badge-dot"></span>Open</span></div>
+          <div class="active-matter-title">Sundaram Logistics — Supply Breach</div>
+          <div class="active-matter-meta mono">Sundaram Logistics Pvt. Ltd. · Due in 12d</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-head">
+        <h2 style="font-size:20px;">Calendar</h2>
+      </div>
+      <div class="cal-strip" style="margin-bottom:20px;">
+        <div class="cal-day-cell"><span class="cal-day-label">Mon</span><span class="cal-day-number">17</span></div>
+        <div class="cal-day-cell cal-day-today"><span class="cal-day-label">Tue</span><span class="cal-day-number">18</span><span class="cal-dot"></span></div>
+        <div class="cal-day-cell"><span class="cal-day-label">Wed</span><span class="cal-day-number">19</span></div>
+        <div class="cal-day-cell"><span class="cal-day-label">Thu</span><span class="cal-day-number">20</span><span class="cal-dot"></span></div>
+        <div class="cal-day-cell"><span class="cal-day-label">Fri</span><span class="cal-day-number">21</span></div>
+      </div>
+
+      <div class="section-head">
+        <h2 style="font-size:20px;">Recent Matters</h2>
+        <a href="#" class="text-sm" style="font-weight:500;">See all →</a>
+      </div>
+      <div class="card" style="padding:6px;">
+        <div class="recent-row">
+          <span class="matter-avatar">MT</span>
+          <div style="flex:1; min-width:0;">
+            <div class="text-sm" style="font-weight:500;">Meridian Textiles — Trademark Opposition</div>
+            <div class="text-tertiary text-xs">Meridian Textiles Pvt. Ltd.</div>
+          </div>
+          <div class="text-tertiary text-xs mono">In 3d</div>
+        </div>
+        <div class="recent-row">
+          <span class="matter-avatar">PN</span>
+          <div style="flex:1; min-width:0;">
+            <div class="text-sm" style="font-weight:500;">Priya Nair — Tenancy Dispute</div>
+            <div class="text-tertiary text-xs">Priya Nair</div>
+          </div>
+          <div class="text-tertiary text-xs mono">Overdue 1d</div>
+        </div>
+        <div class="recent-row">
+          <span class="matter-avatar">KM</span>
+          <div style="flex:1; min-width:0;">
+            <div class="text-sm" style="font-weight:500;">Kabir Malhotra — Will &amp; Probate</div>
+            <div class="text-tertiary text-xs">Kabir Malhotra</div>
+          </div>
+          <div class="text-tertiary text-xs mono">No deadline</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+</x-dc>
+</body>
+</html>

@@ -57,6 +57,13 @@ public class ClientRepositoryImpl implements ClientRepository {
         });
     }
 
+    @Override
+    public boolean delete(UUID firmId, UUID id) {
+        Optional<ClientEntity> entity = jpa.findByIdAndFirmId(id, firmId);
+        entity.ifPresent(jpa::delete);
+        return entity.isPresent();
+    }
+
     static Client toDomain(ClientEntity e) {
         return new Client(e.getId(), e.getFirmId(), e.getName(), e.getContactEmail(), e.getContactPhone(), e.getNotes(), e.getCreatedAt(), e.getUpdatedAt());
     }

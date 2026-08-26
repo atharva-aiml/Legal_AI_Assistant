@@ -63,7 +63,7 @@ class ChatServiceTest {
 
     @Test
     void askForwardsTheQuestionAndReturnsTheGatewaysAnswer() {
-        gateway.askResponse = new ChatMessageDto(UUID.randomUUID(), matterId, null, "assistant", "Rs. 85,000 [1].", null, List.of(), false, false);
+        gateway.askResponse = new ChatMessageDto(UUID.randomUUID(), matterId, null, "assistant", "Rs. 85,000 [1].", null, List.of(), false, true, false);
 
         ChatMessageDto result = service.ask(matterId, lawyerId, "What is the rent?");
 
@@ -87,7 +87,7 @@ class ChatServiceTest {
 
     @Test
     void historyForwardsTheMatterIdAndReturnsTheGatewaysMessages() {
-        ChatMessageDto message = new ChatMessageDto(UUID.randomUUID(), matterId, lawyerId, "user", "What is the rent?", null, List.of(), null, false);
+        ChatMessageDto message = new ChatMessageDto(UUID.randomUUID(), matterId, lawyerId, "user", "What is the rent?", null, List.of(), null, null, false);
         gateway.historyResponse = new ChatHistoryDto(List.of(message));
 
         ChatHistoryDto result = service.history(matterId);

@@ -32,4 +32,7 @@ public interface JpaDeadlineRepository extends JpaRepository<DeadlineEntity, UUI
 
     /** SD-006 scanner only — deliberately unscoped by firm. */
     List<DeadlineEntity> findByStatus(DeadlineStatus status);
+
+    /** Spring Data derived delete query — cascade-delete cleanup only, see DeadlineRepository.deleteByMatter. */
+    void deleteByMatterId(UUID matterId);
 }

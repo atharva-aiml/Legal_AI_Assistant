@@ -34,6 +34,7 @@ export function Modal({
 
   return createPortal(
     <div
+      className="modal-backdrop"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -54,7 +55,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         tabIndex={-1}
-        className="card"
+        className="card modal-panel"
         style={{
           width: "100%",
           maxWidth: width,

@@ -23,6 +23,12 @@ public class ChatDtos {
             Instant createdAt,
             List<CitationDto> citations,
             Boolean lowConfidence,
+            // RAG-Pipeline-Development-History.md gap #7: true when every Ready chunk
+            // was considered (a genuine completeness guarantee), false when ranked
+            // retrieval was used instead (best-effort). Null on history responses,
+            // same as lowConfidence — both are ephemeral, computed only for the
+            // question that produced them, not persisted.
+            Boolean fullContext,
             Boolean pinned) {
     }
 

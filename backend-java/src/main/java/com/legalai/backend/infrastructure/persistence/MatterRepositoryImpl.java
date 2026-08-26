@@ -80,6 +80,13 @@ public class MatterRepositoryImpl implements MatterRepository {
         });
     }
 
+    @Override
+    public boolean delete(UUID firmId, UUID id) {
+        Optional<MatterEntity> entity = jpa.findByIdAndFirmId(id, firmId);
+        entity.ifPresent(jpa::delete);
+        return entity.isPresent();
+    }
+
     static Matter toDomain(MatterEntity e) {
         return new Matter(e.getId(), e.getFirmId(), e.getClientId(), e.getTitle(), e.getStatus(), e.getClosedAt(), e.getCreatedAt(), e.getUpdatedAt());
     }

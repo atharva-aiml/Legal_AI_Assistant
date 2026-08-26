@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/ui/empty-state";
+import { usePersistedState } from "@/lib/use-persisted-state";
 import { NewMatterModal } from "@/app/clients/[id]/new-matter-modal";
 import { MattersList } from "./matters-list";
 import { MatterDetailPanel } from "./matter-detail-panel";
 
-type Matter = { id: string; title: string; status: "open" | "closed"; clientId: string };
+type Matter = { id: string; title: string; status: "open" | "closed"; clientId: string; updatedAt: string };
 type Client = { id: string; name: string };
 type Deadline = { id: string; matterId: string; dueDate: string; status: "open" | "complete" };
 
@@ -23,15 +25,39 @@ export function MattersMasterDetail({
   deadlines: initialDeadlines,
   currentStatus,
   currentClientId,
+  initialSelectedMatterId,
 }: {
   matters: Matter[];
   clients: Client[];
   deadlines: Deadline[];
   currentStatus: string;
   currentClientId: string;
+  /** From /matters?selected={id} — links elsewhere in the app (dashboard cards, a Client's Matter list, etc.) land here with a Matter pre-opened instead of the discarded standalone /matters/{id} page. */
+  initialSelectedMatterId?: string | null;
 }) {
-  const [selectedMatterId, setSelectedMatterId] = useState<string | null>(null);
+  const router = useRouter();
+  const [selectedMatterId, setSelectedMatterId] = usePersistedState<string | null>(
+    "matters:selectedMatterId",
+    initialSelectedMatterId ?? null
+  );
   const panelColRef = useRef<HTMLDivElement>(null);
+
+  // A URL-driven selection (e.g. a dashboard link to /matters?selected={id})
+  // must win over whatever was previously remembered, AND become the new
+  // remembered selection for the next plain-nav-click return to /matters.
+  useEffect(() => {
+    if (initialSelectedMatterId) setSelectedMatterId(initialSelectedMatterId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSelectedMatterId]);
+
+  // The Matter list itself is server-fetched (app/matters/page.tsx), unlike
+  // client-detail-panel.tsx's own client-side matters fetch — deleting needs
+  // a real router.refresh() for the deleted tile to actually disappear from
+  // the left list, not just deselecting the now-gone Matter's panel.
+  function handleMatterDeleted() {
+    setSelectedMatterId(null);
+    router.refresh();
+  }
 
   // Lifted into local state (rather than read straight from the prop) so the
   // detail panel's own deadline-checkbox toggle can patch it in place and
@@ -80,7 +106,7 @@ export function MattersMasterDetail({
       </div>
       <div className="master-detail-panel-col" ref={panelColRef}>
         {selectedMatterId ? (
-          <MatterDetailPanel key={selectedMatterId} matterId={selectedMatterId} onDeadlineChange={handleDeadlineChange} />
+          <MatterDetailPanel key={selectedMatterId} matterId={selectedMatterId} onDeadlineChange={handleDeadlineChange} onDeleted={handleMatterDeleted} />
         ) : (
           <EmptyState title="Select a Matter" body="Pick a Matter from the list to see its Documents, Chat, and Deadlines here." />
         )}

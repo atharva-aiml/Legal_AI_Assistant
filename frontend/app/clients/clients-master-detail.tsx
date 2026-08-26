@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { usePersistedState } from "@/lib/use-persisted-state";
 import { ClientsList } from "./clients-list";
 import { ClientDetailPanel } from "./client-detail-panel";
 
@@ -16,7 +17,7 @@ type Matter = { id: string; clientId: string; status: "open" | "closed"; updated
  * untouched, so direct links/bookmarks to a client still work.
  */
 export function ClientsMasterDetail({ clients, matters }: { clients: Client[]; matters: Matter[] }) {
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = usePersistedState<string | null>("clients:selectedClientId", null);
   const panelColRef = useRef<HTMLDivElement>(null);
 
   // .master-detail-panel-col itself is never remounted (only its child, via
@@ -33,7 +34,7 @@ export function ClientsMasterDetail({ clients, matters }: { clients: Client[]; m
       </div>
       <div className="master-detail-panel-col" ref={panelColRef}>
         {selectedClientId ? (
-          <ClientDetailPanel key={selectedClientId} clientId={selectedClientId} />
+          <ClientDetailPanel key={selectedClientId} clientId={selectedClientId} onDeleted={() => setSelectedClientId(null)} />
         ) : (
           <EmptyState title="Select a client" body="Pick a client from the list to see their details, contact info, and Matters here." />
         )}

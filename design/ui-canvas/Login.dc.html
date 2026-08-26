@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body { margin:0; }
+.lg-field { width:100%; height:44px; padding:0 14px; border-radius:4px; border:1px solid #E1E4E8; background:#FFFFFF; font-family:'Inter',sans-serif; font-size:14px; color:#1B1F24; box-sizing:border-box; transition:border-color 150ms ease, box-shadow 150ms ease; }
+.lg-field::placeholder { color:#838C97; }
+.lg-field:hover { border-color:#C9CED4; }
+.lg-field:focus { outline:none; border-color:#2A6E9C; box-shadow:0 0 0 3px #A2C4DA55; }
+.lg-field-error { border-color:#B3261E; }
+.lg-label { font-size:13px; font-weight:500; color:#48505A; margin-bottom:6px; display:block; }
+.lg-btn { width:100%; height:44px; border-radius:8px; border:none; background:#1F567C; color:#FFFFFF; font-family:'Inter',sans-serif; font-size:14px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:8px; transition:background-color 150ms ease; }
+.lg-btn:hover { background:#17415F; }
+.lg-btn:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.lg-btn[disabled] { background:#E1E4E8; color:#A7AEB8; cursor:not-allowed; }
+.lg-link { color:#2A6E9C; font-size:13px; text-decoration:none; }
+.lg-link:hover { color:#1F567C; text-decoration:underline; }
+@keyframes lg-spin { to { transform:rotate(360deg); } }
+.lg-spinner { width:16px; height:16px; border-radius:9999px; border:2px solid rgba(255,255,255,0.4); border-top-color:#FFFFFF; animation:lg-spin 0.7s linear infinite; }
+</style>
+</helmet>
+<div style="min-height:100dvh; width:100%; background:#F7F8F9; display:flex; align-items:center; justify-content:center; padding:32px; box-sizing:border-box; font-family:'Inter',sans-serif;">
+  <div style="width:100%; max-width:380px;">
+    <div style="text-align:center; margin-bottom:40px;">
+      <div style="width:44px; height:44px; border-radius:12px; background:#EAF1F6; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#17415F" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6.5V11c0 4.7 3.2 8.9 8 10 4.8-1.1 8-5.3 8-10V6.5L12 3Z"/><path d="m9.5 12 2 2 3.5-4"/></svg>
+      </div>
+      <h1 style="font-size:24px; font-weight:600; color:#1B1F24; margin:0 0 8px; letter-spacing:-0.01em;">Rao &amp; Desai Assist</h1>
+      <p style="font-size:14px; color:#626B76; margin:0;">Sign in to your firm&#39;s workspace</p>
+    </div>
+
+    <sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+      <div style="background:#FBEAE9; color:#7C1A14; font-size:13px; padding:12px 14px; border-radius:8px; margin-bottom:20px; display:flex; gap:10px; align-items:flex-start;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C1A14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <span>Incorrect email or password. Please try again.</span>
+      </div>
+    </sc-if>
+
+    <form style="display:flex; flex-direction:column; gap:18px;">
+      <div>
+        <label class="lg-label" for="lg-email">Email address</label>
+        <input id="lg-email" class="{{fieldClass}}" type="email" placeholder="you@firm.com" value="vikram.desai@raodesai.in" />
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <label class="lg-label" for="lg-pass">Password</label>
+          <a href="#" class="lg-link" style="margin-bottom:6px;">Forgot password?</a>
+        </div>
+        <input id="lg-pass" class="{{fieldClass}}" type="password" placeholder="••••••••" value="••••••••••" />
+      </div>
+
+      <button type="button" class="lg-btn" disabled="{{isLoading}}" style="margin-top:6px;">
+        <sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+          <span class="lg-spinner" aria-hidden="true"></span>
+          <span>Signing in…</span>
+        </sc-if>
+        <sc-if value="{{isNotLoading}}" hint-placeholder-val="{{true}}">
+          <span>Sign in</span>
+        </sc-if>
+      </button>
+    </form>
+
+    <p style="text-align:center; font-size:13px; color:#626B76; margin-top:28px;">
+      New to the firm? <a href="#" class="lg-link">Set up your firm&#39;s account</a>
+    </p>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"state":{"editor":"enum","default":"default","options":["default","error","loading"],"section":"Screen state"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const state = this.props.state ?? 'default';
+    return {
+      isError: state === 'error',
+      isLoading: state === 'loading',
+      isNotLoading: state !== 'loading',
+      fieldClass: state === 'error' ? 'lg-field lg-field-error' : 'lg-field',
+    };
+  }
+}
+</script>
+</body>
+</html>

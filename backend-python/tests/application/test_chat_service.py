@@ -217,6 +217,21 @@ def test_full_context_path_offers_metadata_numbered_after_all_content_chunks():
     assert "[2] matter.pdf has 11 pages." in llm.calls[0]
 
 
+def test_full_context_path_reports_full_context_true():
+    # RAG-Pipeline-Development-History.md gap #7: the lawyer needs a signal
+    # that this answer had a genuine completeness guarantee (every Ready
+    # chunk was considered), not just a best-effort ranked subset.
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    retrieval.all_chunks_by_matter[MATTER] = [FakeChunk("c1", "doc-1", "matter.pdf", 1, "Some content.")]
+    llm = ScriptedLLM(["Some content is stated [1]."])
+    service = make_service(retrieval=retrieval, llm=llm)
+
+    result = service.ask(MATTER, LAWYER, "What does it say?")
+
+    assert result.full_context is True
+
+
 def test_full_context_path_low_confidence_is_always_false():
     # There's no partial-retrieval uncertainty concept once the LLM has the
     # entire corpus — confidence is left entirely to citation verification.
@@ -422,6 +437,7 @@ def test_a_well_cited_answer_persists_with_real_citations(monkeypatch):
     assert result.citations[0].document_id == "doc-1"
     assert result.citations[0].page_number == 2
     assert result.low_confidence is False  # cited by both retrieval methods -> above the confident band
+    assert result.full_context is False  # ranked path -> no completeness guarantee, gap #7
 
 
 def test_low_confidence_flag_set_when_only_one_retrieval_method_found_it(monkeypatch):

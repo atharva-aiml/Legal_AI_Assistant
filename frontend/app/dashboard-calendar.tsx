@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { initials } from "@/lib/initials";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 
 type Deadline = { id: string; matterId: string; title: string; dueDate: string; status: "open" | "complete" };
 
@@ -54,16 +55,6 @@ export function DashboardCalendar({ deadlines, matterTitleById }: { deadlines: D
   const [monthAnchor, setMonthAnchor] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  // The week strip's scrollbar is only painted visible while this is true —
-  // set on every scroll event, cleared ~500ms after scrolling stops.
-  const [stripScrolling, setStripScrolling] = useState(false);
-  const stripScrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  function handleStripScroll() {
-    setStripScrolling(true);
-    if (stripScrollTimeout.current) clearTimeout(stripScrollTimeout.current);
-    stripScrollTimeout.current = setTimeout(() => setStripScrolling(false), 500);
-  }
-
   const byDate: ByDate = useMemo(() => {
     const map = new Map<string, Deadline[]>();
     for (const d of deadlines) {
@@ -95,15 +86,16 @@ export function DashboardCalendar({ deadlines, matterTitleById }: { deadlines: D
   }
 
   return (
-    <div id="dashboard-calendar" className="card" style={{ display: "flex", flexDirection: "column", padding: "var(--space-3)", alignSelf: "start" }}>
+    <div id="dashboard-calendar" style={{ display: "flex", flexDirection: "column", padding: "0 var(--space-3) var(--space-3)", alignSelf: "start" }}>
       <div className="row-between" style={{ marginBottom: "var(--space-2)" }}>
         <span className="field-label" style={{ margin: 0 }}>This week</span>
-        <button type="button" className="cal-expand-btn" onClick={() => setOverlay("month")} aria-label="View full calendar" title="View full calendar">
+        <button type="button" className="cal-expand-btn" onClick={() => setOverlay("month")} aria-label="View full calendar">
           <ExpandCalendarIcon />
+          <TooltipBubble label="View full calendar" />
         </button>
       </div>
 
-      <div className={`cal-strip${stripScrolling ? " cal-strip-scrolling" : ""}`} onScroll={handleStripScroll}>
+      <div className="cal-strip">
         {weekDays.map((d) => {
           const iso = dateISO(d);
           const items = byDate.get(iso) ?? [];
@@ -199,13 +191,22 @@ function MonthView({
     <div className="cal-view-enter">
       <div className="row-between" style={{ marginBottom: "var(--space-4)", flexWrap: "wrap", gap: "var(--space-2)" }}>
         <div className="row" style={{ gap: "var(--space-2)" }}>
-          <button type="button" className="btn btn-ghost btn-sm cal-icon-btn" onClick={() => { setNavDirection(-1); onPrevMonth(); }} aria-label="Previous month">‹</button>
+          <button type="button" className="btn btn-ghost btn-sm cal-icon-btn" onClick={() => { setNavDirection(-1); onPrevMonth(); }} aria-label="Previous month">
+            ‹
+            <TooltipBubble label="Previous month" />
+          </button>
           <h2 style={{ fontSize: "var(--font-size-lg)", margin: 0 }}>{MONTH_LABELS[month]} {monthAnchor.getFullYear()}</h2>
-          <button type="button" className="btn btn-ghost btn-sm cal-icon-btn" onClick={() => { setNavDirection(1); onNextMonth(); }} aria-label="Next month">›</button>
+          <button type="button" className="btn btn-ghost btn-sm cal-icon-btn" onClick={() => { setNavDirection(1); onNextMonth(); }} aria-label="Next month">
+            ›
+            <TooltipBubble label="Next month" />
+          </button>
         </div>
         <div className="row" style={{ gap: "var(--space-3)" }}>
           <span className="text-tertiary text-sm">{monthDeadlineCount} deadline{monthDeadlineCount === 1 ? "" : "s"} this month</span>
-          <button type="button" className="btn btn-ghost btn-sm cal-icon-btn cal-close-btn" onClick={onClose} aria-label="Close full calendar" style={{ width: 32, padding: 0 }}>✕</button>
+          <button type="button" className="btn btn-ghost btn-sm cal-icon-btn cal-close-btn" onClick={onClose} aria-label="Close full calendar" style={{ width: 32, padding: 0 }}>
+            ✕
+            <TooltipBubble label="Close" />
+          </button>
         </div>
       </div>
 
@@ -267,7 +268,10 @@ function DayView({
     <div className="cal-view-enter">
       <div className="row-between" style={{ marginBottom: "var(--space-4)" }}>
         <button type="button" className="btn-link text-sm" onClick={onBack}>← Back to month</button>
-        <button type="button" className="btn btn-ghost btn-sm cal-icon-btn cal-close-btn" onClick={onClose} aria-label="Close" style={{ width: 32, padding: 0 }}>✕</button>
+        <button type="button" className="btn btn-ghost btn-sm cal-icon-btn cal-close-btn" onClick={onClose} aria-label="Close" style={{ width: 32, padding: 0 }}>
+          ✕
+          <TooltipBubble label="Close" />
+        </button>
       </div>
       <h2 style={{ fontSize: "var(--font-size-lg)", margin: "0 0 var(--space-4)" }}>{label}</h2>
 
@@ -276,7 +280,7 @@ function DayView({
       ) : (
         <div className="stack">
           {items.map((it) => (
-            <Link key={it.id} href={`/matters/${it.matterId}#deadlines`} className="card row cal-day-matter-row" style={{ gap: "var(--space-3)" }}>
+            <Link key={it.id} href={`/matters?selected=${it.matterId}#panel-deadlines`} className="card row cal-day-matter-row" style={{ gap: "var(--space-3)" }}>
               <span className="matter-avatar">{initials(matterTitleById[it.matterId] ?? "?")}</span>
               <div>
                 <div style={{ fontWeight: 500 }}>{matterTitleById[it.matterId] ?? "Matter"}</div>

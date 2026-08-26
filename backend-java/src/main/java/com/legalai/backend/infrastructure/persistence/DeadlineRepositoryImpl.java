@@ -73,6 +73,11 @@ public class DeadlineRepositoryImpl implements DeadlineRepository {
     }
 
     @Override
+    public void deleteByMatter(UUID matterId) {
+        jpa.deleteByMatterId(matterId);
+    }
+
+    @Override
     public List<DeadlineWithFirm> listAllOpenWithFirm() {
         return jpa.findByStatus(DeadlineStatus.open).stream()
                 .map(entity -> {

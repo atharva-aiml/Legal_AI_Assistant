@@ -27,4 +27,7 @@ public interface MatterRepository {
 
     /** I-35: sets status='open' and closed_at=null. Caller (MatterService) has already verified the Matter was actually Closed. */
     Optional<Matter> reopen(UUID firmId, UUID id);
+
+    /** Cascade-delete only — caller (ClientService.deleteCascade) has already removed every child row for this Matter. Returns false if not found for this firm (BR-008). */
+    boolean delete(UUID firmId, UUID id);
 }

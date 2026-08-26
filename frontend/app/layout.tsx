@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Source_Serif_4, Public_Sans, JetBrains_Mono } from "next/font/google";
 import { ListSearchProvider } from "@/components/list-search-context";
 import { ToastProvider } from "@/components/toast-context";
+import { GlobalScrollIndicator } from "@/components/global-scroll-indicator";
 import "@/styles/globals.css";
 
 const sourceSerif = Source_Serif_4({
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sourceSerif.variable} ${publicSans.variable} ${jetBrainsMono.variable}`}>
       <body>
+        <GlobalScrollIndicator />
         <ListSearchProvider>
           <ToastProvider>{children}</ToastProvider>
         </ListSearchProvider>

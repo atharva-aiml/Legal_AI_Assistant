@@ -9,13 +9,31 @@ import { Modal } from "@/components/ui/modal";
 
 type Client = { id: string; name: string; contactEmail: string | null; contactPhone: string | null; notes: string | null };
 
+function EditIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
 /**
  * I-17: same field set as the New Client form (clients/new/page.tsx), pre-filled with the current values.
  * `onSaved` lets callers that hold their own copy of the client (e.g. the /clients
  * master-detail panel, which fetches client-side) refetch instead of relying on
  * router.refresh() — which only re-runs Server Component data, not client state.
  */
-export function EditClientModal({ client, onSaved }: { client: Client; onSaved?: () => void }) {
+export function EditClientModal({
+  client,
+  onSaved,
+  iconOnly,
+}: {
+  client: Client;
+  onSaved?: () => void;
+  /** Renders the trigger as a bare pencil icon (no background/border/text) instead of the "Edit" button — used on the /clients master-detail panel. */
+  iconOnly?: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(client.name);
@@ -65,6 +83,13 @@ export function EditClientModal({ client, onSaved }: { client: Client; onSaved?:
   }
 
   if (!open) {
+    if (iconOnly) {
+      return (
+        <button type="button" className="edit-icon-btn" onClick={() => setOpen(true)} aria-label="Edit client">
+          <EditIcon />
+        </button>
+      );
+    }
     return (
       <Button variant="secondary" onClick={() => setOpen(true)}>
         Edit

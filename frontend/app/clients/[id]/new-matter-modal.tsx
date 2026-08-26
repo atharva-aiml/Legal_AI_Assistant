@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { NewMatterForm } from "@/app/matters/new/new-matter-form";
 
 type Client = { id: string; name: string };
+
+function AddIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
 
 /**
  * Same NewMatterForm used by /matters/new — opened as a modal instead of a
@@ -17,19 +26,46 @@ type Client = { id: string; name: string };
  * same as /matters/new without a query param. Either way, this only changes
  * the entry point; field set, validation, and the post-create redirect to
  * /matters/[id] are all unchanged.
+ *
+ * Also opens itself automatically when the page is reached as
+ * /matters?new=1 (the dashboard's "New Matter" button navigates here rather
+ * than embedding the modal on the dashboard itself), stripping the param
+ * back off once open so it doesn't re-trigger on refresh/back-navigation.
  */
 export function NewMatterModal({
   clientId,
   clients,
   buttonClassName = "btn-hold-bg",
+  iconOnly,
 }: {
   clientId?: string;
   clients: Client[];
   buttonClassName?: string;
+  /** Renders the trigger as a bare "+" icon (no background/border/text) instead of the "New Matter" button — used on the /clients master-detail panel. */
+  iconOnly?: boolean;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setOpen(true);
+      router.replace(pathname);
+    }
+    // Only ever meant to fire once, off the URL this component mounted with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!open) {
+    if (iconOnly) {
+      return (
+        <button type="button" className="add-icon-btn" onClick={() => setOpen(true)} aria-label="New Matter">
+          <AddIcon />
+        </button>
+      );
+    }
     return (
       <Button className={buttonClassName} onClick={() => setOpen(true)}>
         <span className="btn-plus-icon">+</span> New Matter

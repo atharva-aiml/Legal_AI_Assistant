@@ -35,6 +35,12 @@ public class MatterViewRepositoryImpl implements MatterViewRepository {
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public void deleteByMatter(UUID matterId) {
+        jpa.deleteByMatterId(matterId);
+    }
+
     private static MatterView toDomain(MatterViewEntity e) {
         return new MatterView(e.getLawyerId(), e.getMatterId(), e.getViewedAt());
     }

@@ -33,6 +33,15 @@ public interface DeadlineRepository {
      */
     List<DeadlineWithFirm> listAllOpenWithFirm();
 
+    /**
+     * Cascade-delete only — caller (ClientService.deleteCascade) has already
+     * verified Matter ownership before this is invoked, so no firmId here
+     * (matterId alone is already firm-scoped by that point). Deleting a
+     * Deadline cascades its notifications automatically at the DB level
+     * (System Architecture §3) — never touched directly here.
+     */
+    void deleteByMatter(UUID matterId);
+
     record DeadlineWithFirm(Deadline deadline, UUID firmId) {
     }
 }

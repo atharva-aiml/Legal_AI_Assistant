@@ -60,6 +60,11 @@ class NotificationScanServiceTest {
         public List<DeadlineWithFirm> listAllOpenWithFirm() {
             return openDeadlines;
         }
+
+        @Override
+        public void deleteByMatter(UUID matterId) {
+            throw new UnsupportedOperationException("not needed for the scan test");
+        }
     }
 
     static class InMemoryNotificationRepository implements NotificationRepository {

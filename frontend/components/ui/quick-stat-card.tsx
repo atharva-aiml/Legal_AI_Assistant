@@ -69,21 +69,24 @@ export function QuickStatCard({
   label,
   icon,
   tone,
-  seeAllHref,
+  onSeeAll,
 }: {
   value: string | number;
   label: string;
   icon: IconName;
   tone: Tone;
-  seeAllHref: string;
+  /** Opens the tile's "see all" popup (Active Matters / Deadlines / Notifications) — not a navigation. */
+  onSeeAll: () => void;
 }) {
   const { bg, fg } = TONE_TOKENS[tone];
   const displayValue = useCountUp(value);
 
   return (
     <div className="card stat-card-hover" style={{ padding: "var(--space-3)", alignSelf: "start" }}>
+      <div className="stat-card-glow" aria-hidden="true" style={{ color: fg }} />
+      <div className="stat-card-border" aria-hidden="true" style={{ color: fg }} />
       <div className="row-between" style={{ alignItems: "flex-start" }}>
-        <div style={{ fontFamily: "var(--font-family-heading)", fontSize: "var(--font-size-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+        <div className="stat-value" style={{ fontFamily: "var(--font-family-heading)", fontSize: "var(--font-size-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
           {displayValue}
         </div>
         <div
@@ -106,7 +109,7 @@ export function QuickStatCard({
       </div>
       <div className="row-between" style={{ marginTop: "var(--space-1)", gap: "var(--space-3)" }}>
         <span className="text-tertiary text-xs">{label}</span>
-        <SeeAllLink href={seeAllHref} style={{ fontWeight: "var(--font-weight-medium)", flexShrink: 0 }} />
+        <SeeAllLink onClick={onSeeAll} iconOnly style={{ flexShrink: 0 }} />
       </div>
     </div>
   );

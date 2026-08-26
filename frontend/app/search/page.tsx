@@ -88,7 +88,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             <h2 style={{ fontSize: "var(--font-size-xl)", margin: "0 0 var(--space-3)" }}>Matters</h2>
             <div className="stack">
               {matters.map((m) => (
-                <Link key={m.id} href={`/matters/${m.id}`} className="card">
+                <Link key={m.id} href={`/matters?selected=${m.id}`} className="card">
                   <div className="row-between">
                     <div>
                       <div style={{ fontWeight: 500 }}>{m.title}</div>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+.nb-link { font-family:'Inter',sans-serif; font-size:14px; font-weight:500; color:#626B76; padding:8px 14px; border-radius:8px; text-decoration:none; }
+.nb-link:hover { color:#1B1F24; background:#EEF0F2; text-decoration:none; }
+.nb-link-active { color:#17415F; background:#EAF1F6; }
+.nb-link-active:hover { background:#EAF1F6; color:#17415F; }
+.nb-search { font-family:'Inter',sans-serif; font-size:14px; border:none; background:transparent; outline:none; color:#1B1F24; width:100%; }
+.nb-search::placeholder { color:#838C97; }
+.nb-icon-btn { border:none; background:transparent; padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; }
+.nb-icon-btn:hover { background:#EEF0F2; }
+.nb-icon-btn:focus-visible { box-shadow:0 0 0 3px #A2C4DA; outline:none; }
+</style>
+</helmet>
+<div style="display:flex; align-items:center; height:64px; padding:0 32px; background:#FFFFFF; gap:32px; font-family:'Inter',sans-serif;">
+  <div style="font-size:16px; font-weight:700; color:#17415F; letter-spacing:-0.01em; flex-shrink:0;">Rao &amp; Desai <span style="color:#2A6E9C; font-weight:600;">Assist</span></div>
+  <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+    <a href="#" class="{{navClass.dashboard}}">Dashboard</a>
+    <a href="#" class="{{navClass.clients}}">Clients</a>
+    <a href="#" class="{{navClass.matters}}">Matters</a>
+  </div>
+  <div style="flex:1; display:flex; justify-content:center; max-width:480px; margin:0 auto;">
+    <div style="display:flex; align-items:center; gap:8px; background:#EEF0F2; border-radius:9999px; padding:0 14px; height:36px; width:100%;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#838C97" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input class="nb-search" type="text" placeholder="Search Clients &amp; Matters…" aria-label="Search Clients and Matters" />
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+    <button type="button" class="nb-icon-btn" aria-label="Notifications, {{notifCount}} unread" title="Notifications">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#48505A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+      <sc-if value="{{hasNotif}}" hint-placeholder-val="{{true}}">
+        <span style="position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:9999px; background:#B3261E; border:1.5px solid #FFFFFF;"></span>
+      </sc-if>
+    </button>
+    <div style="display:flex; align-items:center; gap:8px; padding:6px 10px 6px 6px; border-radius:9999px; cursor:pointer;" title="{{lawyerName}}">
+      <div style="width:30px; height:30px; border-radius:9999px; background:#EAF1F6; color:#17415F; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0;">{{initials}}</div>
+      <span style="font-size:13px; color:#48505A; font-weight:500;">{{lawyerName}}</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"active":{"editor":null},"lawyerName":{"editor":null},"initials":{"editor":null},"hasNotif":{"editor":null}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const active = this.props.active ?? 'dashboard';
+    const cls = (k) => 'nb-link' + (k === active ? ' nb-link-active' : '');
+    return {
+      navClass: { dashboard: cls('dashboard'), clients: cls('clients'), matters: cls('matters') },
+      lawyerName: this.props.lawyerName ?? 'Vikram Desai',
+      initials: this.props.initials ?? 'VD',
+      hasNotif: this.props.hasNotif ?? true,
+      notifCount: 2,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -72,6 +72,11 @@ class DeadlineServiceTest {
                     .map(d -> new DeadlineWithFirm(d, matterFirm.get(d.matterId())))
                     .toList();
         }
+
+        @Override
+        public void deleteByMatter(UUID matterId) {
+            deadlines.removeIf(d -> d.matterId().equals(matterId));
+        }
     }
 
     private InMemoryDeadlineRepository repo;

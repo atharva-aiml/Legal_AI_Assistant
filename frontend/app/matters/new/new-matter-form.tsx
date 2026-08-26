@@ -82,14 +82,14 @@ export function NewMatterForm({ clients, initialClientId }: { clients: Client[];
         // The Matter itself was created successfully — don't lose that on a deadline-only failure.
         // Land on the Matter's own page, where the lawyer can add the Deadline directly instead.
         showToast("Matter created");
-        router.push(`/matters/${created.id}`);
+        router.push(`/matters?selected=${created.id}`);
         router.refresh();
         return;
       }
     }
 
     showToast("Matter created");
-    router.push(`/matters/${created.id}`);
+    router.push(`/matters?selected=${created.id}`);
     router.refresh();
   }
 

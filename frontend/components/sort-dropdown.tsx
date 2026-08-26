@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
-function SortIcon() {
+function ChevronIcon() {
   return (
     <svg className="sort-toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 9l6 6 6-6" />
@@ -22,6 +23,8 @@ export function SortDropdown<T extends string>({
   buttonLabel,
   menuLabel,
   align = "right",
+  icon,
+  iconOnly,
 }: {
   value: T;
   options: { value: T; label: string }[];
@@ -30,6 +33,10 @@ export function SortDropdown<T extends string>({
   buttonLabel?: string;
   menuLabel: string;
   align?: "left" | "right";
+  /** Leading glyph shown before the label (or alone, when `iconOnly`) — e.g. a filter/sort/person icon. */
+  icon?: ReactNode;
+  /** Renders as a bare icon button (no text label, no chevron) — used on Clients/Matters list filter & sort controls. */
+  iconOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -56,14 +63,20 @@ export function SortDropdown<T extends string>({
     <div ref={ref} style={{ position: "relative" }}>
       <button
         type="button"
-        className="sort-toggle-btn"
+        className={`sort-toggle-btn${iconOnly ? " sort-toggle-btn-icon-only" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-label={iconOnly ? menuLabel : undefined}
         onClick={() => setOpen((o) => !o)}
         title={menuLabel}
       >
-        {buttonLabel ?? current?.label ?? "Sort"}
-        <SortIcon />
+        {icon}
+        {!iconOnly && (
+          <>
+            {buttonLabel ?? current?.label ?? "Sort"}
+            <ChevronIcon />
+          </>
+        )}
       </button>
       {open && (
         <div

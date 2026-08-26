@@ -18,12 +18,28 @@ RECENT_TURNS = 4
 # dates") against a Matter with real content spread across dozens of pages —
 # confirmed against a real 50-chunk/60-page test document where the answer
 # to "how many pages" needed one chunk, but "chronology" legitimately needed
-# most of the document. Below this character budget (~37K tokens, well
-# inside gpt-4o-mini's context window even after system prompt/history/
-# output), every Ready chunk is included directly instead of relying on
-# RRF-ranked selection — retrieval only still gates/ranks once a Matter's
-# real corpus grows past what comfortably fits in one call.
-FULL_CONTEXT_CHAR_CAP = 150_000
+# most of the document. Below this character budget, every Ready chunk is
+# included directly instead of relying on RRF-ranked selection — retrieval
+# only still gates/ranks once a Matter's real corpus grows past what
+# comfortably fits in one call.
+#
+# RAG-Pipeline-Development-History.md gap #7 (2026-08-25): the original
+# 150K figure was picked purely for NFR-001 latency headroom, not because
+# of any real technical ceiling — and a real Matter already live in this
+# database (378 chunks, 353,336 chars) had already grown past it, silently
+# losing its completeness guarantee with no signal to the lawyer. Raised
+# after spiking the real ceiling directly against the real API (not
+# assumed): a real 712,694-char prompt failed with the API's own error --
+# "This model's maximum context length is 128000 tokens... your messages
+# resulted in 142,948 tokens" (confirms gpt-4o-mini's real limit and this
+# corpus's real ~4.99 chars/token ratio). A real 416,049-char full prompt
+# (~400K content chars, the value below) succeeded in 10.6s; a real
+# 463,971-char prompt (~450K) succeeded too but took 37.1s in that run —
+# real API latency in this range didn't scale cleanly with size (variance
+# dominates), so 400K was chosen as a round number with real margin under
+# the hard 128K-token ceiling (~34% headroom after system prompt/history/
+# output) while comfortably covering the real Matter that motivated this.
+FULL_CONTEXT_CHAR_CAP = 400_000
 
 # Spiked against real retrieved chunks, not decided on paper (Technology
 # Decision Log) — RRF fused-score floor below which nothing is considered
@@ -192,6 +208,13 @@ class AskResult:
     message: ChatMessage
     citations: list[Citation]
     low_confidence: bool
+    # RAG-Pipeline-Development-History.md gap #7: True means every Ready
+    # chunk was considered (a genuine completeness guarantee); False means
+    # ranked retrieval was used instead (best-effort — a broad "summarize
+    # everything" question is not guaranteed to have seen every chunk).
+    # Ephemeral like low_confidence — computed per-request, not persisted,
+    # so it's only present on the response to the question that produced it.
+    full_context: bool
 
 
 def _label_for(c) -> str:
@@ -266,7 +289,7 @@ class ChatService:
             # Small enough to just include everything — no ranking, no
             # threshold gate, no risk of a broad question missing content
             # that simply wasn't in a relevance-ranked top-K.
-            return self._generate_and_persist(matter_id, question, chunks=all_chunks, metadata=metadata, low_confidence=False)
+            return self._generate_and_persist(matter_id, question, chunks=all_chunks, metadata=metadata, low_confidence=False, full_context=True)
 
         identifier_refs = extract_identifier_refs(question)
         try:
@@ -294,8 +317,8 @@ class ChatService:
             # can still be tried against metadata alone, with zero document
             # content ever entering the prompt.
             if metadata:
-                return self._generate_and_persist(matter_id, question, chunks=[], metadata=metadata, low_confidence=False)
-            return self._persist_answer(matter_id, NOT_FOUND_RESPONSE, [], low_confidence=False)
+                return self._generate_and_persist(matter_id, question, chunks=[], metadata=metadata, low_confidence=False, full_context=False)
+            return self._persist_answer(matter_id, NOT_FOUND_RESPONSE, [], low_confidence=False, full_context=False)
 
         # Exact-identifier chunks are never capped at CONTEXT_SIZE — a page or
         # table's own chunk count is naturally small and bounded, so truncating
@@ -310,10 +333,10 @@ class ChatService:
         # match can be, even if fused_scores itself is thin or empty.
         low_confidence = False if exact_chunks else max(fused_scores.values()) < CONFIDENT_THRESHOLD
 
-        return self._generate_and_persist(matter_id, question, chunks=chunks, metadata=metadata, low_confidence=low_confidence)
+        return self._generate_and_persist(matter_id, question, chunks=chunks, metadata=metadata, low_confidence=low_confidence, full_context=False)
 
     def _generate_and_persist(
-        self, matter_id: str, question: str, chunks: list, metadata: list[DocumentMetadata], low_confidence: bool
+        self, matter_id: str, question: str, chunks: list, metadata: list[DocumentMetadata], low_confidence: bool, full_context: bool
     ) -> AskResult:
         recent = self.messages.recent_messages(matter_id, limit=RECENT_TURNS)
         context = _format_context(chunks, metadata)
@@ -349,7 +372,7 @@ class ChatService:
                 pass  # keep the first (already-stripped) attempt rather than fail the whole request
 
         citation_data = [self._citation_for(n, chunks, metadata) for n in verified.cited_chunk_numbers]
-        return self._persist_answer(matter_id, verified.text, citation_data, low_confidence=low_confidence)
+        return self._persist_answer(matter_id, verified.text, citation_data, low_confidence=low_confidence, full_context=full_context)
 
     @staticmethod
     def _citation_for(n: int, chunks: list, metadata: list[DocumentMetadata]) -> tuple[str, int | None, str, str, str | None]:
@@ -360,7 +383,12 @@ class ChatService:
         return m.document_id, None, metadata_excerpt(m), m.file_name, None
 
     def _persist_answer(
-        self, matter_id: str, content: str, citation_data: list[tuple[str, int | None, str, str, str | None]], low_confidence: bool
+        self,
+        matter_id: str,
+        content: str,
+        citation_data: list[tuple[str, int | None, str, str, str | None]],
+        low_confidence: bool,
+        full_context: bool,
     ) -> AskResult:
         # BR-006, enforced as a real gate on the write path — not just documented.
         pending = [
@@ -370,7 +398,7 @@ class ChatService:
         validate_assistant_message(content, pending)
 
         message, citations = self.messages.save_assistant_message(matter_id, content, citation_data)
-        return AskResult(message, citations, low_confidence=low_confidence)
+        return AskResult(message, citations, low_confidence=low_confidence, full_context=full_context)
 
     def history(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]:
         return self.messages.list_messages(matter_id)

@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+body { margin:0; background:#F7F8F9; font-family:'Inter',-apple-system,'Segoe UI',sans-serif; color:#1B1F24; }
+a { color:#2A6E9C; text-decoration:none; }
+.ml-btn-primary { height:38px; padding:0 16px; border-radius:8px; border:none; background:#1F567C; color:#FFFFFF; font-size:13px; font-weight:500; }
+.ml-btn-primary:hover { background:#17415F; }
+.ml-btn-primary:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.ml-search { width:100%; max-width:340px; height:38px; border-radius:8px; border:1px solid #E1E4E8; background:#FFFFFF; padding:0 14px 0 38px; font-size:13px; box-sizing:border-box; }
+.ml-search:focus { outline:none; border-color:#2A6E9C; box-shadow:0 0 0 3px #A2C4DA55; }
+.ml-pill { height:32px; padding:0 14px; border-radius:9999px; border:none; background:transparent; color:#626B76; font-size:13px; font-weight:500; }
+.ml-pill:hover { background:#EEF0F2; color:#1B1F24; }
+.ml-pill-active { background:#EAF1F6; color:#17415F; }
+.ml-pill-active:hover { background:#EAF1F6; color:#17415F; }
+.ml-pill:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.ml-row { display:grid; grid-template-columns:2.2fr 1.4fr 100px 130px; align-items:center; gap:16px; padding:15px 12px; border-radius:10px; text-decoration:none; color:inherit; }
+.ml-row:hover { background:#FFFFFF; text-decoration:none; }
+.ml-row:focus-visible { outline:none; box-shadow:0 0 0 3px #A2C4DA; }
+.ml-head { font-size:12px; font-weight:500; color:#838C97; padding:0 12px 8px; }
+.ml-badge { font-size:11px; font-weight:500; padding:2px 10px; border-radius:9999px; border:1px solid; display:inline-block; width:fit-content; }
+@keyframes ml-shimmer { 0% { background-position:-200px 0; } 100% { background-position:200px 0; } }
+.ml-skel { border-radius:6px; background:linear-gradient(90deg,#EEF0F2 25%,#E1E4E8 37%,#EEF0F2 63%); background-size:400px 100%; animation:ml-shimmer 1.4s ease infinite; }
+@media (prefers-reduced-motion: reduce) { .ml-skel { animation:none; background:#EEF0F2; } }
+</style>
+</helmet>
+
+<div style="min-height:100dvh; display:flex; flex-direction:column;">
+  <dc-import name="NavBar" active="matters" lawyer-name="Vikram Desai" initials="VD" has-notif="{{true}}" hint-size="100%,64px"></dc-import>
+
+  <div style="max-width:1400px; width:100%; margin:0 auto; padding:40px 32px 64px; box-sizing:border-box; flex:1;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+      <h1 style="font-size:30px; font-weight:700; margin:0; letter-spacing:-0.01em;">Matters</h1>
+      <button type="button" class="ml-btn-primary">+ New Matter</button>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap;">
+      <div style="position:relative; flex:1; min-width:220px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#838C97" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:13px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="ml-search" type="text" placeholder="Filter by matter or client name…" aria-label="Filter matters" />
+      </div>
+      <div style="display:flex; gap:4px;">
+        <button type="button" class="ml-pill ml-pill-active">All (4)</button>
+        <button type="button" class="ml-pill">Open (3)</button>
+        <button type="button" class="ml-pill">Closed (1)</button>
+      </div>
+    </div>
+
+    <sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+      <div class="ml-head" style="display:grid; grid-template-columns:2.2fr 1.4fr 100px 130px; padding:0 12px 8px;">
+        <span>Matter</span><span>Client</span><span>Status</span><span>Next deadline</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="ml-skel" style="height:52px;"></div>
+        <div class="ml-skel" style="height:52px;"></div>
+        <div class="ml-skel" style="height:52px;"></div>
+        <div class="ml-skel" style="height:52px;"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+      <div style="text-align:center; padding:80px 24px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B3261E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <p style="font-size:14px; color:#7C1A14; margin:0 0 16px;">Couldn&#39;t load matters.</p>
+        <button type="button" class="ml-btn-primary">Retry</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+      <div style="text-align:center; padding:80px 24px; max-width:420px; margin:0 auto;">
+        <div style="width:48px; height:48px; border-radius:9999px; background:#EAF1F6; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#17415F" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5a1 1 0 0 0 1 1h5"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 13h6M9 17h6"/></svg>
+        </div>
+        <h2 style="font-size:18px; font-weight:600; margin:0 0 8px;">No matters yet</h2>
+        <p style="font-size:14px; color:#626B76; margin:0 0 24px; line-height:1.5;">Create a Matter for one of your Clients to start tracking documents, deadlines, and AI-assisted research.</p>
+        <button type="button" class="ml-btn-primary" style="margin:0 auto;">+ New Matter</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isPopulated}}" hint-placeholder-val="{{true}}">
+      <div class="ml-head" style="display:grid; grid-template-columns:2.2fr 1.4fr 100px 130px; padding:0 12px 8px;">
+        <span>Matter</span><span>Client</span><span>Status</span><span>Next deadline</span>
+      </div>
+      <div style="display:flex; flex-direction:column;">
+        <sc-for list="{{matters}}" as="m" hint-placeholder-count="4">
+          <a href="#" class="ml-row">
+            <span style="font-size:14px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{m.title}}</span>
+            <span style="font-size:13px; color:#626B76; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{m.client}}</span>
+            <span class="ml-badge" style="background:{{m.badgeBg}}; border-color:{{m.badgeBorder}}; color:{{m.badgeText}};">{{m.badgeLabel}}</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:{{m.dueColor}};">{{m.due}}</span>
+          </a>
+        </sc-for>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"state":{"editor":"enum","default":"Populated","options":["Populated","Loading","Empty","Error"],"section":"Screen state"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const state = this.props.state ?? 'Populated';
+    const matters = [
+      { title: 'Meridian Textiles — Trademark Opposition', client: 'Meridian Textiles Pvt. Ltd.', badgeLabel: 'Open', badgeBg: '#E5F3F4', badgeBorder: '#A9D6DA', badgeText: '#0A5960', due: 'In 3d', dueColor: '#7A5107' },
+      { title: 'Priya Nair — Tenancy Dispute', client: 'Priya Nair', badgeLabel: 'Open', badgeBg: '#E5F3F4', badgeBorder: '#A9D6DA', badgeText: '#0A5960', due: 'Overdue 1d', dueColor: '#7C1A14' },
+      { title: 'Sundaram Logistics — Supply Breach', client: 'Sundaram Logistics Pvt. Ltd.', badgeLabel: 'Open', badgeBg: '#E5F3F4', badgeBorder: '#A9D6DA', badgeText: '#0A5960', due: 'In 12d', dueColor: '#838C97' },
+      { title: 'Kabir Malhotra — Will & Probate', client: 'Kabir Malhotra', badgeLabel: 'Closed', badgeBg: '#EEF0F2', badgeBorder: '#C9CED4', badgeText: '#48505A', due: '—', dueColor: '#A7AEB8' },
+    ];
+    return {
+      isLoading: state === 'Loading',
+      isError: state === 'Error',
+      isEmpty: state === 'Empty',
+      isPopulated: state === 'Populated',
+      matters,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useListSearch } from "@/components/list-search-context";
 import { SortDropdown } from "@/components/sort-dropdown";
 import { initials } from "@/lib/initials";
+import { usePersistedState } from "@/lib/use-persisted-state";
 
 type Client = { id: string; name: string; contactEmail: string | null };
 type Matter = { id: string; clientId: string; status: "open" | "closed"; updatedAt: string };
@@ -14,6 +15,15 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: "recent", label: "Most recent activity" },
   { value: "openMatters", label: "Most open Matters" },
 ];
+
+function SortOrderIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 6v13M7 19l-3-3M7 19l3-3" />
+      <path d="M17 18V5M17 5l-3 3M17 5l3 3" />
+    </svg>
+  );
+}
 
 /**
  * I-13/I-14: pure client-side filter + sort over the already-fetched list —
@@ -33,7 +43,7 @@ export function ClientsList({
   onSelectClient: (id: string) => void;
 }) {
   const { query } = useListSearch();
-  const [sortMode, setSortMode] = useState<SortMode>("name");
+  const [sortMode, setSortMode] = usePersistedState<SortMode>("clients:sortMode", "name");
 
   const matterCounts = useMemo(() => {
     const counts = new Map<string, { open: number; closed: number }>();
@@ -83,14 +93,22 @@ export function ClientsList({
   return (
     <>
       <div className="row master-detail-col-header" style={{ gap: "var(--space-3)", marginBottom: "var(--space-4)", flexWrap: "wrap" }}>
-        <SortDropdown value={sortMode} options={SORT_OPTIONS} onChange={setSortMode} menuLabel="Sort clients by" align="left" />
+        <SortDropdown
+          value={sortMode}
+          options={SORT_OPTIONS}
+          onChange={setSortMode}
+          menuLabel="Sort clients by"
+          align="left"
+          icon={<SortOrderIcon />}
+          iconOnly
+        />
       </div>
 
       <div className="master-detail-col-scroll">
         {sortedClients.length === 0 ? (
           <div key={query} className="card text-secondary client-empty-fade">No clients match &quot;{query.trim()}&quot;.</div>
         ) : (
-          <div className="stack">
+          <div className="stack" style={{ gap: "var(--space-1)" }}>
             {sortedClients.map((c) => {
               const counts = matterCounts.get(c.id) ?? { open: 0, closed: 0 };
               const selected = c.id === selectedClientId;
@@ -100,7 +118,7 @@ export function ClientsList({
                   type="button"
                   onClick={() => onSelectClient(c.id)}
                   aria-current={selected ? "true" : undefined}
-                  className={`card client-row${selected ? " card-selected" : ""}`}
+                  className={`client-row${selected ? " card-selected" : ""}`}
                 >
                   <div className="row-between">
                     <div className="row" style={{ gap: "var(--space-3)" }}>

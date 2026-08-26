@@ -9,6 +9,8 @@ import { ChatPanel } from "./[id]/chat-panel";
 import { NewDeadlineForm } from "./[id]/new-deadline-form";
 import { CloseMatterButton } from "./[id]/close-matter-button";
 import { ReopenMatterButton } from "./[id]/reopen-matter-button";
+import { GenerateDraftModal } from "./[id]/generate-draft-modal";
+import { DeleteMatterModal } from "./[id]/delete-matter-modal";
 
 type Matter = { id: string; title: string; status: "open" | "closed" };
 type Client = { id: string; name: string };
@@ -23,7 +25,7 @@ type Doc = {
   createdAt: string;
 };
 type Citation = { id: string; documentId: string | null; fileName: string | null; pageNumber: number | null; section: string | null; excerpt: string | null };
-type ChatMsg = { id: string; role: "user" | "assistant"; content: string; createdAt: string; citations: Citation[]; lowConfidence: boolean | null; pinned: boolean };
+type ChatMsg = { id: string; role: "user" | "assistant"; content: string; createdAt: string; citations: Citation[]; lowConfidence: boolean | null; fullContext: boolean | null; pinned: boolean };
 type Deadline = {
   id: string;
   matterId: string;
@@ -222,12 +224,15 @@ function DocTabsStrip({
 }
 
 /** Title + status + client line — shared between the normal header and the (narrower) chat-mode header. */
-function MatterTitleBlock({ matter, client }: { matter: Matter; client: Client | null }) {
+function MatterTitleBlock({ matter, client, onDeleted }: { matter: Matter; client: Client | null; onDeleted: () => void }) {
   return (
     <>
       <div className="row-between">
         <h1 style={{ fontSize: "var(--font-size-2xl)" }}>{matter.title}</h1>
-        <StatusBadge status={matter.status} />
+        <div className="row" style={{ gap: "var(--space-2)" }}>
+          <StatusBadge status={matter.status} />
+          <DeleteMatterModal matterId={matter.id} matterTitle={matter.title} onDeleted={onDeleted} />
+        </div>
       </div>
       {client && (
         <div className="text-tertiary text-sm" style={{ marginTop: "var(--space-2)" }}>
@@ -265,10 +270,12 @@ function AiSparkleIcon() {
 export function MatterDetailPanel({
   matterId,
   onDeadlineChange,
+  onDeleted,
 }: {
   matterId: string;
   /** Notified (not required by the standalone page) whenever a deadline's status changes here, so the Matter list's tile can update its "Due X" text live without a full refetch. */
   onDeadlineChange?: (deadline: Deadline) => void;
+  onDeleted: () => void;
 }) {
   const [matter, setMatter] = useState<Matter | null>(null);
   const [client, setClient] = useState<Client | null>(null);
@@ -353,7 +360,7 @@ export function MatterDetailPanel({
         {chatModeOpen ? (
           <div className="chat-mode-header-row">
             <div className="chat-mode-title-block">
-              <MatterTitleBlock matter={matter} client={client} />
+              <MatterTitleBlock matter={matter} client={client} onDeleted={onDeleted} />
             </div>
             <DocTabsStrip
               documents={documents}
@@ -365,7 +372,7 @@ export function MatterDetailPanel({
             />
           </div>
         ) : (
-          <MatterTitleBlock matter={matter} client={client} />
+          <MatterTitleBlock matter={matter} client={client} onDeleted={onDeleted} />
         )}
       </div>
 
@@ -407,6 +414,7 @@ export function MatterDetailPanel({
                     <AiSparkleIcon />
                   </button>
                   {matter.status === "open" && <PanelDocumentAddButton matterId={matter.id} onUpdated={refetch} />}
+                  <GenerateDraftModal matterId={matter.id} matterTitle={matter.title} clientName={client?.name ?? null} onUpdated={refetch} />
                 </div>
               </div>
               <PanelDocumentsList documents={documents} />

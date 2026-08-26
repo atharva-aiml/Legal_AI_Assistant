@@ -55,7 +55,7 @@ function NotificationRow({
   );
 
   return matterId ? (
-    <Link href={`/matters/${matterId}#deadlines`} onClick={() => onOpen(notification)} className="card">
+    <Link href={`/matters?selected=${matterId}#panel-deadlines`} onClick={() => onOpen(notification)} className="card">
       {content}
     </Link>
   ) : (

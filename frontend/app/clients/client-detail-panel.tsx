@@ -7,7 +7,9 @@ import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { EditClientModal } from "./[id]/edit-client-modal";
+import { DeleteClientModal } from "./[id]/delete-client-modal";
 import { NewMatterModal } from "./[id]/new-matter-modal";
+import { DeleteMatterModal } from "../matters/[id]/delete-matter-modal";
 
 type Client = { id: string; name: string; contactEmail: string | null; contactPhone: string | null; notes: string | null; createdAt: string };
 type ClientSummary = { id: string; name: string };
@@ -24,7 +26,7 @@ function formatDueDate(iso: string): string {
  * inline under the list) — fetched client-side so selecting a client from
  * the master list never navigates away from /clients.
  */
-export function ClientDetailPanel({ clientId }: { clientId: string }) {
+export function ClientDetailPanel({ clientId, onDeleted }: { clientId: string; onDeleted: () => void }) {
   const [client, setClient] = useState<Client | null>(null);
   const [matters, setMatters] = useState<Matter[]>([]);
   const [allClients, setAllClients] = useState<ClientSummary[]>([]);
@@ -84,60 +86,66 @@ export function ClientDetailPanel({ clientId }: { clientId: string }) {
   }
 
   return (
-    <div className="client-detail-panel">
-      <div className="row-between">
+    <div className="client-detail-panel" style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      <div className="row master-detail-col-header" style={{ gap: "var(--space-2)" }}>
         <h1 style={{ fontSize: "var(--font-size-2xl)" }}>{client.name}</h1>
-        <EditClientModal client={client} onSaved={() => setRefreshTick((t) => t + 1)} />
+        <EditClientModal client={client} onSaved={() => setRefreshTick((t) => t + 1)} iconOnly />
+        <DeleteClientModal clientId={client.id} clientName={client.name} onDeleted={onDeleted} />
       </div>
 
-      <div className="card" style={{ marginTop: "var(--space-4)" }}>
-        <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "var(--space-4)" }}>
-          <div>
-            <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Contact email</dt>
-            <dd style={{ margin: 0 }}>{client.contactEmail || "—"}</dd>
-          </div>
-          <div>
-            <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Contact phone</dt>
-            <dd style={{ margin: 0 }}>{client.contactPhone || "—"}</dd>
-          </div>
-          <div>
-            <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Added</dt>
-            <dd style={{ margin: 0 }}>{new Date(client.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</dd>
-          </div>
-          {client.notes && (
-            <div style={{ gridColumn: "1 / -1" }}>
-              <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Notes</dt>
-              <dd style={{ margin: 0, whiteSpace: "pre-wrap" }}>{client.notes}</dd>
+      <div className="master-detail-col-scroll">
+        <div style={{ marginTop: "var(--space-4)" }}>
+          <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "var(--space-4)" }}>
+            <div>
+              <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Contact email</dt>
+              <dd style={{ margin: 0 }}>{client.contactEmail || "—"}</dd>
             </div>
-          )}
-        </dl>
-      </div>
-
-      <div className="section-header">
-        <h2 style={{ fontSize: "var(--font-size-xl)" }}>Matters</h2>
-        <NewMatterModal clientId={client.id} clients={allClients} />
-      </div>
-
-      {matters.length === 0 ? (
-        <EmptyState title="No matters yet" body="Open the first Matter for this client to start uploading documents." action={<NewMatterModal clientId={client.id} clients={allClients} />} />
-      ) : (
-        <div className="stack">
-          {matters.map((matter) => {
-            const nextDeadline = nextDeadlineByMatter.get(matter.id);
-            return (
-              <Link key={matter.id} href={`/matters/${matter.id}`} className="card">
-                <div className="row-between">
-                  <div style={{ fontWeight: 500 }}>{matter.title}</div>
-                  <div className="row" style={{ gap: "var(--space-3)" }}>
-                    {nextDeadline && <span className="text-tertiary text-sm mono">Due {formatDueDate(nextDeadline)}</span>}
-                    <StatusBadge status={matter.status} />
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+            <div>
+              <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Contact phone</dt>
+              <dd style={{ margin: 0 }}>{client.contactPhone || "—"}</dd>
+            </div>
+            <div>
+              <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Added</dt>
+              <dd style={{ margin: 0 }}>{new Date(client.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</dd>
+            </div>
+            {client.notes && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Notes</dt>
+                <dd style={{ margin: 0, whiteSpace: "pre-wrap" }}>{client.notes}</dd>
+              </div>
+            )}
+          </dl>
         </div>
-      )}
+
+        <div className="row" style={{ gap: "var(--space-2)", margin: "var(--space-5) 0 var(--space-3)" }}>
+          <h2 style={{ fontSize: "var(--font-size-xl)" }}>Matters</h2>
+          <NewMatterModal clientId={client.id} clients={allClients} iconOnly />
+        </div>
+
+        {matters.length === 0 ? (
+          <EmptyState title="No matters yet" body="Open the first Matter for this client to start uploading documents." action={<NewMatterModal clientId={client.id} clients={allClients} />} />
+        ) : (
+          <div className="stack">
+            {matters.map((matter) => {
+              const nextDeadline = nextDeadlineByMatter.get(matter.id);
+              return (
+                <div key={matter.id} className="client-matter-row">
+                  <Link href={`/matters?selected=${matter.id}`} className="client-matter-row-link">
+                    <div className="row-between" style={{ width: "100%" }}>
+                      <div style={{ fontWeight: 500 }}>{matter.title}</div>
+                      <div className="row" style={{ gap: "var(--space-3)" }}>
+                        {nextDeadline && <span className="text-tertiary text-sm mono">Due {formatDueDate(nextDeadline)}</span>}
+                        <StatusBadge status={matter.status} />
+                      </div>
+                    </div>
+                  </Link>
+                  <DeleteMatterModal matterId={matter.id} matterTitle={matter.title} onDeleted={() => setRefreshTick((t) => t + 1)} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,36 +1,24 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { javaFetch } from "@/lib/api/java-client";
-import { initials } from "@/lib/initials";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { QuickStatCard } from "@/components/ui/quick-stat-card";
-import { SeeAllLink } from "@/components/see-all-link";
 import { HollowPlusIcon } from "@/components/ui/hollow-plus-icon";
 import { DashboardCalendar } from "./dashboard-calendar";
 import { ActiveMattersPanel } from "./active-matters-panel";
+import { RecentMattersPanel } from "./recent-matters-panel";
+import { QuickStatsPanel } from "./quick-stats-panel";
 
 type Lawyer = { name: string; email: string };
 type Matter = { id: string; title: string; status: "open" | "closed"; clientId: string };
 type Client = { id: string; name: string };
 type Deadline = { id: string; matterId: string; title: string; dueDate: string; status: "open" | "complete" };
-type NotificationRow = { id: string; readAt: string | null };
+type NotificationRow = { id: string; deadlineId: string; message: string; readAt: string | null; createdAt: string };
 
 function todayISO(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-}
-
-/** "Due in 5d" / "Due today" / "Overdue by 2d" / "No deadline" — the compact countdown shown on Active/Recent Matters cards. */
-function dueLabel(iso: string | undefined, today: string): string {
-  if (!iso) return "No deadline";
-  const diffMs = new Date(`${iso}T00:00:00`).getTime() - new Date(`${today}T00:00:00`).getTime();
-  const diffDays = Math.round(diffMs / 86_400_000);
-  if (diffDays < 0) return `Overdue by ${Math.abs(diffDays)}d`;
-  if (diffDays === 0) return "Due today";
-  return `Due in ${diffDays}d`;
 }
 
 export default async function DashboardPage() {
@@ -53,7 +41,6 @@ export default async function DashboardPage() {
   const { notifications }: { notifications: NotificationRow[] } = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
   const { deadlines: allDeadlines }: { deadlines: Deadline[] } = allDeadlinesRes.ok ? await allDeadlinesRes.json() : { deadlines: [] };
 
-  const clientNameById = new Map(clients.map((c) => [c.id, c.name]));
   const clientNameByIdPlain: Record<string, string> = Object.fromEntries(clients.map((c) => [c.id, c.name]));
   const matterTitleById: Record<string, string> = Object.fromEntries(matters.map((m) => [m.id, m.title]));
   // Full open set, not pre-capped — ActiveMattersPanel sorts client-side (default
@@ -83,7 +70,7 @@ export default async function DashboardPage() {
       ok: mattersRes.ok,
       icon: "matters" as const,
       tone: "primary" as const,
-      seeAllHref: "/matters?status=open",
+      popup: "matters" as const,
     },
     {
       label: "Deadlines this week",
@@ -91,7 +78,7 @@ export default async function DashboardPage() {
       ok: weekDeadlinesRes.ok,
       icon: "deadlines" as const,
       tone: "warning" as const,
-      seeAllHref: "#dashboard-calendar",
+      popup: "deadlines" as const,
     },
     {
       label: "Unread notifications",
@@ -99,7 +86,7 @@ export default async function DashboardPage() {
       ok: notificationsRes.ok,
       icon: "notifications" as const,
       tone: "info" as const,
-      seeAllHref: "/notifications",
+      popup: "notifications" as const,
     },
   ];
 
@@ -128,10 +115,10 @@ export default async function DashboardPage() {
         <div className="dashboard-header row-between">
           <h1 style={{ fontSize: "var(--font-size-2xl)" }}>Dashboard</h1>
           <div className="row">
-            <Button href="/clients/new" variant="secondary" className="btn-plain">
+            <Button href="/clients?new=1" variant="secondary" className="btn-plain">
               <HollowPlusIcon /> New Client
             </Button>
-            <Button href="/matters/new" className="btn-hold-bg">
+            <Button href="/matters?new=1" className="btn-hold-bg">
               <span className="btn-plus-icon">+</span> New Matter
             </Button>
           </div>
@@ -139,18 +126,15 @@ export default async function DashboardPage() {
 
         <div className="dashboard-grid">
           <div className="dashboard-col">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "var(--space-3)" }}>
-              {statTiles.map((tile) => (
-                <QuickStatCard
-                  key={tile.label}
-                  value={tile.ok ? tile.value : "—"}
-                  label={tile.label}
-                  icon={tile.icon}
-                  tone={tile.tone}
-                  seeAllHref={tile.seeAllHref}
-                />
-              ))}
-            </div>
+            <QuickStatsPanel
+              statTiles={statTiles}
+              activeMatters={activeMatters}
+              weekDeadlines={weekDeadlines}
+              unreadNotifications={notifications.filter((n) => n.readAt === null)}
+              clientNameById={clientNameByIdPlain}
+              matterTitleById={matterTitleById}
+              today={today}
+            />
 
             {!mattersRes.ok ? (
               <ErrorBanner>Couldn&apos;t load matters — retry.</ErrorBanner>
@@ -167,31 +151,12 @@ export default async function DashboardPage() {
           <div className="dashboard-col">
             <DashboardCalendar deadlines={allDeadlines} matterTitleById={matterTitleById} />
 
-            <div className="dashboard-panel" style={{ flex: 1 }}>
-              <div className="row-between" style={{ marginBottom: "var(--space-2)" }}>
-                <h2 style={{ fontSize: "var(--font-size-lg)", margin: 0 }}>Recent Matters</h2>
-                <SeeAllLink href="/matters" />
-              </div>
-              {recentMatters.length === 0 ? (
-                <div className="card text-secondary">No recently viewed Matters yet.</div>
-              ) : (
-                <div className="stack" style={{ gap: "var(--space-2)" }}>
-                  {recentMatters.map((matter) => {
-                    const nextDeadline = nextDeadlineByMatter.get(matter.id);
-                    return (
-                      <Link key={matter.id} href={`/matters/${matter.id}`} className="card recent-matter-row">
-                        <span className="matter-avatar matter-avatar-xs">{initials(matter.title)}</span>
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div className="active-matter-title">{matter.title}</div>
-                          <div className="text-tertiary active-matter-meta">{clientNameById.get(matter.clientId) ?? "—"}</div>
-                        </div>
-                        <div className="text-tertiary active-matter-meta mono" style={{ flexShrink: 0 }}>{dueLabel(nextDeadline, today)}</div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <RecentMattersPanel
+              matters={recentMatters}
+              nextDeadlineById={nextDeadlineByIdPlain}
+              clientNameById={clientNameByIdPlain}
+              today={today}
+            />
           </div>
         </div>
       </main>

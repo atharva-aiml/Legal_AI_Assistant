@@ -7,16 +7,16 @@ import { NewMatterModal } from "@/app/clients/[id]/new-matter-modal";
 import { MattersMasterDetail } from "./matters-master-detail";
 
 type Lawyer = { name: string; email: string };
-type Matter = { id: string; title: string; status: "open" | "closed"; clientId: string };
+type Matter = { id: string; title: string; status: "open" | "closed"; clientId: string; updatedAt: string };
 type Client = { id: string; name: string };
 type Deadline = { id: string; matterId: string; dueDate: string; status: "open" | "complete" };
 
-export default async function MattersPage({ searchParams }: { searchParams: Promise<{ status?: string; clientId?: string }> }) {
+export default async function MattersPage({ searchParams }: { searchParams: Promise<{ status?: string; clientId?: string; selected?: string }> }) {
   const meRes = await javaFetch("/api/auth/me");
   if (!meRes.ok) redirect("/login");
   const { lawyer }: { lawyer: Lawyer } = await meRes.json();
 
-  const { status, clientId } = await searchParams;
+  const { status, clientId, selected } = await searchParams;
 
   // I-23: status/clientId are real server-side filters on the same GET /api/matters endpoint.
   const query = new URLSearchParams();
@@ -73,6 +73,7 @@ export default async function MattersPage({ searchParams }: { searchParams: Prom
             deadlines={deadlines}
             currentStatus={status ?? ""}
             currentClientId={clientId ?? ""}
+            initialSelectedMatterId={selected ?? null}
           />
         )}
       </main>

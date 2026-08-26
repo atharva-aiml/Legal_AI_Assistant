@@ -95,7 +95,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             {matters.map((matter) => {
               const nextDeadline = nextDeadlineByMatter.get(matter.id);
               return (
-                <Link key={matter.id} href={`/matters/${matter.id}`} className="card">
+                <Link key={matter.id} href={`/matters?selected=${matter.id}`} className="card">
                   <div className="row-between">
                     <div style={{ fontWeight: 500 }}>{matter.title}</div>
                     <div className="row" style={{ gap: "var(--space-3)" }}>
