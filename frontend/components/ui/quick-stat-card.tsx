@@ -86,7 +86,7 @@ export function QuickStatCard({
       <div className="stat-card-glow" aria-hidden="true" style={{ color: fg }} />
       <div className="stat-card-border" aria-hidden="true" style={{ color: fg }} />
       <div className="row-between" style={{ alignItems: "flex-start" }}>
-        <div className="stat-value" style={{ fontFamily: "var(--font-family-heading)", fontSize: "var(--font-size-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+        <div className="stat-value" style={{ fontFamily: "var(--font-family-heading)", fontSize: "var(--font-size-xl)", fontWeight: 700, letterSpacing: "-0.01em", fontVariantNumeric: "tabular-nums" }}>
           {displayValue}
         </div>
         <div

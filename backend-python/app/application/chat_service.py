@@ -200,7 +200,18 @@ class AssistantUnavailableError(Exception):
 class ChatMessageNotFoundError(Exception):
     """404: no assistant message with that id in this Matter — covers a bad id, a
     different Matter's message, and a user message alike, same as the rest of this
-    codebase collapsing an out-of-scope id to "not found" rather than a distinct error."""
+    codebase collapsing an out-of-scope id to "not found" rather than a distinct error.
+
+    Also reused by edit()/activate_branch() for "no message with that id in this
+    Matter at all" — as opposed to InvalidEditTargetError below, which is the
+    distinct 400 case of a real message that exists but can't be edited."""
+
+
+class InvalidEditTargetError(Exception):
+    """400: the message being edited exists in this Matter but isn't a 'user'
+    message — only a lawyer's own question can be edited into a new sibling
+    branch. Distinct from ChatMessageNotFoundError (a missing/wrong-Matter id),
+    same split as the rest of this codebase's 404-vs-400 error types."""
 
 
 @dataclass(frozen=True)
@@ -276,8 +287,75 @@ class ChatService:
         if self.retrieval.ready_document_count(matter_id) == 0:
             raise NoReadyDocumentsError()
 
-        self.messages.save_user_message(matter_id, lawyer_id, question)
+        # The server, not the caller, is the source of truth for "what's
+        # currently active" — parent_id is always the tail of the CURRENT
+        # active path, never accepted as an argument for this endpoint.
+        current_path = self.messages.active_path(matter_id)
+        parent_id = current_path[-1].id if current_path else None
 
+        user_message = self.messages.save_user_message(matter_id, lawyer_id, question, parent_id=parent_id)
+        if parent_id is None:
+            # First message ever in this Matter — no parent row exists to hold
+            # the "which root is active" pointer, so the Matter itself does.
+            self.messages.set_matter_active_root(matter_id, user_message.id)
+        else:
+            # A plain new question has no siblings yet — it's simply the one child.
+            self.messages.set_active_child(parent_id, user_message.id)
+
+        return self._answer(matter_id, question, user_message.id)
+
+    def edit(self, matter_id: str, message_id: str, lawyer_id: str, question: str) -> list[tuple[ChatMessage, list[Citation]]]:
+        """ChatGPT-style edit-a-previous-message: never deletes/overwrites the
+        original — creates a sibling user message at the same tree position
+        with its own new assistant reply, and repoints the active branch to it."""
+        original = self.messages.get_by_id(message_id)
+        if original is None or original.matter_id != matter_id:
+            raise ChatMessageNotFoundError()
+        if original.role != "user":
+            raise InvalidEditTargetError()
+
+        # A sibling of the edited message, not a child — same parent_id.
+        new_message = self.messages.save_user_message(matter_id, lawyer_id, question, parent_id=original.parent_id)
+
+        if original.parent_id is not None:
+            self.messages.set_active_child(original.parent_id, new_message.id)
+        else:
+            # Editing the Matter's very first message — no parent row exists.
+            self.messages.set_matter_active_root(matter_id, new_message.id)
+
+        self._answer(matter_id, question, new_message.id)
+        return self._active_path_with_citations(matter_id)
+
+    def activate_branch(self, matter_id: str, message_id: str) -> list[tuple[ChatMessage, list[Citation]]]:
+        """Repoints the active pointer to make message_id the active one among
+        its siblings — e.g. switching back to a pre-edit branch. Generates
+        nothing new: the sibling being activated already has its own subtree
+        (assistant reply and anything downstream of it) from before."""
+        message = self.messages.get_by_id(message_id)
+        if message is None or message.matter_id != matter_id:
+            raise ChatMessageNotFoundError()
+
+        if message.parent_id is not None:
+            self.messages.set_active_child(message.parent_id, message.id)
+        else:
+            self.messages.set_matter_active_root(matter_id, message.id)
+
+        return self._active_path_with_citations(matter_id)
+
+    def _active_path_with_citations(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]:
+        path = self.messages.active_path(matter_id)
+        return [(m, self.messages.citations_for(m.id)) for m in path]
+
+    def sibling_ids(self, message: ChatMessage) -> list[str]:
+        """Ordered ids of every message sharing this message's parent_id,
+        itself included — what a "‹ 2/3 ›" edit-arrow UI is built from."""
+        return [m.id for m in self.messages.siblings(message.matter_id, message.parent_id)]
+
+    def _answer(self, matter_id: str, question: str, user_message_id: str) -> AskResult:
+        """Shared by ask() and edit(): everything from retrieval through
+        persisting the assistant reply as user_message_id's child. Identical
+        full-context/ranked-retrieval/threshold-gate logic either way — only
+        which user message the reply is attached to differs."""
         try:
             metadata = self.retrieval.document_metadata(matter_id)
             all_chunks = self.retrieval.all_ready_chunks(matter_id)
@@ -289,7 +367,9 @@ class ChatService:
             # Small enough to just include everything — no ranking, no
             # threshold gate, no risk of a broad question missing content
             # that simply wasn't in a relevance-ranked top-K.
-            return self._generate_and_persist(matter_id, question, chunks=all_chunks, metadata=metadata, low_confidence=False, full_context=True)
+            return self._generate_and_persist(
+                matter_id, question, user_message_id, chunks=all_chunks, metadata=metadata, low_confidence=False, full_context=True
+            )
 
         identifier_refs = extract_identifier_refs(question)
         try:
@@ -317,8 +397,10 @@ class ChatService:
             # can still be tried against metadata alone, with zero document
             # content ever entering the prompt.
             if metadata:
-                return self._generate_and_persist(matter_id, question, chunks=[], metadata=metadata, low_confidence=False, full_context=False)
-            return self._persist_answer(matter_id, NOT_FOUND_RESPONSE, [], low_confidence=False, full_context=False)
+                return self._generate_and_persist(
+                    matter_id, question, user_message_id, chunks=[], metadata=metadata, low_confidence=False, full_context=False
+                )
+            return self._persist_answer(matter_id, user_message_id, NOT_FOUND_RESPONSE, [], low_confidence=False, full_context=False)
 
         # Exact-identifier chunks are never capped at CONTEXT_SIZE — a page or
         # table's own chunk count is naturally small and bounded, so truncating
@@ -333,12 +415,24 @@ class ChatService:
         # match can be, even if fused_scores itself is thin or empty.
         low_confidence = False if exact_chunks else max(fused_scores.values()) < CONFIDENT_THRESHOLD
 
-        return self._generate_and_persist(matter_id, question, chunks=chunks, metadata=metadata, low_confidence=low_confidence, full_context=False)
+        return self._generate_and_persist(
+            matter_id, question, user_message_id, chunks=chunks, metadata=metadata, low_confidence=low_confidence, full_context=False
+        )
 
     def _generate_and_persist(
-        self, matter_id: str, question: str, chunks: list, metadata: list[DocumentMetadata], low_confidence: bool, full_context: bool
+        self,
+        matter_id: str,
+        question: str,
+        user_message_id: str,
+        chunks: list,
+        metadata: list[DocumentMetadata],
+        low_confidence: bool,
+        full_context: bool,
     ) -> AskResult:
-        recent = self.messages.recent_messages(matter_id, limit=RECENT_TURNS)
+        # Real conversation history that led up to THIS user message on ITS
+        # branch — not "the last N rows for the matter", which could pull in
+        # a superseded or sibling branch's messages once editing exists.
+        recent = self.messages.history_before(user_message_id, limit=RECENT_TURNS)
         context = _format_context(chunks, metadata)
         user_prompt = _format_history(recent) + f"Context:\n{context}\n\nQuestion: {question}"
         num_sources = len(chunks) + len(metadata)
@@ -372,7 +466,9 @@ class ChatService:
                 pass  # keep the first (already-stripped) attempt rather than fail the whole request
 
         citation_data = [self._citation_for(n, chunks, metadata) for n in verified.cited_chunk_numbers]
-        return self._persist_answer(matter_id, verified.text, citation_data, low_confidence=low_confidence, full_context=full_context)
+        return self._persist_answer(
+            matter_id, user_message_id, verified.text, citation_data, low_confidence=low_confidence, full_context=full_context
+        )
 
     @staticmethod
     def _citation_for(n: int, chunks: list, metadata: list[DocumentMetadata]) -> tuple[str, int | None, str, str, str | None]:
@@ -385,6 +481,7 @@ class ChatService:
     def _persist_answer(
         self,
         matter_id: str,
+        user_message_id: str,
         content: str,
         citation_data: list[tuple[str, int | None, str, str, str | None]],
         low_confidence: bool,
@@ -397,11 +494,12 @@ class ChatService:
         ]
         validate_assistant_message(content, pending)
 
-        message, citations = self.messages.save_assistant_message(matter_id, content, citation_data)
+        message, citations = self.messages.save_assistant_message(matter_id, content, citation_data, parent_id=user_message_id)
+        self.messages.set_active_child(user_message_id, message.id)
         return AskResult(message, citations, low_confidence=low_confidence, full_context=full_context)
 
     def history(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]:
-        return self.messages.list_messages(matter_id)
+        return self._active_path_with_citations(matter_id)
 
     def toggle_pin(self, matter_id: str, message_id: str, pinned: bool) -> ChatMessage:
         message = self.messages.toggle_pin(matter_id, message_id, pinned)

@@ -4,7 +4,7 @@ Single light theme for v1 (no dark mode — not required by Requirements; revisi
 
 ## 1. Color Tokens
 
-Deep Navy primary (authority, trust, legal tradition) + Slate Graphite secondary (enterprise neutrality) + a cool neutral scale, replacing the earlier warm-ivory/forest-green direction. A single muted indigo-violet **AI accent** marks AI-origin content; a muted teal **Citation** color marks legal-reference links — both deliberately distinct from Primary and from each other so each reads as its own semantic category at a glance, and deliberately desaturated so neither reads as decorative/flashy.
+Deep Navy primary (authority, trust, legal tradition) + Slate Graphite secondary (enterprise neutrality) + a cool neutral scale, replacing the earlier warm-ivory/forest-green direction. A single **AI accent** — a bright sky blue (`#3B82F6`; updated 2026-08-27 from the earlier muted indigo-violet) — marks AI-origin content; a muted teal **Citation** color marks legal-reference links — both deliberately distinct from Primary and from each other so each reads as its own semantic category at a glance.
 
 **Neutrals** — backgrounds, text, borders, disabled states.
 
@@ -75,14 +75,14 @@ Deep Navy primary (authority, trust, legal tradition) + Slate Graphite secondary
 
 **Destructive-action note.** Unlike a hypothetical no-permanent-deletion product, this app has a real irreversible action — REQ-027 Document delete is deliberately unrestricted (explicit user override, not gated by Matter status). `.btn-destructive` therefore keeps using `--color-error-base` as a genuine destructive-red variant; it was not removed.
 
-**AI accent** — muted indigo-violet, used only within or referencing AI-origin content (the Chat panel's assistant messages/citations, Section 4). Never a general-purpose accent.
+**AI accent** — a bright sky blue (updated 2026-08-27 from muted indigo-violet), used only within or referencing AI-origin content (the Chat panel's assistant messages, the "Ask AI" trigger, the thinking-dots and voice-dictation indicators, Section 4). Never a general-purpose accent.
 
 | Token | Hex | Used for |
 |---|---|---|
-| `--color-ai-50` | `#EFEBF7` | Assistant chat-bubble background; AI-origin content tint. |
-| `--color-ai-200` | `#CFC3E8` | Assistant chat-bubble border. |
-| `--color-ai-500` | `#5B4B9E` | AI accent (icons/markers). |
-| `--color-ai-700` | `#40356F` | "AI" label text on `ai-50`. |
+| `--color-ai-50` | `#EFF6FF` | Assistant chat-bubble background; AI-origin content tint. |
+| `--color-ai-200` | `#BFDBFE` | Assistant chat-bubble border. |
+| `--color-ai-500` | `#3B82F6` | AI accent (icons/markers, thinking/voice indicators, "Ask AI" gradient). |
+| `--color-ai-700` | `#1D4ED8` | "AI" label text on `ai-50`. |
 
 **Citation** — muted teal, used only on citation markers/links (Chat panel citations), so a citation reads as a distinct category from ordinary hyperlinks or AI-accent content.
 
@@ -121,9 +121,11 @@ Deep Navy primary (authority, trust, legal tradition) + Slate Graphite secondary
 
 | Token | Stack | Used for |
 |---|---|---|
-| `--font-family-ui` | `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif` | All UI text, including headings. |
-| `--font-family-heading` | same as `--font-family-ui` | Headings reuse the UI face at heavier weight rather than a second display font — keeps the app feeling calm/administrative and avoids a second webfont dependency (matches the solo/low-budget constraint). |
-| `--font-family-mono` | `'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace` | AI Assistant citations (document name + page ref), timestamps, IDs. |
+| `--font-family-ui` | `var(--font-ui)` → Public Sans, `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif` | All UI chrome and body text — nav, buttons, inputs, tabs, tables, chat messages. |
+| `--font-family-heading` | `var(--font-heading)` → Source Serif 4, `'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif` | Page titles, section headings (`h1`–`h4`), the brand wordmark, empty-state titles, calendar day numbers, Quick Stat values, the Chat hero prompt. |
+| `--font-family-mono` | `'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace` | AI Assistant citations (document name + page ref), timestamps, IDs, and numeric metadata — set with `font-variant-numeric: tabular-nums`. |
+
+**"Chambers" type direction (2026-08-27).** Headings are set in a serif (Source Serif 4, already bundled via `app/layout.tsx`'s `next/font` loader as `--font-heading`) for a printed-brief register, distinct from the sans UI chrome; `h1` is bold (700), `h2`–`h4` semibold (600), all with `letter-spacing: -0.006em`. Micro-labels — `.field-label`, calendar day labels — are 11px, semibold, `text-transform: uppercase`, `letter-spacing: 0.08em`, tertiary colour. The single-sans "headings reuse the UI face" approach used through the 2026-08-18 reskin was replaced here; palette, spacing, radius, elevation and motion are untouched.
 
 **Type scale** — fixed; do not interpolate between steps.
 
@@ -331,11 +333,11 @@ Base: `border-radius: var(--radius-full)`, `padding: 2px var(--space-2)`, `font-
   --color-info-border: #A9D6DA;
   --color-info-text: #0A5960;
 
-  /* AI accent — muted indigo-violet, AI-origin content only */
-  --color-ai-50: #EFEBF7;
-  --color-ai-200: #CFC3E8;
-  --color-ai-500: #5B4B9E;
-  --color-ai-700: #40356F;
+  /* AI accent — bright sky blue, AI-origin content only */
+  --color-ai-50: #EFF6FF;
+  --color-ai-200: #BFDBFE;
+  --color-ai-500: #3B82F6;
+  --color-ai-700: #1D4ED8;
 
   /* Citation — muted teal, citation markers/links only */
   --color-citation-50: #E7F0EF;

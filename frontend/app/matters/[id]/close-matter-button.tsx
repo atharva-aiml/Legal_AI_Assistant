@@ -47,7 +47,7 @@ export function CloseMatterButton({ matterId, onUpdated }: { matterId: string; o
 
   return (
     <div>
-      <Button variant="secondary" onClick={handleClose} loading={submitting}>
+      <Button variant="secondary" className="btn-danger-outline" onClick={handleClose} loading={submitting}>
         {submitting ? "Closing…" : "Close Matter"}
       </Button>
       {error && (

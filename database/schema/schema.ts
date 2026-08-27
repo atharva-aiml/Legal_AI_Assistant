@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, date, pgEnum, integer, bigint, boolean, customType, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, date, pgEnum, integer, bigint, boolean, customType, uniqueIndex, AnyPgColumn } from "drizzle-orm/pg-core";
 
 // Drizzle has no built-in pgvector column type (CLAUDE.md §4) — defined via
 // customType, fixed at 384 dimensions to match all-MiniLM-L6-v2 (System
@@ -78,6 +78,14 @@ export const matters = pgTable("matters", {
   title: text("title").notNull(),
   status: matterStatusEnum("status").notNull().default("open"), // BR-003 (enforced from V0.5)
   closedAt: timestamp("closed_at", { withTimezone: true }),
+  // Chat branching (edit-a-previous-message, ChatGPT-style): the currently
+  // active root-level (parent_id IS NULL) chat_messages row for this Matter.
+  // Needed because editing a Matter's very first chat message creates a
+  // second root-level sibling, and there's no parent row to hold that
+  // pointer the way non-root messages use their own parent's
+  // active_child_id — forward reference to a table defined later in this
+  // file, resolved lazily via the callback form same as any other FK here.
+  activeRootMessageId: uuid("active_root_message_id").references((): AnyPgColumn => chatMessages.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -185,6 +193,13 @@ export const chatMessages = pgTable("chat_messages", {
   role: chatRoleEnum("role").notNull(),
   content: text("content").notNull(),
   pinned: boolean("pinned").notNull().default(false), // I-34: assistant answers only, enforced at the application layer, not here
+  // Chat branching (edit-a-previous-message, ChatGPT-style): a tree via two
+  // self-referencing pointers, reconstructed by walking a chain — no
+  // separate "conversation" table needed. Self-reference on the same table
+  // needs the AnyPgColumn type-cast pattern or TS throws a circular-
+  // reference error on the inferred column type.
+  parentId: uuid("parent_id").references((): AnyPgColumn => chatMessages.id, { onDelete: "cascade" }), // deleting a message deletes its whole subtree, matching citations' existing cascade-from posture
+  activeChildId: uuid("active_child_id").references((): AnyPgColumn => chatMessages.id, { onDelete: "set null" }), // which child (if edited-from, more than one) is currently displayed
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

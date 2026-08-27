@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
+import { usePersistedState } from "@/lib/use-persisted-state";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
+import { PlusIcon } from "@/components/ui/plus-icon";
 import { StatusBadge } from "@/components/status-badge";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { ChatPanel } from "./[id]/chat-panel";
 import { NewDeadlineForm } from "./[id]/new-deadline-form";
 import { CloseMatterButton } from "./[id]/close-matter-button";
 import { ReopenMatterButton } from "./[id]/reopen-matter-button";
-import { GenerateDraftModal } from "./[id]/generate-draft-modal";
 import { DeleteMatterModal } from "./[id]/delete-matter-modal";
 
 type Matter = { id: string; title: string; status: "open" | "closed" };
@@ -25,7 +28,18 @@ type Doc = {
   createdAt: string;
 };
 type Citation = { id: string; documentId: string | null; fileName: string | null; pageNumber: number | null; section: string | null; excerpt: string | null };
-type ChatMsg = { id: string; role: "user" | "assistant"; content: string; createdAt: string; citations: Citation[]; lowConfidence: boolean | null; fullContext: boolean | null; pinned: boolean };
+type ChatMsg = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+  citations: Citation[];
+  lowConfidence: boolean | null;
+  fullContext: boolean | null;
+  pinned: boolean;
+  parentId: string | null;
+  siblingIds: string[];
+};
 type Deadline = {
   id: string;
   matterId: string;
@@ -97,8 +111,11 @@ function PanelDeadlinesList({ deadlines, onToggle }: { deadlines: Deadline[]; on
   );
 }
 
-/** Compact "+" trigger replacing DocumentUpload's button+dropzone — same upload call, minimal chrome. */
-function PanelDocumentAddButton({ matterId, onUpdated }: { matterId: string; onUpdated: () => void }) {
+/** Compact "+" trigger replacing DocumentUpload's button+dropzone — same upload call, minimal chrome.
+ * `attention` (used from the AI Chat header when the Matter has no ready
+ * Document yet) turns it red and pulses it a few times to point the lawyer
+ * at the one thing they need to do before they can ask anything. */
+function PanelDocumentAddButton({ matterId, onUpdated, attention, tooltipBelow }: { matterId: string; onUpdated: () => void; attention?: boolean; tooltipBelow?: boolean }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -133,15 +150,118 @@ function PanelDocumentAddButton({ matterId, onUpdated }: { matterId: string; onU
       />
       <button
         type="button"
-        className="panel-add-btn"
+        className={`panel-add-btn${attention ? " panel-add-btn-attention" : ""}`}
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
         aria-label="Add document"
-        title="Add document"
       >
-        {uploading ? "…" : "+"}
+        {uploading ? "…" : <PlusIcon />}
+        <TooltipBubble label="Add document" below={tooltipBelow} />
       </button>
     </>
+  );
+}
+
+function UploadCloudIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2" />
+      <path d="M12 12v9" />
+      <path d="m16 16-4-4-4 4" />
+    </svg>
+  );
+}
+
+/**
+ * Drag-and-drop upload surface, sits beside PanelDocumentsList so uploading
+ * doesn't require hunting for the small "+" in the section header. Same
+ * upload call as PanelDocumentAddButton (POST per file, Promise.all) — no
+ * fake progress bar, since there's nothing here to fake it from; fetch
+ * doesn't expose upload progress and this app doesn't stand up an XHR just
+ * to get one.
+ */
+function PanelDocumentDropzone({ matterId, onUpdated }: { matterId: string; onUpdated: () => void }) {
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    };
+  }, []);
+
+  function showError(message: string) {
+    setError(message);
+    if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    errorTimeoutRef.current = setTimeout(() => setError(null), 3000);
+  }
+
+  function uploadFiles(files: FileList | File[]) {
+    const list = Array.from(files);
+    if (list.length === 0) return;
+    setUploading(true);
+    Promise.all(
+      list.map((file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return fetch(`${JAVA_API_URL_PUBLIC}/api/matters/${matterId}/documents`, { method: "POST", credentials: "include", body: formData });
+      })
+    )
+      .then((responses) => {
+        if (responses.some((r) => !r.ok)) showError("Couldn't upload one or more files — retry.");
+        onUpdated();
+      })
+      .catch(() => showError("Couldn't upload one or more files — retry."))
+      .finally(() => setUploading(false));
+  }
+
+  return (
+    <div
+      className={`doc-dropzone${dragging ? " doc-dropzone-dragging" : ""}`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (!uploading) setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        e.preventDefault();
+        setDragging(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        if (uploading) return;
+        if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
+      }}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept=".pdf,.docx,image/png,image/jpeg,image/tiff,image/webp"
+        onChange={(e) => {
+          if (e.target.files?.length) uploadFiles(e.target.files);
+          e.target.value = "";
+        }}
+        style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      <UploadCloudIcon />
+      <div className="doc-dropzone-title">{uploading ? "Uploading…" : "Drag and drop or"}</div>
+      <div className="doc-dropzone-hint">PDF, DOCX, PNG, JPG, TIFF, WEBP</div>
+      <button
+        type="button"
+        className="doc-dropzone-browse-btn"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+      >
+        Upload File
+      </button>
+      {error && <div className="doc-dropzone-error">{error}</div>}
+    </div>
   );
 }
 
@@ -155,19 +275,38 @@ function FileIcon() {
   );
 }
 
+function DownloadIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  );
+}
+
 function PanelDocumentsList({ documents }: { documents: Doc[] }) {
   if (documents.length === 0) {
     return <div className="text-tertiary text-sm">No documents yet.</div>;
   }
   return (
     <div className="stack" style={{ gap: 0 }}>
-      {documents.map((d) => (
-        <a key={d.id} href={`${JAVA_API_URL_PUBLIC}/api/documents/${d.id}/download`} className="panel-list-row">
-          <FileIcon />
-          <span className="panel-list-row-text">{d.fileName}</span>
-          {d.status !== "ready" && <span className="text-tertiary text-xs">{d.status}</span>}
-        </a>
-      ))}
+      {documents.map((d) => {
+        const downloadHref = `${JAVA_API_URL_PUBLIC}/api/documents/${d.id}/download`;
+        return (
+          <div key={d.id} className="panel-list-row">
+            <a href={downloadHref} className="panel-download-icon-btn" aria-label={`Download ${d.fileName}`}>
+              <DownloadIcon />
+              <TooltipBubble label="Download" />
+            </a>
+            <a href={downloadHref} className="panel-list-row-link">
+              <FileIcon />
+              <span className="panel-list-row-text">{d.fileName}</span>
+              {d.status !== "ready" && <span className="text-tertiary text-xs">{d.status}</span>}
+            </a>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -185,6 +324,7 @@ function DocTabsStrip({
   onUpdated,
   chatModeOpen,
   onToggleChat,
+  addAttention,
 }: {
   documents: Doc[];
   matterId: string;
@@ -192,33 +332,37 @@ function DocTabsStrip({
   onUpdated: () => void;
   chatModeOpen: boolean;
   onToggleChat: () => void;
+  /** Pulse the "add document" button — set when chat is open but the Matter has no ready Document. */
+  addAttention?: boolean;
 }) {
   return (
     <div className="doc-tabs-strip">
-      {documents.length === 0 ? (
-        <span className="text-tertiary text-xs">No documents</span>
-      ) : (
-        documents.map((d) => (
-          <a key={d.id} href={`${JAVA_API_URL_PUBLIC}/api/documents/${d.id}/download`} className="doc-tab" title={d.fileName}>
-            <FileIcon />
-            <span className="doc-tab-name">{d.fileName}</span>
-          </a>
-        ))
-      )}
+      <div className="doc-tabs-strip-tabs">
+        {documents.length === 0 ? (
+          <span className="text-tertiary text-xs">No documents</span>
+        ) : (
+          // Native title (the tabs clip on overflow); the toggle/add buttons below use TooltipBubble.
+          documents.map((d) => (
+            <a key={d.id} href={`${JAVA_API_URL_PUBLIC}/api/documents/${d.id}/download`} className="doc-tab" title={d.fileName}>
+              <FileIcon />
+              <span className="doc-tab-name">{d.fileName}</span>
+            </a>
+          ))
+        )}
+      </div>
       {/* Same toggle as the (non-chat-mode) Documents header — kept reachable
-          here too, since this strip replaces that header while chat is open
-          and closing the chat needs to stay possible from the same spot. */}
+          here too, since this strip replaces that header while chat is open. */}
       <button
         type="button"
         className="chat-toggle-btn"
         onClick={onToggleChat}
         aria-pressed={chatModeOpen}
         aria-label={chatModeOpen ? "Close AI Chat" : "Open AI Chat"}
-        title={chatModeOpen ? "Close AI Chat" : "Open AI Chat"}
       >
         <AiSparkleIcon />
+        <TooltipBubble label={chatModeOpen ? "Close AI Chat" : "Open AI Chat"} below />
       </button>
-      {matterOpen && <PanelDocumentAddButton matterId={matterId} onUpdated={onUpdated} />}
+      {matterOpen && <PanelDocumentAddButton matterId={matterId} onUpdated={onUpdated} attention={addAttention} tooltipBelow />}
     </div>
   );
 }
@@ -231,7 +375,7 @@ function MatterTitleBlock({ matter, client, onDeleted }: { matter: Matter; clien
         <h1 style={{ fontSize: "var(--font-size-2xl)" }}>{matter.title}</h1>
         <div className="row" style={{ gap: "var(--space-2)" }}>
           <StatusBadge status={matter.status} />
-          <DeleteMatterModal matterId={matter.id} matterTitle={matter.title} onDeleted={onDeleted} />
+          <DeleteMatterModal matterId={matter.id} matterTitle={matter.title} onDeleted={onDeleted} tooltipBelow />
         </div>
       </div>
       {client && (
@@ -284,7 +428,18 @@ export function MatterDetailPanel({
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [refreshTick, setRefreshTick] = useState(0);
-  const [chatModeOpen, setChatModeOpen] = useState(false);
+  // Persisted per Matter (sessionStorage) so refreshing the browser while
+  // the AI Chat view is open reopens it, instead of dropping back to the
+  // Documents/Deadlines view. Keyed by matterId — this component is already
+  // remounted per Matter (key={selectedMatterId} upstream), so each Matter
+  // keeps its own last chat view.
+  const [chatModeOpen, setChatModeOpen] = usePersistedState<boolean>(`matters:${matterId}:chatMode`, false);
+  const [chatMaximized, setChatMaximized] = usePersistedState<boolean>(`matters:${matterId}:chatMaximized`, false);
+  const prevChatModeOpen = useRef(chatModeOpen);
+  // Owned here (not inside ChatPanel) so toggling chatMaximized — which
+  // swaps between two structurally different ChatPanel mounts, one portaled
+  // to document.body — doesn't discard the conversation or the unsent draft.
+  const [chatDraft, setChatDraft] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -332,6 +487,17 @@ export function MatterDetailPanel({
     setRefreshTick((t) => t + 1);
   }
 
+  // Closing AI Chat should always land back in the normal (non-maximized)
+  // layout next time it's reopened, not resume full-screen — but only on a
+  // real open->closed transition, never on mount, where usePersistedState is
+  // still hydrating chatMaximized from sessionStorage and a reset here would
+  // wipe it before a refresh can restore it.
+  useEffect(() => {
+    if (prevChatModeOpen.current && !chatModeOpen) setChatMaximized(false);
+    prevChatModeOpen.current = chatModeOpen;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatModeOpen]);
+
   function handleDeadlineToggle(id: string, newStatus: "open" | "complete") {
     // Deliberately not computed inside the setDeadlines updater — React can
     // invoke that updater during another component's render (e.g. Strict
@@ -354,37 +520,122 @@ export function MatterDetailPanel({
 
   const hasReadyDocuments = documents.some((d) => d.status === "ready");
 
+  const chatModeBlock = (
+    <>
+      <div className="master-detail-col-header">
+        <div className="chat-mode-header-row">
+          <div className="chat-mode-title-block">
+            <MatterTitleBlock matter={matter} client={client} onDeleted={onDeleted} />
+          </div>
+          <DocTabsStrip
+            documents={documents}
+            matterId={matter.id}
+            matterOpen={matter.status === "open"}
+            onUpdated={refetch}
+            chatModeOpen={chatModeOpen}
+            onToggleChat={() => setChatModeOpen(!chatModeOpen)}
+            addAttention={!hasReadyDocuments}
+          />
+        </div>
+      </div>
+      <div className="chat-fullpanel">
+        <ChatPanel
+          matterId={matter.id}
+          messages={messages}
+          setMessages={setMessages}
+          draft={chatDraft}
+          setDraft={setChatDraft}
+          hasReadyDocuments={hasReadyDocuments}
+          onDocumentsReady={refetch}
+          fullHeight
+          maximized={chatMaximized}
+          onToggleMaximize={() => setChatMaximized(!chatMaximized)}
+        />
+      </div>
+    </>
+  );
+
+  if (chatModeOpen && chatMaximized) {
+    // Maximized layout is its own thing (30% sidebar + chat filling the
+    // rest), not a reuse of chatModeBlock's stacked header-then-chat shape.
+    const chatMaximizedBlock = (
+      <div className="chat-maximized-layout">
+        <div className="chat-maximized-sidebar">
+          <MatterTitleBlock matter={matter} client={client} onDeleted={onDeleted} />
+          <div>
+            <h2 style={{ fontSize: "var(--font-size-lg)", marginBottom: "var(--space-3)" }}>Documents</h2>
+            <PanelDocumentsList documents={documents} />
+          </div>
+        </div>
+        <div className="chat-maximized-chat">
+          <ChatPanel
+            matterId={matter.id}
+            messages={messages}
+            setMessages={setMessages}
+            draft={chatDraft}
+            setDraft={setChatDraft}
+            hasReadyDocuments={hasReadyDocuments}
+            onDocumentsReady={refetch}
+            fullHeight
+            maximized={chatMaximized}
+            onToggleMaximize={() => setChatMaximized(!chatMaximized)}
+          />
+        </div>
+      </div>
+    );
+    // Portaled to document.body: .master-detail-panel-col (an ancestor) keeps
+    // a permanent no-op `transform` from its own mount animation's fill-mode,
+    // which silently makes it the containing block for any `position: fixed`
+    // descendant — an in-place fixed overlay here would only cover that
+    // column, not the navbar or the Matter list beside it.
+    if (typeof document === "undefined") return null;
+    return createPortal(<div className="chat-maximized-overlay">{chatMaximizedBlock}</div>, document.body);
+  }
+
   return (
     <div className="matter-detail-panel" style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      {chatModeOpen ? (
+        chatModeBlock
+      ) : (
+        <>
       <div className="master-detail-col-header">
-        {chatModeOpen ? (
-          <div className="chat-mode-header-row">
-            <div className="chat-mode-title-block">
-              <MatterTitleBlock matter={matter} client={client} onDeleted={onDeleted} />
-            </div>
-            <DocTabsStrip
-              documents={documents}
-              matterId={matter.id}
-              matterOpen={matter.status === "open"}
-              onUpdated={refetch}
-              chatModeOpen={chatModeOpen}
-              onToggleChat={() => setChatModeOpen((o) => !o)}
-            />
-          </div>
-        ) : (
           <MatterTitleBlock matter={matter} client={client} onDeleted={onDeleted} />
-        )}
       </div>
 
-      {chatModeOpen ? (
-        <div className="chat-fullpanel">
-          <ChatPanel matterId={matter.id} initialMessages={messages} hasReadyDocuments={hasReadyDocuments} fullHeight />
-        </div>
-      ) : (
         <div className="master-detail-col-scroll">
-          <div className="row" style={{ alignItems: "flex-start", flexWrap: "wrap", gap: "var(--space-5)", marginTop: "var(--space-1)" }}>
-            <section id="panel-deadlines" aria-labelledby="panel-deadlines-heading" style={{ flex: "1 1 260px", minWidth: 0 }}>
-              <div className="section-header">
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)", marginTop: "var(--space-1)" }}>
+            <section aria-labelledby="panel-documents-heading" style={{ width: "100%" }}>
+              <div className="documents-columns">
+                <div className="documents-list-col">
+                  <div className="section-header">
+                    <h2 id="panel-documents-heading" style={{ fontSize: "var(--font-size-lg)" }}>Documents</h2>
+                    <div className="row" style={{ gap: "var(--space-2)" }}>
+                      <button
+                        type="button"
+                        className="ask-ai-btn"
+                        onClick={() => setChatModeOpen(!chatModeOpen)}
+                        aria-pressed={chatModeOpen}
+                        aria-label={chatModeOpen ? "Close AI Chat" : "Open AI Chat"}
+                      >
+                        <AiSparkleIcon />
+                        <span>Ask AI</span>
+                        <TooltipBubble label={chatModeOpen ? "Close AI Chat" : "Open AI Chat"} below />
+                      </button>
+                      {matter.status === "open" && <PanelDocumentAddButton matterId={matter.id} onUpdated={refetch} tooltipBelow />}
+                    </div>
+                  </div>
+                  <PanelDocumentsList documents={documents} />
+                </div>
+                {matter.status === "open" && (
+                  <div className="documents-upload-col">
+                    <PanelDocumentDropzone matterId={matter.id} onUpdated={refetch} />
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section id="panel-deadlines" aria-labelledby="panel-deadlines-heading" style={{ maxWidth: "65%" }}>
+              <div className="row" style={{ gap: "var(--space-2)", margin: "var(--space-5) 0 var(--space-3)" }}>
                 <h2 id="panel-deadlines-heading" style={{ fontSize: "var(--font-size-lg)" }}>Deadlines</h2>
                 {matter.status === "open" && <NewDeadlineForm matterId={matter.id} onUpdated={refetch} />}
               </div>
@@ -398,29 +649,9 @@ export function MatterDetailPanel({
                 )}
               </div>
             </section>
-
-            <section aria-labelledby="panel-documents-heading" style={{ flex: "1 1 260px", minWidth: 0 }}>
-              <div className="section-header">
-                <h2 id="panel-documents-heading" style={{ fontSize: "var(--font-size-lg)" }}>Documents</h2>
-                <div className="row" style={{ gap: "var(--space-2)" }}>
-                  <button
-                    type="button"
-                    className="chat-toggle-btn"
-                    onClick={() => setChatModeOpen((o) => !o)}
-                    aria-pressed={chatModeOpen}
-                    aria-label={chatModeOpen ? "Close AI Chat" : "Open AI Chat"}
-                    title={chatModeOpen ? "Close AI Chat" : "Open AI Chat"}
-                  >
-                    <AiSparkleIcon />
-                  </button>
-                  {matter.status === "open" && <PanelDocumentAddButton matterId={matter.id} onUpdated={refetch} />}
-                  <GenerateDraftModal matterId={matter.id} matterTitle={matter.title} clientName={client?.name ?? null} onUpdated={refetch} />
-                </div>
-              </div>
-              <PanelDocumentsList documents={documents} />
-            </section>
           </div>
         </div>
+        </>
       )}
     </div>
   );

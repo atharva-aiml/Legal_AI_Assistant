@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Modal } from "@/components/ui/modal";
 import { TrashIcon } from "@/components/ui/trash-icon";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 import { useToast } from "@/components/toast-context";
 
 /**
@@ -17,7 +18,7 @@ import { useToast } from "@/components/toast-context";
  * a real confirmation Modal naming what's about to be lost, not a bare
  * confirm().
  */
-export function DeleteMatterModal({ matterId, matterTitle, onDeleted }: { matterId: string; matterTitle: string; onDeleted: () => void }) {
+export function DeleteMatterModal({ matterId, matterTitle, onDeleted, tooltipBelow }: { matterId: string; matterTitle: string; onDeleted: () => void; tooltipBelow?: boolean }) {
   const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export function DeleteMatterModal({ matterId, matterTitle, onDeleted }: { matter
     return (
       <button type="button" className="delete-icon-btn" onClick={() => setOpen(true)} aria-label="Delete matter">
         <TrashIcon />
+        <TooltipBubble label="Delete matter" below={tooltipBelow} />
       </button>
     );
   }

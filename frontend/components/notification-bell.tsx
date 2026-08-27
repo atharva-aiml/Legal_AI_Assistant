@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 
 type Notification = { id: string; readAt: string | null };
 
@@ -81,6 +82,7 @@ export function NotificationBell() {
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       )}
+      <TooltipBubble label={unreadCount ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "Notifications"} />
     </Link>
   );
 }

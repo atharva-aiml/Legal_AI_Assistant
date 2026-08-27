@@ -4,17 +4,11 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
+import { PlusIcon } from "@/components/ui/plus-icon";
 import { NewMatterForm } from "@/app/matters/new/new-matter-form";
 
 type Client = { id: string; name: string };
-
-function AddIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
 
 /**
  * Same NewMatterForm used by /matters/new — opened as a modal instead of a
@@ -62,7 +56,8 @@ export function NewMatterModal({
     if (iconOnly) {
       return (
         <button type="button" className="add-icon-btn" onClick={() => setOpen(true)} aria-label="New Matter">
-          <AddIcon />
+          <PlusIcon />
+          <TooltipBubble label="New Matter" below />
         </button>
       );
     }

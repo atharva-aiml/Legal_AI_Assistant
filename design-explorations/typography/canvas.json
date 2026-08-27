@@ -1,0 +1,156 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "ChambersMatter.dc.html",
+      "x": 1640,
+      "y": 0,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "ChambersClient.dc.html",
+      "x": 3280,
+      "y": 0,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "StatuteDashboard.dc.html",
+      "x": 0,
+      "y": 1380,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "StatuteMatter.dc.html",
+      "x": 1640,
+      "y": 1380,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "StatuteClient.dc.html",
+      "x": 3280,
+      "y": 1380,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "CounselDashboard.dc.html",
+      "x": 0,
+      "y": 2760,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "CounselMatter.dc.html",
+      "x": 1640,
+      "y": 2760,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "CounselClient.dc.html",
+      "x": 3280,
+      "y": 2760,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "LedgerDashboard.dc.html",
+      "x": 0,
+      "y": 4140,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "LedgerMatter.dc.html",
+      "x": 1640,
+      "y": 4140,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "LedgerClient.dc.html",
+      "x": 3280,
+      "y": 4140,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "BriefDashboard.dc.html",
+      "x": 0,
+      "y": 5520,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "BriefMatter.dc.html",
+      "x": 1640,
+      "y": 5520,
+      "w": 1480,
+      "h": 1180
+    },
+    {
+      "file": "BriefClient.dc.html",
+      "x": 3280,
+      "y": 5520,
+      "w": 1480,
+      "h": 1180
+    }
+  ],
+  "annotations": [
+    {
+      "id": "sys-chambers",
+      "x": -720,
+      "y": 40,
+      "w": 600,
+      "text": "Option A — Chambers  —  Traditional legal authority\n\nDisplay / headings:  Source Serif 4\nBody / UI text:  Public Sans\nCitations · IDs · dates:  JetBrains Mono\n\nSerif page titles and section heads read as a printed brief; the sans body keeps forms and dense lists calm. Micro-labels go small-caps. Reuses Source Serif 4, already bundled in the app but currently unused."
+    },
+    {
+      "id": "sys-statute",
+      "x": -720,
+      "y": 1420,
+      "w": 600,
+      "text": "Option B — Statute  —  Institutional / government-register\n\nDisplay / headings:  IBM Plex Serif\nBody / UI text:  IBM Plex Sans\nCitations · IDs · dates:  IBM Plex Mono\n\nOne superfamily (IBM Plex) across sans, serif and mono, so headings, body and citation refs feel cut from the same block. Tabular figures everywhere; a Plex Serif H1 gives each page a gazette-like nameplate."
+    },
+    {
+      "id": "sys-counsel",
+      "x": -720,
+      "y": 2800,
+      "w": 600,
+      "text": "Option C — Counsel  —  Editorial, law-review contrast\n\nDisplay / headings:  Lora\nBody / UI text:  Public Sans\nCitations · IDs · dates:  JetBrains Mono\n\nHigh contrast between a warm bookish serif (Lora) for headings and a plain sans body, with a longer line-height for reading. Field labels are set in serif italic — a law-review register rather than a SaaS one."
+    },
+    {
+      "id": "sys-ledger",
+      "x": -720,
+      "y": 4180,
+      "w": 600,
+      "text": "Option D — Ledger  —  Data-dense, mono-forward legal-tech\n\nDisplay / headings:  Archivo\nBody / UI text:  Archivo\nCitations · IDs · dates:  JetBrains Mono\n\nGrotesque UI (Archivo) with tight tracking, and JetBrains Mono pushed forward onto every number, badge, date, ID and avatar. Reads like a legal-tech terminal — best if the product leans data-heavy."
+    },
+    {
+      "id": "sys-brief",
+      "x": -720,
+      "y": 5560,
+      "w": 600,
+      "text": "Option E — Brief  —  Public Sans, disciplined (one family, done right)\n\nDisplay / headings:  Public Sans\nBody / UI text:  Public Sans\nCitations · IDs · dates:  JetBrains Mono\n\nKeeps the current single family (Public Sans) but rebuilds the hierarchy: real weight steps, negative tracking on display sizes, tracked upper-case eyebrows, tabular numerals. The 'the usage was the problem, not the font' option — zero new webfonts."
+    },
+    {
+      "id": "how-to-read",
+      "x": -720,
+      "y": -150,
+      "w": 600,
+      "text": "TYPOGRAPHY DIRECTIONS — Legal AI Assistant\n\nRows = five type systems. Columns = Dashboard, Matter, Client.\nLayout, colour palette, spacing, radii and the page background are identical in every row — only the typeface, weights, size ramp, letter-spacing, casing and mono usage change. Pick a row and I'll wire it into globals.css."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

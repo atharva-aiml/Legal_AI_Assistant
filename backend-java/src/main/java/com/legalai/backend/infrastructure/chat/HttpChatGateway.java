@@ -85,6 +85,64 @@ public class HttpChatGateway implements ChatGateway {
     }
 
     @Override
+    public ChatHistoryDto editMessage(UUID matterId, UUID messageId, UUID lawyerId, String question) {
+        try {
+            String requestBody = mapper.writeValueAsString(Map.of("lawyerId", lawyerId.toString(), "question", question));
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(pythonBaseUrl + "/chat/" + matterId + "/" + messageId + "/edit"))
+                    .timeout(Duration.ofSeconds(30))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 404) {
+                throw new ChatService.ChatMessageNotFoundException();
+            }
+            if (response.statusCode() == 400) {
+                throw new ChatService.InvalidEditTargetException();
+            }
+            if (response.statusCode() == 422) {
+                throw new ChatService.NoReadyDocumentsException();
+            }
+            if (response.statusCode() >= 300) {
+                throw new ChatService.AssistantUnavailableException("Assistant service returned " + response.statusCode());
+            }
+            return mapper.readValue(response.body(), ChatHistoryDto.class);
+        } catch (IOException e) {
+            throw new ChatService.AssistantUnavailableException("Assistant service unreachable", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ChatService.AssistantUnavailableException("Assistant call interrupted", e);
+        }
+    }
+
+    @Override
+    public ChatHistoryDto activateBranch(UUID matterId, UUID messageId) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(pythonBaseUrl + "/chat/" + matterId + "/" + messageId + "/activate"))
+                    .timeout(Duration.ofSeconds(10))
+                    .method("PATCH", HttpRequest.BodyPublishers.noBody())
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 404) {
+                throw new ChatService.ChatMessageNotFoundException();
+            }
+            if (response.statusCode() >= 300) {
+                throw new ChatService.AssistantUnavailableException("Assistant service returned " + response.statusCode());
+            }
+            return mapper.readValue(response.body(), ChatHistoryDto.class);
+        } catch (IOException e) {
+            throw new ChatService.AssistantUnavailableException("Assistant service unreachable", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ChatService.AssistantUnavailableException("Assistant call interrupted", e);
+        }
+    }
+
+    @Override
     public PinToggleDto togglePin(UUID matterId, UUID messageId, boolean pinned) {
         try {
             String requestBody = mapper.writeValueAsString(Map.of("pinned", pinned));

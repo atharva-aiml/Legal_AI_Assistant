@@ -29,7 +29,13 @@ public class ChatDtos {
             // same as lowConfidence — both are ephemeral, computed only for the
             // question that produced them, not persisted.
             Boolean fullContext,
-            Boolean pinned) {
+            Boolean pinned,
+            // Edit-a-previous-message branching: null for a root-level message.
+            String parentId,
+            // Ordered ids of every message sharing this message's parentId, itself
+            // included — a "‹ 2/3 ›" edit-arrow UI is built directly from this list
+            // (index/count derived on the frontend, not sent as a separate field).
+            List<String> siblingIds) {
     }
 
     public record ChatHistoryDto(List<ChatMessageDto> messages) {

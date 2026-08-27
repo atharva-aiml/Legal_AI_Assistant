@@ -6,6 +6,7 @@ import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Modal } from "@/components/ui/modal";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 
 type Client = { id: string; name: string; contactEmail: string | null; contactPhone: string | null; notes: string | null };
 
@@ -87,6 +88,7 @@ export function EditClientModal({
       return (
         <button type="button" className="edit-icon-btn" onClick={() => setOpen(true)} aria-label="Edit client">
           <EditIcon />
+          <TooltipBubble label="Edit client" below />
         </button>
       );
     }

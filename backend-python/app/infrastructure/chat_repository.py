@@ -157,29 +157,33 @@ class SqlAlchemyChatRepository:
             ).mappings().all()
             return [ChunkResult(**dict(r)) for r in rows]
 
-    def save_user_message(self, matter_id: str, lawyer_id: str, content: str) -> ChatMessage:
+    def save_user_message(self, matter_id: str, lawyer_id: str, content: str, parent_id: str | None = None) -> ChatMessage:
         with engine.begin() as conn:
             row = conn.execute(
                 text(
-                    "INSERT INTO chat_messages (id, matter_id, lawyer_id, role, content, created_at) "
-                    "VALUES (gen_random_uuid(), :matter_id, :lawyer_id, 'user', :content, now()) "
-                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned"
+                    "INSERT INTO chat_messages (id, matter_id, lawyer_id, role, content, parent_id, created_at) "
+                    "VALUES (gen_random_uuid(), :matter_id, :lawyer_id, 'user', :content, :parent_id, now()) "
+                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned, parent_id, active_child_id"
                 ),
-                {"matter_id": matter_id, "lawyer_id": lawyer_id, "content": content},
+                {"matter_id": matter_id, "lawyer_id": lawyer_id, "content": content, "parent_id": parent_id},
             ).mappings().first()
             return _to_message(row)
 
     def save_assistant_message(
-        self, matter_id: str, content: str, citations: list[tuple[str | None, int | None, str | None, str | None, str | None]]
+        self,
+        matter_id: str,
+        content: str,
+        citations: list[tuple[str | None, int | None, str | None, str | None, str | None]],
+        parent_id: str | None = None,
     ) -> tuple[ChatMessage, list[Citation]]:
         with engine.begin() as conn:
             message_row = conn.execute(
                 text(
-                    "INSERT INTO chat_messages (id, matter_id, lawyer_id, role, content, created_at) "
-                    "VALUES (gen_random_uuid(), :matter_id, NULL, 'assistant', :content, now()) "
-                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned"
+                    "INSERT INTO chat_messages (id, matter_id, lawyer_id, role, content, parent_id, created_at) "
+                    "VALUES (gen_random_uuid(), :matter_id, NULL, 'assistant', :content, :parent_id, now()) "
+                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned, parent_id, active_child_id"
                 ),
-                {"matter_id": matter_id, "content": content},
+                {"matter_id": matter_id, "content": content, "parent_id": parent_id},
             ).mappings().first()
             message = _to_message(message_row)
 
@@ -205,22 +209,16 @@ class SqlAlchemyChatRepository:
 
             return message, created_citations
 
-    def recent_messages(self, matter_id: str, limit: int) -> list[ChatMessage]:
-        with engine.connect() as conn:
-            rows = conn.execute(
-                text(
-                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned FROM chat_messages "
-                    "WHERE matter_id = :matter_id ORDER BY created_at DESC LIMIT :limit"
-                ),
-                {"matter_id": matter_id, "limit": limit},
-            ).mappings().all()
-            return [_to_message(r) for r in reversed(rows)]
-
     def list_messages(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]:
+        """Historically "every row for the Matter" — superseded for the active
+        history endpoint by active_path (branching means a flat by-matter list
+        can include superseded-branch messages), but list_pinned/pinning still
+        legitimately want every row regardless of which branch it's on, so
+        this stays and just gains the two new columns."""
         with engine.connect() as conn:
             message_rows = conn.execute(
                 text(
-                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned FROM chat_messages "
+                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned, parent_id, active_child_id FROM chat_messages "
                     "WHERE matter_id = :matter_id ORDER BY created_at ASC"
                 ),
                 {"matter_id": matter_id},
@@ -232,6 +230,81 @@ class SqlAlchemyChatRepository:
             citations_by_message = self._citations_by_message(conn, matter_id)
             return [(m, citations_by_message.get(m.id, [])) for m in messages]
 
+    def get_by_id(self, message_id: str) -> ChatMessage | None:
+        with engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned, parent_id, active_child_id "
+                    "FROM chat_messages WHERE id = :message_id"
+                ),
+                {"message_id": message_id},
+            ).mappings().first()
+            return _to_message(row) if row else None
+
+    def siblings(self, matter_id: str, parent_id: str | None) -> list[ChatMessage]:
+        # IS NOT DISTINCT FROM, not "=" — SQL NULL = NULL is not true, so a
+        # plain "=" would silently return zero rows for every root-level
+        # message (parent_id IS NULL is the common case: the very first
+        # question in a Matter, and every un-edited first message after it).
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned, parent_id, active_child_id "
+                    "FROM chat_messages WHERE matter_id = :matter_id AND parent_id IS NOT DISTINCT FROM :parent_id "
+                    "ORDER BY created_at ASC"
+                ),
+                {"matter_id": matter_id, "parent_id": parent_id},
+            ).mappings().all()
+            return [_to_message(r) for r in rows]
+
+    def set_active_child(self, message_id: str, child_id: str) -> None:
+        with engine.begin() as conn:
+            conn.execute(
+                text("UPDATE chat_messages SET active_child_id = :child_id WHERE id = :message_id"),
+                {"child_id": child_id, "message_id": message_id},
+            )
+
+    def get_matter_active_root(self, matter_id: str) -> str | None:
+        with engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT active_root_message_id FROM matters WHERE id = :matter_id"),
+                {"matter_id": matter_id},
+            ).mappings().first()
+            return str(row["active_root_message_id"]) if row and row["active_root_message_id"] else None
+
+    def set_matter_active_root(self, matter_id: str, message_id: str) -> None:
+        with engine.begin() as conn:
+            conn.execute(
+                text("UPDATE matters SET active_root_message_id = :message_id WHERE id = :matter_id"),
+                {"message_id": message_id, "matter_id": matter_id},
+            )
+
+    def active_path(self, matter_id: str) -> list[ChatMessage]:
+        root_id = self.get_matter_active_root(matter_id)
+        if root_id is None:
+            return []
+        path: list[ChatMessage] = []
+        current = self.get_by_id(root_id)
+        while current is not None:
+            path.append(current)
+            current = self.get_by_id(current.active_child_id) if current.active_child_id else None
+        return path
+
+    def history_before(self, message_id: str, limit: int) -> list[ChatMessage]:
+        """Walks parent_id backward from message_id (exclusive) — the
+        conversation history that actually led up to message_id on its own
+        branch, unlike the old "last N by matter_id" query which could pull
+        messages from a superseded or sibling branch entirely."""
+        chain: list[ChatMessage] = []
+        current = self.get_by_id(message_id)
+        while current is not None and current.parent_id is not None and len(chain) < limit:
+            parent = self.get_by_id(current.parent_id)
+            if parent is None:
+                break
+            chain.append(parent)
+            current = parent
+        return list(reversed(chain))
+
     def toggle_pin(self, matter_id: str, message_id: str, pinned: bool) -> ChatMessage | None:
         """I-34: pinnable state only ever applies to assistant answers — scoping the
         UPDATE to role='assistant' AND matter_id=:matter_id makes that the one place
@@ -241,7 +314,7 @@ class SqlAlchemyChatRepository:
                 text(
                     "UPDATE chat_messages SET pinned = :pinned "
                     "WHERE id = :message_id AND matter_id = :matter_id AND role = 'assistant' "
-                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned"
+                    "RETURNING id, matter_id, lawyer_id, role, content, created_at, pinned, parent_id, active_child_id"
                 ),
                 {"pinned": pinned, "message_id": message_id, "matter_id": matter_id},
             ).mappings().first()
@@ -251,7 +324,7 @@ class SqlAlchemyChatRepository:
         with engine.connect() as conn:
             message_rows = conn.execute(
                 text(
-                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned FROM chat_messages "
+                    "SELECT id, matter_id, lawyer_id, role, content, created_at, pinned, parent_id, active_child_id FROM chat_messages "
                     "WHERE matter_id = :matter_id AND pinned = true ORDER BY created_at ASC"
                 ),
                 {"matter_id": matter_id},
@@ -262,6 +335,21 @@ class SqlAlchemyChatRepository:
 
             citations_by_message = self._citations_by_message(conn, matter_id)
             return [(m, citations_by_message.get(m.id, [])) for m in messages]
+
+    def citations_for(self, message_id: str) -> list[Citation]:
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT c.id, c.chat_message_id, c.document_id, d.file_name, c.page_number, c.section, c.excerpt, c.created_at "
+                    "FROM citations c "
+                    # LEFT JOIN, not JOIN: REQ-027 lets a Document be deleted unconditionally,
+                    # and a Citation must survive that (AI Architecture §4, "persisted permanently").
+                    "LEFT JOIN documents d ON d.id = c.document_id "
+                    "WHERE c.chat_message_id = :message_id ORDER BY c.created_at ASC"
+                ),
+                {"message_id": message_id},
+            ).mappings().all()
+            return [_to_citation(r) for r in rows]
 
     @staticmethod
     def _citations_by_message(conn, matter_id: str) -> dict[str, list[Citation]]:
@@ -292,6 +380,8 @@ def _to_message(row) -> ChatMessage:
         content=row["content"],
         created_at=row["created_at"],
         pinned=bool(row["pinned"]),
+        parent_id=str(row["parent_id"]) if row["parent_id"] else None,
+        active_child_id=str(row["active_child_id"]) if row["active_child_id"] else None,
     )
 
 

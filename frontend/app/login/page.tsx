@@ -89,7 +89,7 @@ export default function LoginPage() {
   return (
     <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "var(--space-6)" }}>
       <div style={{ marginBottom: "var(--space-6)", textAlign: "center" }}>
-        <div style={{ fontFamily: "var(--font-family-heading)", fontWeight: 600, fontSize: "var(--font-size-xl)" }}>Legal AI Assistant</div>
+        <div style={{ fontFamily: "var(--font-family-heading)", fontWeight: 700, letterSpacing: "-0.01em", fontSize: "var(--font-size-xl)" }}>Legal AI Assistant</div>
         <div className="text-tertiary text-sm" style={{ marginTop: "var(--space-1)" }}>
           Grounded answers from your own case files
         </div>

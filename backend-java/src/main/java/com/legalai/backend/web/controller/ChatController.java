@@ -62,6 +62,48 @@ public class ChatController {
         }
     }
 
+    @PostMapping("/api/matters/{matterId}/chat/{messageId}/edit")
+    public ResponseEntity<?> editMessage(@PathVariable UUID matterId, @PathVariable UUID messageId, @RequestBody EditRequest body, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+        if (matterService.get(lawyer.get().firmId(), matterId).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Matter not found"));
+        }
+        if (body.question() == null || body.question().isBlank()) {
+            return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", "question is required"));
+        }
+
+        try {
+            return ResponseEntity.ok(chatService.editMessage(matterId, messageId, lawyer.get().id(), body.question()));
+        } catch (ChatService.ChatMessageNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Chat message not found"));
+        } catch (ChatService.InvalidEditTargetException e) {
+            return ResponseEntity.badRequest().body(ApiError.of("VALIDATION", "Only a user message can be edited"));
+        } catch (ChatService.NoReadyDocumentsException e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiError.of("NO_READY_DOCUMENTS", "This Matter has no ready Documents to search yet."));
+        } catch (ChatService.AssistantUnavailableException e) {
+            return assistantUnavailable();
+        }
+    }
+
+    @PatchMapping("/api/matters/{matterId}/chat/{messageId}/activate")
+    public ResponseEntity<?> activateBranch(@PathVariable UUID matterId, @PathVariable UUID messageId, HttpServletRequest request) {
+        Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
+        if (lawyer.isEmpty()) return unauthenticated();
+        if (matterService.get(lawyer.get().firmId(), matterId).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Matter not found"));
+        }
+
+        try {
+            return ResponseEntity.ok(chatService.activateBranch(matterId, messageId));
+        } catch (ChatService.ChatMessageNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.notFound("Chat message not found"));
+        } catch (ChatService.AssistantUnavailableException e) {
+            return assistantUnavailable();
+        }
+    }
+
     @PatchMapping("/api/matters/{matterId}/chat/{messageId}/pin")
     public ResponseEntity<?> togglePin(@PathVariable UUID matterId, @PathVariable UUID messageId, @RequestBody PinRequest body, HttpServletRequest request) {
         Optional<Lawyer> lawyer = currentLawyerResolver.resolve(request);
@@ -80,6 +122,9 @@ public class ChatController {
     }
 
     public record AskRequest(String question) {
+    }
+
+    public record EditRequest(String question) {
     }
 
     public record PinRequest(boolean pinned) {

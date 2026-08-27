@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Modal } from "@/components/ui/modal";
 import { TrashIcon } from "@/components/ui/trash-icon";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 import { useToast } from "@/components/toast-context";
 
 /**
@@ -60,6 +61,7 @@ export function DeleteClientModal({ clientId, clientName, onDeleted }: { clientI
     return (
       <button type="button" className="delete-icon-btn" onClick={() => setOpen(true)} aria-label="Delete client">
         <TrashIcon />
+        <TooltipBubble label="Delete client" below />
       </button>
     );
   }

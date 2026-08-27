@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { SortDropdown } from "@/components/sort-dropdown";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 import { initials } from "@/lib/initials";
 import { usePersistedState } from "@/lib/use-persisted-state";
 
@@ -245,20 +246,20 @@ export function MattersList({
             className={viewMode === "list" ? "btn btn-secondary btn-sm" : "btn btn-ghost btn-sm"}
             aria-pressed={viewMode === "list"}
             aria-label="List view"
-            title="List view"
             onClick={() => setViewMode("list")}
           >
             <ListViewIcon />
+            <TooltipBubble label="List view" />
           </button>
           <button
             type="button"
             className={viewMode === "board" ? "btn btn-secondary btn-sm" : "btn btn-ghost btn-sm"}
             aria-pressed={viewMode === "board"}
             aria-label="Board view"
-            title="Board view"
             onClick={() => setViewMode("board")}
           >
             <BoardViewIcon />
+            <TooltipBubble label="Board view" />
           </button>
         </div>
       </div>

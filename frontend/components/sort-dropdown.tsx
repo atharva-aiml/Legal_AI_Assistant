@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 
 function ChevronIcon() {
   return (
@@ -68,7 +69,6 @@ export function SortDropdown<T extends string>({
         aria-expanded={open}
         aria-label={iconOnly ? menuLabel : undefined}
         onClick={() => setOpen((o) => !o)}
-        title={menuLabel}
       >
         {icon}
         {!iconOnly && (
@@ -77,6 +77,7 @@ export function SortDropdown<T extends string>({
             <ChevronIcon />
           </>
         )}
+        {iconOnly && <TooltipBubble label={menuLabel} />}
       </button>
       {open && (
         <div

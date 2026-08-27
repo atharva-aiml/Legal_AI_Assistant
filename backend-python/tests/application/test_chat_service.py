@@ -1,7 +1,15 @@
+from dataclasses import replace
+
 import pytest
 
 import app.application.chat_service as chat_service_module
-from app.application.chat_service import AssistantUnavailableError, ChatMessageNotFoundError, ChatService, NoReadyDocumentsError
+from app.application.chat_service import (
+    AssistantUnavailableError,
+    ChatMessageNotFoundError,
+    ChatService,
+    InvalidEditTargetError,
+    NoReadyDocumentsError,
+)
 from app.domain.chat import ChatMessage, Citation, DocumentMetadata, NOT_FOUND_RESPONSE, OUT_OF_SCOPE_RESPONSE
 
 
@@ -72,22 +80,35 @@ class InMemoryChatRetrievalRepository:
 
 
 class InMemoryChatMessageRepository:
+    """Mirrors SqlAlchemyChatRepository's contract, including the branching
+    methods added for edit-a-previous-message — same in-memory-fake-against-
+    Protocol style as this codebase's other application-layer tests
+    (CLAUDE.md §2), not a Mockito-style mock."""
+
     def __init__(self):
         self.messages: list[ChatMessage] = []
         self.citations: list[Citation] = []
+        self.active_root: dict[str, str] = {}  # matter_id -> message_id, mirrors matters.active_root_message_id
         self._n = 0
 
     def _next_id(self):
         self._n += 1
         return f"id-{self._n}"
 
-    def save_user_message(self, matter_id, lawyer_id, content):
-        msg = ChatMessage(id=self._next_id(), matter_id=matter_id, lawyer_id=lawyer_id, role="user", content=content)
+    def _replace(self, message_id, **changes):
+        for i, m in enumerate(self.messages):
+            if m.id == message_id:
+                self.messages[i] = replace(m, **changes)
+                return self.messages[i]
+        return None
+
+    def save_user_message(self, matter_id, lawyer_id, content, parent_id=None):
+        msg = ChatMessage(id=self._next_id(), matter_id=matter_id, lawyer_id=lawyer_id, role="user", content=content, parent_id=parent_id)
         self.messages.append(msg)
         return msg
 
-    def save_assistant_message(self, matter_id, content, citations):
-        msg = ChatMessage(id=self._next_id(), matter_id=matter_id, lawyer_id=None, role="assistant", content=content)
+    def save_assistant_message(self, matter_id, content, citations, parent_id=None):
+        msg = ChatMessage(id=self._next_id(), matter_id=matter_id, lawyer_id=None, role="assistant", content=content, parent_id=parent_id)
         self.messages.append(msg)
         created = []
         for document_id, page_number, excerpt, file_name, section in citations:
@@ -104,22 +125,59 @@ class InMemoryChatMessageRepository:
             created.append(c)
         return msg, created
 
-    def recent_messages(self, matter_id, limit):
-        return [m for m in self.messages if m.matter_id == matter_id][-limit:]
-
     def list_messages(self, matter_id):
         return [(m, [c for c in self.citations if c.chat_message_id == m.id]) for m in self.messages if m.matter_id == matter_id]
 
     def toggle_pin(self, matter_id, message_id, pinned):
-        for i, m in enumerate(self.messages):
+        for m in self.messages:
             if m.id == message_id and m.matter_id == matter_id and m.role == "assistant":
-                updated = ChatMessage(id=m.id, matter_id=m.matter_id, lawyer_id=m.lawyer_id, role=m.role, content=m.content, created_at=m.created_at, pinned=pinned)
-                self.messages[i] = updated
-                return updated
+                return self._replace(message_id, pinned=pinned)
         return None
 
     def list_pinned(self, matter_id):
         return [(m, [c for c in self.citations if c.chat_message_id == m.id]) for m in self.messages if m.matter_id == matter_id and m.pinned]
+
+    def citations_for(self, message_id):
+        return [c for c in self.citations if c.chat_message_id == message_id]
+
+    # --- Edit-a-previous-message branching ---
+
+    def get_by_id(self, message_id):
+        return next((m for m in self.messages if m.id == message_id), None)
+
+    def siblings(self, matter_id, parent_id):
+        return [m for m in self.messages if m.matter_id == matter_id and m.parent_id == parent_id]
+
+    def set_active_child(self, message_id, child_id):
+        self._replace(message_id, active_child_id=child_id)
+
+    def get_matter_active_root(self, matter_id):
+        return self.active_root.get(matter_id)
+
+    def set_matter_active_root(self, matter_id, message_id):
+        self.active_root[matter_id] = message_id
+
+    def active_path(self, matter_id):
+        root_id = self.get_matter_active_root(matter_id)
+        if root_id is None:
+            return []
+        path = []
+        current = self.get_by_id(root_id)
+        while current is not None:
+            path.append(current)
+            current = self.get_by_id(current.active_child_id) if current.active_child_id else None
+        return path
+
+    def history_before(self, message_id, limit):
+        chain = []
+        current = self.get_by_id(message_id)
+        while current is not None and current.parent_id is not None and len(chain) < limit:
+            parent = self.get_by_id(current.parent_id)
+            if parent is None:
+                break
+            chain.append(parent)
+            current = parent
+        return list(reversed(chain))
 
 
 class FakeEmbedder:
@@ -595,18 +653,24 @@ def test_generation_failure_raises_assistant_unavailable_not_a_fabricated_answer
 
 
 def test_history_returns_messages_with_their_citations():
+    # history() now walks the Matter's active path (branching), not "every row
+    # by matter_id" -- build the tree by hand the way ask() would.
     messages = InMemoryChatMessageRepository()
-    messages.save_user_message(MATTER, LAWYER, "What is the rent?")
-    messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf", None)])
+    user_msg = messages.save_user_message(MATTER, LAWYER, "What is the rent?")
+    messages.set_matter_active_root(MATTER, user_msg.id)
+    assistant_msg, _ = messages.save_assistant_message(
+        MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf", None)], parent_id=user_msg.id
+    )
+    messages.set_active_child(user_msg.id, assistant_msg.id)
     service = make_service(messages=messages)
 
     history = service.history(MATTER)
 
     assert len(history) == 2
-    user_msg, user_citations = history[0]
-    assert user_msg.role == "user" and user_citations == []
-    assistant_msg, assistant_citations = history[1]
-    assert assistant_msg.role == "assistant"
+    user_result, user_citations = history[0]
+    assert user_result.role == "user" and user_citations == []
+    assistant_result, assistant_citations = history[1]
+    assert assistant_result.role == "assistant"
     assert len(assistant_citations) == 1
 
 
@@ -616,6 +680,7 @@ def test_history_returns_messages_with_their_citations():
 def test_pinning_an_assistant_message_marks_it_pinned():
     messages = InMemoryChatMessageRepository()
     assistant_msg, _ = messages.save_assistant_message(MATTER, "Rs. 85,000 [1].", [("doc-1", 2, "the rent is...", "lease.pdf", None)])
+    messages.set_matter_active_root(MATTER, assistant_msg.id)  # history() now walks the active path, not every row
     service = make_service(messages=messages)
 
     updated = service.toggle_pin(MATTER, assistant_msg.id, True)
@@ -666,3 +731,128 @@ def test_pinned_lists_only_pinned_messages_most_pin_order_preserved():
 
     assert [m.content for m, _ in pinned] == ["First answer [1].", "Third answer [1]."]
     assert all(len(c) == 1 for _, c in pinned), "pinned messages must still carry their citations"
+
+
+# --- Edit-a-previous-message branching (ChatGPT-style edit-message arrows) ---
+
+
+def make_branching_service(llm_responses):
+    """A full-context Matter (small corpus) with a scripted LLM, real
+    InMemoryChatMessageRepository so the tree-walking methods (active_path,
+    history_before, siblings) are exercised the same way the real SQL
+    repository would be, not stubbed out."""
+    retrieval = InMemoryChatRetrievalRepository()
+    retrieval.ready_documents[MATTER] = 1
+    retrieval.all_chunks_by_matter[MATTER] = [FakeChunk("c1", "doc-1", "matter.pdf", 1, "The rent is Rs. 85,000.")]
+    messages = InMemoryChatMessageRepository()
+    llm = ScriptedLLM(llm_responses)
+    service = make_service(retrieval=retrieval, messages=messages, llm=llm)
+    return service, messages, llm
+
+
+def test_editing_a_message_creates_a_sibling_never_deleting_the_original():
+    service, messages, llm = make_branching_service(
+        ["The rent is Rs. 85,000 [1].", "The updated rent is Rs. 90,000 [1]."]
+    )
+    service.ask(MATTER, LAWYER, "What is the rent?")
+    original_user_id = next(m.id for m in messages.messages if m.content == "What is the rent?")
+
+    edited_path = service.edit(MATTER, original_user_id, LAWYER, "What is the updated rent?")
+
+    # Nothing was deleted/overwritten -- the original question row still exists as-is.
+    original = messages.get_by_id(original_user_id)
+    assert original is not None
+    assert original.content == "What is the rent?"
+
+    # It's now a sibling of the new question (same parent -- both root-level here).
+    siblings = messages.siblings(MATTER, original.parent_id)
+    assert {s.content for s in siblings} == {"What is the rent?", "What is the updated rent?"}
+
+    # The edit's own returned active path is the new branch, in full.
+    assert [m.content for m, _ in edited_path] == ["What is the updated rent?", "The updated rent is Rs. 90,000 [1]."]
+
+
+def test_the_old_branch_stays_fully_fetchable_via_activate_branch_after_an_edit():
+    service, messages, llm = make_branching_service(
+        ["The rent is Rs. 85,000 [1].", "The updated rent is Rs. 90,000 [1]."]
+    )
+    service.ask(MATTER, LAWYER, "What is the rent?")
+    original_user_id = next(m.id for m in messages.messages if m.content == "What is the rent?")
+    service.edit(MATTER, original_user_id, LAWYER, "What is the updated rent?")
+
+    # After the edit, GET history (active_path) returns only the NEW branch.
+    assert [m.content for m, _ in service.history(MATTER)] == ["What is the updated rent?", "The updated rent is Rs. 90,000 [1]."]
+
+    # Switching back to the old sibling brings its full original conversation back intact.
+    reactivated = service.activate_branch(MATTER, original_user_id)
+
+    assert [m.content for m, _ in reactivated] == ["What is the rent?", "The rent is Rs. 85,000 [1]."]
+    assert [m.content for m, _ in service.history(MATTER)] == ["What is the rent?", "The rent is Rs. 85,000 [1]."]
+
+
+def test_editing_a_non_first_message_repoints_its_parents_active_child_not_the_matter_root():
+    service, messages, llm = make_branching_service(
+        ["Answer 1 [1].", "Answer 2 [1].", "Answer 2 edited [1]."]
+    )
+    service.ask(MATTER, LAWYER, "Question 1?")
+    service.ask(MATTER, LAWYER, "Question 2?")
+    question1_id = next(m.id for m in messages.messages if m.content == "Question 1?")
+    question2_id = next(m.id for m in messages.messages if m.content == "Question 2?")
+
+    edited_path = service.edit(MATTER, question2_id, LAWYER, "Question 2 edited?")
+
+    assert [m.content for m, _ in edited_path] == ["Question 1?", "Answer 1 [1].", "Question 2 edited?", "Answer 2 edited [1]."]
+    # The Matter's root pointer is untouched -- editing Q2 only repoints Q1's active_child.
+    assert messages.get_matter_active_root(MATTER) == question1_id
+
+
+def test_history_before_never_pulls_in_a_sibling_branchs_messages():
+    service, messages, llm = make_branching_service(
+        ["First branch answer [1].", "Second branch answer [1]."]
+    )
+    service.ask(MATTER, LAWYER, "First question?")
+    first_user_id = next(m.id for m in messages.messages if m.content == "First question?")
+    service.edit(MATTER, first_user_id, LAWYER, "Edited question?")
+    edited_assistant_id = next(m.id for m in messages.messages if m.content == "Second branch answer [1].")
+
+    # A naive "last N rows by matter_id" would include "First question?" (it's
+    # an earlier row in the same Matter) -- history_before must not, since it
+    # only exists on the sibling branch, not on the edited branch's own chain.
+    history = messages.history_before(edited_assistant_id, limit=10)
+
+    assert [m.content for m in history] == ["Edited question?"]
+    assert "First question?" not in [m.content for m in history]
+
+
+def test_editing_a_non_user_message_is_rejected():
+    service, messages, llm = make_branching_service(["The rent is Rs. 85,000 [1]."])
+    service.ask(MATTER, LAWYER, "What is the rent?")
+    assistant_id = next(m.id for m in messages.messages if m.role == "assistant")
+
+    with pytest.raises(InvalidEditTargetError):
+        service.edit(MATTER, assistant_id, LAWYER, "New question")
+
+
+def test_editing_a_nonexistent_message_is_not_found():
+    service, messages, llm = make_branching_service([])
+    with pytest.raises(ChatMessageNotFoundError):
+        service.edit(MATTER, "no-such-id", LAWYER, "anything")
+
+
+def test_activating_a_nonexistent_branch_is_not_found():
+    service, messages, llm = make_branching_service([])
+    with pytest.raises(ChatMessageNotFoundError):
+        service.activate_branch(MATTER, "no-such-id")
+
+
+def test_sibling_ids_includes_the_message_itself_and_every_sibling():
+    service, messages, llm = make_branching_service(["Answer 1 [1].", "Answer 1 edited [1]."])
+    service.ask(MATTER, LAWYER, "Question?")
+    original_id = next(m.id for m in messages.messages if m.content == "Question?")
+    service.edit(MATTER, original_id, LAWYER, "Question edited?")
+    edited_id = next(m.id for m in messages.messages if m.content == "Question edited?")
+
+    original = messages.get_by_id(original_id)
+    ids = service.sibling_ids(original)
+
+    assert set(ids) == {original_id, edited_id}

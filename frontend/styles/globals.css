@@ -3,13 +3,19 @@
    Direction (2026-08-18 reskin, reference: a monochrome SaaS CRM dashboard):
    near-black primary for buttons/links/active-tab instead of navy, a soft
    lavender for selected/highlighted states, a cool neutral scale. A single
-   muted indigo-violet AI accent still marks AI-origin content; a muted teal
-   still marks citations/legal references — both deliberately distinct from
-   Primary and left untouched by this reskin so each keeps reading as its
-   own semantic category. Headings now share the same sans (Public Sans) as
-   UI chrome and body text — no serif anywhere, matching the reference;
-   citations and identifiers stay in JetBrains Mono. Corners are a touch
+   bright sky-blue AI accent marks AI-origin content (--color-ai-*, updated
+   2026-08-27 from the earlier muted indigo-violet); a muted teal still marks
+   citations/legal references — both deliberately distinct from Primary so
+   each keeps reading as its own semantic category. Corners are a touch
    rounder than the previous "sharper than typical SaaS" direction.
+
+   Typography — "Chambers" direction (2026-08-27): headings are set in a
+   serif (Source Serif 4, var(--font-heading), loaded in app/layout.tsx)
+   for a printed-brief register, with slightly tighter tracking and a
+   bolder H1; body and UI chrome stay Public Sans; citations, identifiers
+   and any numeric metadata stay JetBrains Mono, now with tabular figures.
+   Micro-labels (.field-label, calendar day labels) are small, uppercase
+   and letter-spaced. Layout, colour, spacing, radius, motion unchanged.
    ========================================================================== */
 
 :root {
@@ -81,11 +87,11 @@
   --color-info-border: #A9D6DA;
   --color-info-text: #0A5960;
 
-  /* ---- AI accent: muted indigo-violet — AI Workspace / AI-origin content markers only ---- */
-  --color-ai-50: #EFEBF7;
-  --color-ai-200: #CFC3E8;
-  --color-ai-500: #5B4B9E;
-  --color-ai-700: #40356F;
+  /* ---- AI accent: bright sky blue — AI Workspace / AI-origin content markers only ---- */
+  --color-ai-50: #EFF6FF;
+  --color-ai-200: #BFDBFE;
+  --color-ai-500: #3B82F6;
+  --color-ai-700: #1D4ED8;
 
   /* ---- Citation: muted teal — citation markers / legal-reference links only ---- */
   --color-citation-50: #E7F0EF;
@@ -114,9 +120,11 @@
   --color-border-focus: var(--color-primary-500);
 
   /* ---- Typography ---- */
-  /* Reskin: same sans as UI chrome, not --font-heading (Source Serif 4) — the
-     reference has no serif anywhere. */
-  --font-family-heading: var(--font-ui), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /* "Chambers" direction: headings return to a serif — Source Serif 4, exposed
+     as --font-heading by next/font in app/layout.tsx — for a printed-brief
+     register. Body/UI chrome stays Public Sans (--font-ui); mono stays
+     JetBrains Mono. */
+  --font-family-heading: var(--font-heading), 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
   --font-family-ui: var(--font-ui), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-family-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 
@@ -203,7 +211,9 @@ h1, h2, h3, h4 {
   color: var(--color-text-primary);
   margin: 0;
   line-height: 1.25;
+  letter-spacing: -0.006em;
 }
+h1 { font-weight: var(--font-weight-bold); }
 
 p { margin: 0; }
 
@@ -218,6 +228,7 @@ a.link-quiet:hover { text-decoration: none; }
 code, .mono {
   font-family: var(--font-family-mono);
   font-size: 0.925em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Every interactive element gets a real, visible keyboard-focus ring —
@@ -287,6 +298,11 @@ select:focus-visible,
 .btn-secondary:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--color-bg-surface-hover); border-color: var(--color-border-strong); }
 .btn-secondary:active:not(:disabled):not([aria-disabled="true"]) { background: var(--color-neutral-200); border-color: var(--color-border-strong); }
 .btn-secondary:disabled, .btn-secondary[aria-disabled="true"] { color: var(--color-text-disabled); border-color: var(--color-neutral-200); }
+/* Modifier (pass via Button's className) — a caution action: red text + border
+   at rest, red-tinted fill on hover. Not a full destructive fill. Used by "Close Matter". */
+.btn-secondary.btn-danger-outline { color: var(--color-error-text); border-color: var(--color-error-border); }
+.btn-secondary.btn-danger-outline:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--color-error-bg); border-color: var(--color-error-base); color: var(--color-error-text); }
+.btn-secondary.btn-danger-outline:active:not(:disabled):not([aria-disabled="true"]) { background: var(--color-error-bg); border-color: var(--color-error-active); color: var(--color-error-active); }
 /* Modifier (pass via Button's className) — no fill/border at rest, only a
    faint hover tint. Used by "+ New Client". */
 .btn-secondary.btn-plain {
@@ -347,7 +363,8 @@ select:focus-visible,
    ========================================================================== */
 
 .field { display: flex; flex-direction: column; gap: var(--space-2); }
-.field-label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); }
+/* "Chambers": field labels read as small-caps eyebrows — uppercase, letter-spaced, one step down in size and colour. */
+.field-label { font-size: 11px; font-weight: var(--font-weight-semibold); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; }
 .field-hint { font-size: var(--font-size-xs); color: var(--color-text-tertiary); }
 .field-error { font-size: var(--font-size-xs); color: var(--color-error-text); }
 
@@ -441,6 +458,13 @@ a.card:focus-visible, button.card:focus-visible { box-shadow: var(--shadow-sm), 
 .badge-warning { background: var(--color-warning-bg); border-color: var(--color-warning-border); color: var(--color-warning-text); }
 .badge-error { background: var(--color-error-bg); border-color: var(--color-error-border); color: var(--color-error-text); }
 .badge-ai { background: var(--color-ai-50); border-color: var(--color-ai-200); color: var(--color-ai-700); }
+
+/* Matter status (Open/Closed) — a plain dot + label instead of the filled
+   pill .badge uses elsewhere, kept scoped to StatusBadge only. */
+.status-dot-badge { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); color: var(--color-text-primary); white-space: nowrap; }
+.status-dot { width: 8px; height: 8px; border-radius: var(--radius-full); flex-shrink: 0; }
+.status-dot-open { background: var(--color-success-base); }
+.status-dot-closed { background: var(--color-neutral-400); }
 .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
 /* AI-origin content marker (Section 6.6) — restrained, used only within/referencing AI-generated content. */
@@ -472,8 +496,9 @@ a.text-citation:hover { color: var(--color-citation-700); }
   align-items: center;
   height: 36px;
   font-family: var(--font-family-heading);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   font-size: calc(var(--font-size-md) + 1px);
+  letter-spacing: -0.01em;
   line-height: 1;
   color: var(--color-text-primary);
   text-decoration: none;
@@ -885,14 +910,14 @@ a.recent-matter-row:hover::before, a.recent-matter-row:hover::after { opacity: 1
   gap: var(--space-1);
   height: 32px;
   padding: 0 var(--space-2);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: none;
   background: none;
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition: background-color 140ms ease, color 140ms ease;
 }
 .sort-toggle-btn:hover, .sort-toggle-btn[aria-expanded="true"] { background: var(--color-bg-surface-hover); color: var(--color-text-primary); }
 .sort-toggle-btn-icon-only { width: 32px; padding: 0; justify-content: center; }
@@ -916,14 +941,14 @@ a.recent-matter-row:hover::before, a.recent-matter-row:hover::after { opacity: 1
   flex-shrink: 0;
   border: none;
   background: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   color: var(--color-text-secondary);
   cursor: pointer;
   transform-origin: center;
   transition: transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 350ms ease, filter 350ms ease, background-color 150ms ease, color 150ms ease;
 }
 .am-sort-icon-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-text-primary); }
-.am-sort-icon-btn:active { transform: scale(0.88); }
+.am-sort-icon-btn:active { transform: scale(0.96); }
 .am-sort-icon-btn-active { color: var(--color-primary-500); }
 .am-sort-icon-btn-open { transform: scale(1.5, 0.85); opacity: 0; filter: blur(8px); pointer-events: none; }
 
@@ -1000,15 +1025,15 @@ a.recent-matter-row:hover::before, a.recent-matter-row:hover::after { opacity: 1
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: none;
   background: none;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background-color 200ms ease, color 200ms ease, transform 150ms ease;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.cal-expand-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-text-primary); }
-.cal-expand-btn:active { transform: scale(0.88); }
+.cal-expand-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-text-primary); transform: scale(1.1); }
+.cal-expand-btn:active { background: var(--color-neutral-200); transform: scale(0.96); }
 .cal-expand-btn:active svg { transform: scale(0.92); }
 .cal-expand-btn:hover svg { animation: cal-expand-corners-pulse 500ms cubic-bezier(0.16, 1, 0.3, 1); }
 @keyframes cal-expand-corners-pulse {
@@ -1067,7 +1092,7 @@ a.recent-matter-row:hover::before, a.recent-matter-row:hover::after { opacity: 1
   animation: cal-today-pulse 2.2s ease-out infinite;
   pointer-events: none;
 }
-.cal-day-label { font-size: var(--font-size-xs); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+.cal-day-label { font-size: 11px; font-weight: var(--font-weight-semibold); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; }
 .cal-day-number { font-family: var(--font-family-heading); font-weight: 600; font-size: var(--font-size-md); transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
 .cal-day-cell:hover .cal-day-number { transform: scale(1.08); }
 .cal-day-initials { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; justify-content: center; }
@@ -1307,10 +1332,10 @@ a.recent-matter-row:hover::before, a.recent-matter-row:hover::after { opacity: 1
   cursor: pointer;
   border-radius: var(--radius-sm);
   color: var(--color-text-tertiary);
-  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.edit-icon-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-text-primary); }
-.edit-icon-btn:active { transform: scale(0.88); }
+.edit-icon-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-text-primary); transform: scale(1.1); }
+.edit-icon-btn:active { background: var(--color-neutral-200); transform: scale(0.96); }
 
 /* Client detail panel's "Delete" trigger — same bare-icon shape as
    .edit-icon-btn, but tinted with the destructive/error tokens at rest so
@@ -1335,30 +1360,71 @@ a.recent-matter-row:hover::before, a.recent-matter-row:hover::after { opacity: 1
   color: var(--color-error-base);
   transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
-.delete-icon-btn:hover { background: var(--color-error-bg); color: var(--color-error-text); transform: scale(1.08); }
-.delete-icon-btn:active { background: var(--color-error-bg); color: var(--color-error-active); transform: scale(0.88); }
+.delete-icon-btn:hover { background: var(--color-error-bg); color: var(--color-error-text); transform: scale(1.1); }
+.delete-icon-btn:active { background: var(--color-error-bg); color: var(--color-error-active); transform: scale(0.96); }
 
-/* Client detail panel's "New Matter" trigger — bare "+" icon, no background/
-   border/text at rest, smooth scale on both hover and press. */
-.add-icon-btn {
+/* One shared look for every icon-only "add" trigger in the app (New Matter in
+   the client panel, New Deadline, Add document): a bare "+" with no border or
+   fill at rest, a soft rounded-square hover surface, and a slight expand.
+   .panel-add-btn (below) joins this via the shared selector. */
+.add-icon-btn,
+.deadline-add-btn,
+.panel-add-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
+  padding: 0;
   border: none;
   background: transparent;
-  padding: 0;
-  font: inherit;
-  cursor: pointer;
   border-radius: var(--radius-sm);
   color: var(--color-text-tertiary);
-  transition: background-color 200ms ease, color 200ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.add-icon-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-text-primary); transform: scale(1.15); }
-.add-icon-btn:active { transform: scale(0.9); }
+.add-icon-btn:hover:not(:disabled),
+.deadline-add-btn:hover:not(:disabled),
+.panel-add-btn:hover:not(:disabled) {
+  background: var(--color-bg-surface-hover);
+  color: var(--color-text-primary);
+  transform: scale(1.1);
+}
+.add-icon-btn:active:not(:disabled),
+.deadline-add-btn:active:not(:disabled),
+.panel-add-btn:active:not(:disabled) {
+  background: var(--color-neutral-200);
+  transform: scale(0.96);
+}
+.add-icon-btn:disabled,
+.deadline-add-btn:disabled,
+.panel-add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+/* Universal square hover for bare icon buttons: the same rounded-square fill
+   + slight expand as the add buttons above, applied wherever the app has an
+   icon-only control (AI Chat message actions, edit/delete/download triggers,
+   calendar + sort controls). Semantic hover colours (delete red, download
+   primary, AI toggle blue) are kept in each control's own rule. */
+@media (prefers-reduced-motion: reduce) {
+  .add-icon-btn, .deadline-add-btn, .panel-add-btn,
+  .chat-icon-btn, .chat-branch-btn, .chat-mic-btn, .chat-maximize-btn, .chat-toggle-btn,
+  .edit-icon-btn, .delete-icon-btn, .panel-download-icon-btn, .cal-expand-btn {
+    transition-property: background-color, color;
+  }
+  .add-icon-btn:hover:not(:disabled), .deadline-add-btn:hover:not(:disabled), .panel-add-btn:hover:not(:disabled),
+  .add-icon-btn:active:not(:disabled), .deadline-add-btn:active:not(:disabled), .panel-add-btn:active:not(:disabled),
+  .chat-icon-btn:hover:not(:disabled), .chat-icon-btn:active:not(:disabled),
+  .chat-branch-btn:hover:not(:disabled), .chat-branch-btn:active:not(:disabled),
+  .chat-mic-btn:hover:not(:disabled), .chat-mic-btn:active:not(:disabled),
+  .chat-maximize-btn:hover, .chat-maximize-btn:active, .chat-toggle-btn:hover,
+  .edit-icon-btn:hover, .edit-icon-btn:active,
+  .delete-icon-btn:hover, .delete-icon-btn:active,
+  .panel-download-icon-btn:hover, .panel-download-icon-btn:active,
+  .cal-expand-btn:hover, .cal-expand-btn:active { transform: none; }
+}
 
 /* Sort dropdown chevron (Active Matters + Matters/Clients list sort & filters) */
 .sort-toggle-icon { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
@@ -1434,11 +1500,19 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
   border-top-color: #000000;
   border-bottom-width: 0;
 }
+/* Drops below the trigger instead of above — for toolbars flush against the
+   top of an overflow-hidden container, where the default upward bubble clips. */
+.tooltip-bubble-below { top: calc(100% + 8px); bottom: auto; transform-origin: top center; }
+.tooltip-bubble-below::after { top: auto; bottom: 100%; border-top-width: 0; border-top-color: transparent; border-bottom-width: 5px; border-bottom-color: #000000; }
 *:hover > .tooltip-bubble, *:focus-visible > .tooltip-bubble { opacity: 1; transform: translateX(-50%) scale(1); }
 @media (prefers-reduced-motion: reduce) {
   .tooltip-bubble { transition: opacity 150ms ease; transform: translateX(-50%); }
   *:hover > .tooltip-bubble, *:focus-visible > .tooltip-bubble { transform: translateX(-50%); }
 }
+/* Any control hosting a TooltipBubble is its positioning context, so
+   individual icon-button rules don't each need `position: relative`
+   (a later, more specific `position` on a given button still wins). */
+:has(> .tooltip-bubble) { position: relative; }
 
 /* ==========================================================================
    Clients page micro-interactions
@@ -1582,24 +1656,51 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
 a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
 .panel-list-row-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-sm); }
 .panel-file-icon { flex-shrink: 0; color: var(--color-text-tertiary); }
-.panel-add-btn {
+
+/* Documents row: an explicit download icon in front of the file-name link
+   (its own sibling <a>, not nested — a <button>/<a> can't validly nest
+   inside another <a>). */
+.panel-list-row-link { display: flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 0; text-decoration: none; color: inherit; }
+.panel-list-row-link:hover { color: var(--color-text-link); text-decoration: none; }
+.panel-download-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border-default);
-  background: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.panel-add-btn:hover:not(:disabled) { background: var(--color-bg-surface-hover); border-color: var(--color-border-strong); transform: scale(1.08); }
-.panel-add-btn:active:not(:disabled) { transform: scale(0.94); }
-.panel-add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.panel-download-icon-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-primary-600); transform: scale(1.1); }
+.panel-download-icon-btn:active { background: var(--color-neutral-200); transform: scale(0.96); }
+/* .panel-add-btn's base look is the shared icon-only "add" rule above. */
+
+/* "You need to add a document first" cue in the AI Chat header — the button
+   goes red and emits five expanding rings (same idea as the calendar's
+   .cal-day-today pulse, but finite), then settles to a static red. */
+.panel-add-btn-attention {
+  position: relative;
+  color: var(--color-error-base);
+}
+.panel-add-btn-attention::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1.5px solid var(--color-error-base);
+  animation: panel-add-attention-pulse 1.1s ease-out 5 forwards;
+  pointer-events: none;
+}
+@keyframes panel-add-attention-pulse {
+  0% { opacity: 0.65; transform: scale(1); }
+  70% { opacity: 0; transform: scale(1.6); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel-add-btn-attention::after { animation: none; opacity: 0; }
+}
 
 /* AI Chat (matter Chat tab) — Assistant messages: avatar on the left, neutral
    bubble. User messages: right-aligned, no avatar (WhatsApp-style) — icon-
@@ -1621,49 +1722,72 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
 .chat-bubble {
   padding: var(--space-3);
   border-radius: var(--radius-lg);
-  background: var(--color-bg-surface-sunken);
-  border: 1px solid var(--color-border-default);
   font-size: var(--font-size-sm);
 }
-.chat-row-user .chat-bubble { background: var(--color-bg-selected); border-color: var(--color-primary-200); }
+.chat-row-user .chat-bubble { background: var(--color-bg-surface-sunken); border: 1px solid var(--color-primary-200); }
 .chat-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 26px;
   height: 26px;
-  border-radius: var(--radius-full);
-  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  border: none;
   background: none;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.chat-icon-btn:hover:not(:disabled) { background: var(--color-bg-surface-hover); color: var(--color-text-secondary); border-color: var(--color-border-default); }
+.chat-icon-btn:hover:not(:disabled) { background: var(--color-bg-surface-hover); color: var(--color-text-primary); transform: scale(1.1); }
+.chat-icon-btn:active:not(:disabled) { background: var(--color-neutral-200); transform: scale(0.96); }
 .chat-icon-btn[aria-pressed="true"] { color: var(--color-warning-base); }
 .chat-icon-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Edit-a-question box, replacing the user bubble in place while editing. */
+.chat-edit-box { width: min(85%, 640px); margin-left: auto; }
+.chat-edit-textarea { min-height: 64px; }
+
+/* ChatGPT-style "‹ 2/3 ›" switcher for an edited question's sibling versions. */
+.chat-branch-switcher { display: inline-flex; align-items: center; gap: var(--space-1); margin-right: var(--space-1); }
+.chat-branch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chat-branch-btn:hover:not(:disabled) { background: var(--color-bg-surface-hover); color: var(--color-text-primary); transform: scale(1.1); }
+.chat-branch-btn:active:not(:disabled) { background: var(--color-neutral-200); transform: scale(0.96); }
+.chat-branch-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .chat-input-bar {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  border: 1px solid var(--color-border-default);
+  border: none;
   border-radius: var(--radius-full);
-  padding: var(--space-1);
-  padding-left: var(--space-4);
+  padding: var(--space-2);
+  padding-left: var(--space-5);
   background: var(--color-bg-surface);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow 150ms ease;
 }
-.chat-input-bar:focus-within { border-color: var(--color-border-focus); box-shadow: var(--focus-ring); }
+.chat-input-bar:focus-within { box-shadow: var(--shadow-lg); }
 .chat-input {
   flex: 1;
   min-width: 0;
-  height: 40px;
+  height: 44px;
   border: none;
   background: none;
   outline: none;
   font-family: var(--font-family-ui);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   color: var(--color-text-primary);
 }
 .chat-input::placeholder { color: var(--color-text-tertiary); }
@@ -1671,8 +1795,8 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-full);
   flex-shrink: 0;
   border: none;
@@ -1684,12 +1808,177 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
 .chat-send-btn:hover:not(:disabled) { background: var(--color-primary-600); transform: scale(1.06); }
 .chat-send-btn:disabled { background: var(--color-neutral-200); color: var(--color-text-disabled); cursor: not-allowed; }
 
+.chat-mic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chat-mic-btn:hover:not(:disabled) { background: var(--color-bg-surface-hover); color: var(--color-text-primary); transform: scale(1.1); }
+.chat-mic-btn:active:not(:disabled) { background: var(--color-neutral-200); transform: scale(0.96); }
+.chat-mic-btn:disabled { color: var(--color-text-disabled); cursor: not-allowed; }
+.chat-mic-btn-active { background: var(--color-error-bg); color: var(--color-error-text); animation: chat-mic-pulse 1.4s ease-in-out infinite; }
+.chat-mic-btn-active:hover { background: var(--color-error-bg); color: var(--color-error-text); }
+@keyframes chat-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 26, 20, 0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(124, 26, 20, 0); }
+}
+
+/* AI "thinking" indicator (components/ui/thinking-dots.tsx) — three dots
+   rising and falling in a wave while an answer is being generated. Tinted
+   with the AI-accent token, since this marks AI-origin content. */
+.thinking-dots { position: relative; display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) 0; }
+.thinking-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--color-ai-500);
+  animation: thinking-dot-wave 1.2s ease-in-out infinite;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.15s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes thinking-dot-wave {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+@keyframes ai-voice-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thinking-dot { animation: none; opacity: 0.7; }
+}
+
+/* Voice-dictation visualiser (components/ui/ai-voice-visualizer.tsx) — a
+   48-bar waveform + elapsed timer shown while the Web Speech recogniser is
+   listening. Adapted from KokonutUI "AI Voice" (MIT) to plain CSS; tinted
+   with the AI-accent token as an AI-origin surface. */
+.ai-voice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+  gap: var(--space-2);
+  width: min(100%, 360px);
+  animation: ai-voice-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ai-voice-bars { display: flex; align-items: center; justify-content: center; gap: 2px; height: 32px; width: 100%; }
+.ai-voice-bar {
+  width: 2px;
+  min-height: 2px;
+  border-radius: var(--radius-full);
+  background: var(--color-ai-500);
+  transform-origin: center;
+}
+.ai-voice-active .ai-voice-bar { animation: ai-voice-bar 1s ease-in-out infinite; }
+@keyframes ai-voice-bar {
+  0%, 100% { transform: scaleY(0.28); }
+  50% { transform: scaleY(1); }
+}
+.ai-voice-meta { display: inline-flex; align-items: center; gap: var(--space-2); }
+.ai-voice-time { font-size: var(--font-size-xs); color: var(--color-text-tertiary); }
+.ai-voice-label { font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); color: var(--color-ai-700); }
+@media (prefers-reduced-motion: reduce) {
+  .ai-voice { animation: none; }
+  .ai-voice-active .ai-voice-bar { animation: none; }
+}
+
 /* .chat-frame's own message list (chat-messages-scroll, flex:1) scrolls within
    this bounded height — used by the standalone Matter Detail page's in-flow
    Chat section. The inline panel's AI Chat is full-height instead (chat-frame-full,
    opened via the toggle icon next to the Matter name), not bounded like this. */
-.chat-frame { max-height: calc(100dvh - var(--nav-height) - 32px); }
-.chat-messages-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.chat-frame { position: relative; padding: var(--space-4); max-height: calc(100dvh - var(--nav-height) - 32px); }
+
+/* Pre-first-document state: the "upload a document first" line sits centered
+   in the panel with no card around it. */
+.chat-frame-empty { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 40vh; }
+.chat-frame-empty.chat-frame-full { min-height: 0; }
+.chat-empty-hint { max-width: 34ch; color: var(--color-text-tertiary); font-size: var(--font-size-base); line-height: 1.5; }
+
+.chat-maximize-btn {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chat-maximize-btn:hover { background: var(--color-bg-surface-hover); color: var(--color-text-primary); transform: scale(1.1); }
+.chat-maximize-btn:active { background: var(--color-neutral-200); transform: scale(0.96); }
+
+/* Maximized AI Chat: a fixed, full-viewport overlay that sits above the
+   nav (z-index 30) and everything else in the page, so the navbar and the
+   Matter list column visually disappear without actually being unmounted —
+   this component has no way to reach up and hide siblings/ancestors it
+   doesn't own. */
+.chat-maximized-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-bg-page);
+  padding: 0 var(--space-6) var(--space-5);
+}
+/* 25% sidebar (title/client/documents, stacked) + chat filling the rest. The
+   sidebar keeps its own top inset; the chat column has none, so it's free to
+   use that upper area right up to the screen edge. */
+.chat-maximized-layout { display: flex; flex: 1; min-height: 0; gap: var(--space-6); }
+.chat-maximized-sidebar { flex: 0 0 25%; max-width: 25%; min-width: 0; padding-top: var(--space-5); display: flex; flex-direction: column; gap: var(--space-5); overflow-y: auto; }
+.chat-maximized-chat { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+/* Fades the last ~40px of messages to transparent as they scroll toward the
+   type bar, via a mask rather than a background-color gradient — chat-frame
+   has no background of its own (removed per request), and masking the
+   content directly stays correct regardless of whatever's actually behind
+   it (plain panel vs the maximized overlay's page background). */
+/* Empty-conversation hero — heading + the same input bar, centered, before
+   the first question is asked (instead of a small "no messages yet" line
+   sitting above an otherwise-unused message list). */
+.chat-hero {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  text-align: center;
+  padding: var(--space-6);
+}
+.chat-hero-heading { font-family: var(--font-family-heading); font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); letter-spacing: -0.006em; color: var(--color-text-primary); max-width: 36rem; }
+.chat-hero .chat-input-bar { width: min(100%, 640px); }
+
+.chat-messages-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Never scroll sideways — overflow-y:auto would otherwise make overflow-x
+     compute to auto too, so a long URL / unbroken token in a message or
+     citation could produce a horizontal scrollbar. */
+  overflow-x: hidden;
+  mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
+}
+/* …and make that long content wrap instead of pushing width. */
+.chat-bubble, .chat-messages-scroll .mono { overflow-wrap: anywhere; }
 
 /* Toggled full-panel AI Chat (opened via the icon next to the Matter name) —
    fills the rest of the column instead of the viewport-relative max-height above. */
@@ -1699,15 +1988,77 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--color-border-default);
   background: var(--color-bg-surface);
   color: var(--color-ai-500);
   cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chat-toggle-btn:hover { background: var(--color-ai-50); border-color: var(--color-ai-200); transform: scale(1.1); }
+.chat-toggle-btn[aria-pressed="true"] { background: var(--color-ai-50); border-color: var(--color-ai-200); }
+
+/* "Ask AI" trigger next to the Documents heading — same toggle behavior as
+   .chat-toggle-btn, but a labeled pill instead of an icon-only circle, so it
+   gets its own class rather than overloading the compact doc-tabs-strip one. */
+.ask-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-ai-200);
+  background: linear-gradient(90deg, #FFFFFF, var(--color-ai-500), #FFFFFF);
+  background-size: 200% 100%;
+  background-position: 50% 0;
+  color: #FFFFFF;
+  text-shadow: 0 0 1px var(--color-ai-700), 0 0 1px var(--color-ai-700), 0 1px 3px rgba(29, 78, 216, 0.7);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-position 400ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms ease;
+}
+.ask-ai-btn svg { flex-shrink: 0; }
+.ask-ai-btn:hover, .ask-ai-btn[aria-pressed="true"] { background-position: 0% 0; border-color: var(--color-ai-500); transform: scale(1.04); }
+
+/* Documents section: file list on the left, drag-and-drop upload on the
+   right, each taking half the section's width. */
+.documents-columns { display: flex; align-items: flex-start; gap: var(--space-4); }
+.documents-list-col, .documents-upload-col { flex: 1 1 50%; min-width: 0; }
+
+.doc-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-4);
+  border: 1.5px dashed var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  text-align: center;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.doc-dropzone-dragging { border-color: var(--color-ai-500); background: var(--color-ai-50); }
+.doc-dropzone-title { font-size: var(--font-size-sm); font-weight: 500; color: var(--color-text-primary); margin-top: var(--space-1); }
+.doc-dropzone-hint { font-size: var(--font-size-xs); color: var(--color-text-tertiary); }
+.doc-dropzone-browse-btn {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface-hover);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
   transition: background-color 150ms ease, border-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.chat-toggle-btn:hover { background: var(--color-ai-50); border-color: var(--color-ai-200); transform: scale(1.08); }
-.chat-toggle-btn[aria-pressed="true"] { background: var(--color-ai-50); border-color: var(--color-ai-200); }
+.doc-dropzone-browse-btn:hover { background: var(--color-bg-surface); border-color: var(--color-border-strong); transform: scale(1.03); }
+.doc-dropzone-browse-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+.doc-dropzone-error { font-size: var(--font-size-xs); color: var(--color-error-text); margin-top: var(--space-1); }
 .chat-fullpanel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .chat-frame.chat-frame-full { max-height: none; height: 100%; }
 
@@ -1716,7 +2067,12 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
    right (replacing the full Documents section for this view). */
 .chat-mode-header-row { display: flex; align-items: flex-start; gap: var(--space-5); }
 .chat-mode-title-block { flex-shrink: 0; max-width: 45%; }
-.doc-tabs-strip { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: hidden; padding-top: var(--space-1); }
+.doc-tabs-strip { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; padding-top: var(--space-1); }
+/* Only the tabs clip on overflow — the close-chat / add-document buttons stay
+   outside this (so their TooltipBubbles aren't cut off) and sit right after
+   the document names rather than being pushed to the far right: flex 0 1 auto
+   = size to the names, shrink+clip only when space is tight. */
+.doc-tabs-strip-tabs { display: flex; align-items: center; gap: 2px; flex: 0 1 auto; min-width: 0; overflow: hidden; }
 .doc-tab {
   display: flex;
   align-items: center;

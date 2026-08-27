@@ -76,13 +76,15 @@ class ChatRetrievalRepository(Protocol):
 
 
 class ChatMessageRepository(Protocol):
-    def save_user_message(self, matter_id: str, lawyer_id: str, content: str) -> ChatMessage: ...
+    def save_user_message(self, matter_id: str, lawyer_id: str, content: str, parent_id: str | None = None) -> ChatMessage: ...
 
     def save_assistant_message(
-        self, matter_id: str, content: str, citations: list[tuple[str, int | None, str, str, str | None]]
+        self,
+        matter_id: str,
+        content: str,
+        citations: list[tuple[str, int | None, str, str, str | None]],
+        parent_id: str | None = None,
     ) -> tuple[ChatMessage, list[Citation]]: ...
-
-    def recent_messages(self, matter_id: str, limit: int) -> list[ChatMessage]: ...
 
     def list_messages(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]: ...
 
@@ -92,6 +94,35 @@ class ChatMessageRepository(Protocol):
         ...
 
     def list_pinned(self, matter_id: str) -> list[tuple[ChatMessage, list[Citation]]]: ...
+
+    def citations_for(self, message_id: str) -> list[Citation]: ...
+
+    # --- Edit-a-previous-message branching ---
+
+    def get_by_id(self, message_id: str) -> ChatMessage | None: ...
+
+    def siblings(self, matter_id: str, parent_id: str | None) -> list[ChatMessage]:
+        """Every message sharing this parent_id (the null-parent/root case included),
+        ordered by created_at — used to build the ‹ i/N › UI on the frontend."""
+        ...
+
+    def set_active_child(self, message_id: str, child_id: str) -> None: ...
+
+    def get_matter_active_root(self, matter_id: str) -> str | None: ...
+
+    def set_matter_active_root(self, matter_id: str, message_id: str) -> None: ...
+
+    def active_path(self, matter_id: str) -> list[ChatMessage]:
+        """Walks the Matter's active_root_message_id -> active_child_id chain,
+        oldest to newest — this is "the messages" the API returns, not every row."""
+        ...
+
+    def history_before(self, message_id: str, limit: int) -> list[ChatMessage]:
+        """Walks parent_id backward from message_id (not included) up to limit
+        messages, returned oldest -> newest — the real conversation history that
+        led up to message_id on ITS branch, unlike a plain "last N by matter_id"
+        query which could pull messages from a superseded or sibling branch."""
+        ...
 
 
 class ChatLLM(Protocol):

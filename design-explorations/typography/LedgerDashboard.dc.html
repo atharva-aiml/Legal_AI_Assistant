@@ -1,0 +1,395 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+*{box-sizing:border-box;}
+:root{
+  --color-neutral-0:#FFFFFF;--color-neutral-50:#F7F8F9;--color-neutral-100:#EEF0F2;
+  --color-neutral-200:#E1E4E8;--color-neutral-300:#C9CED4;--color-neutral-400:#A7AEB8;
+  --color-neutral-500:#838C97;--color-neutral-600:#626B76;--color-neutral-700:#48505A;
+  --color-neutral-800:#313740;--color-neutral-900:#1B1F24;--color-neutral-950:#101317;
+  --color-primary-50:#F4F4F5;--color-primary-100:#E4E4E7;--color-primary-200:#D4D4D8;
+  --color-primary-300:#A1A1AA;--color-primary-400:#71717A;--color-primary-500:#27272A;
+  --color-primary-600:#18181B;--color-primary-700:#09090B;
+  --color-brand-200:var(--color-primary-200);--color-brand-300:var(--color-primary-300);
+  --color-brand-600:var(--color-primary-600);--color-brand-700:var(--color-primary-700);
+  --color-success-base:#1E7B4D;--color-success-bg:#E8F5EE;--color-success-border:#B7E0C7;--color-success-text:#145C39;
+  --color-warning-base:#B5790A;--color-warning-bg:#FBF1DE;--color-warning-border:#EDCB86;--color-warning-text:#7A5107;
+  --color-error-base:#B3261E;--color-error-bg:#FBEAE9;--color-error-border:#E9B3AF;--color-error-text:#7C1A14;
+  --color-info-base:#0E7C86;--color-info-bg:#E5F3F4;--color-info-border:#A9D6DA;--color-info-text:#0A5960;
+  --color-ai-50:#EFEBF7;--color-ai-200:#CFC3E8;--color-ai-500:#5B4B9E;--color-ai-700:#40356F;
+  --color-citation-50:#E7F0EF;--color-citation-200:#B9D6D3;--color-citation-500:#3E6E6B;--color-citation-700:#2A4C4A;
+  --color-bg-page:var(--color-neutral-50);--color-bg-surface:var(--color-neutral-0);
+  --color-bg-surface-hover:var(--color-neutral-100);--color-bg-surface-sunken:var(--color-neutral-100);
+  --color-bg-selected:#EFEBFB;
+  --color-text-primary:var(--color-neutral-900);--color-text-secondary:var(--color-neutral-600);
+  --color-text-tertiary:var(--color-neutral-500);--color-text-disabled:var(--color-neutral-400);
+  --color-text-on-brand:#FFFFFF;--color-text-link:var(--color-primary-500);--color-text-link-hover:var(--color-primary-600);
+  --color-border-default:var(--color-neutral-200);--color-border-strong:var(--color-neutral-300);
+  --font-family-ui:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-family-heading:var(--font-family-ui);
+  --font-family-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  --font-size-xs:0.75rem;--font-size-sm:0.875rem;--font-size-base:1rem;--font-size-md:1.125rem;
+  --font-size-lg:1.25rem;--font-size-xl:1.5rem;--font-size-2xl:1.875rem;--font-size-3xl:2.375rem;
+  --font-weight-regular:400;--font-weight-medium:500;--font-weight-semibold:600;--font-weight-bold:700;
+  --space-1:0.25rem;--space-2:0.5rem;--space-3:0.75rem;--space-4:1rem;--space-5:1.5rem;--space-6:2rem;--space-7:3rem;--space-8:4rem;
+  --radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-full:9999px;
+  --shadow-sm:0 1px 2px rgba(26,32,41,0.06);--shadow-md:0 4px 12px rgba(26,32,41,0.10);--shadow-lg:0 16px 40px rgba(26,32,41,0.18);
+  --nav-height:64px;
+}
+html,body{height:100%;}
+body{
+  margin:0;font-family:var(--font-family-ui);
+  background:linear-gradient(to left,#FFFFFF,var(--color-bg-page));
+  background-attachment:fixed;color:var(--color-text-primary);
+  font-size:var(--font-size-base);line-height:1.5;-webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+h1,h2,h3,h4{font-family:var(--font-family-heading);font-weight:var(--font-weight-semibold);color:var(--color-text-primary);margin:0;line-height:1.25;}
+p{margin:0;}
+a{color:var(--color-text-link);text-decoration:none;}
+a:hover{color:var(--color-text-link-hover);}
+code,.mono{font-family:var(--font-family-mono);font-size:0.925em;}
+.type-band{
+  display:flex;align-items:center;gap:16px;height:36px;padding:0 var(--space-6);
+  background:var(--color-neutral-100);border-bottom:1px solid var(--color-neutral-200);
+  font-family:var(--font-family-mono);font-size:11px;letter-spacing:0.05em;
+  text-transform:uppercase;color:var(--color-neutral-500);white-space:nowrap;
+}
+.type-band b{color:var(--color-neutral-900);font-weight:600;}
+.type-band span{color:var(--color-neutral-300);}
+.app-nav{
+  display:flex;align-items:center;gap:var(--space-5);height:var(--nav-height);
+  padding:0 var(--space-6);background:var(--color-bg-surface);
+  border-bottom:1px solid var(--color-neutral-200);
+}
+.app-nav-brand{
+  display:inline-flex;align-items:center;height:36px;font-family:var(--font-family-heading);
+  font-weight:var(--font-weight-semibold);font-size:calc(var(--font-size-md) + 1px);
+  line-height:1;color:var(--color-text-primary);white-space:nowrap;
+}
+.app-nav-links{display:flex;align-items:center;gap:var(--space-4);}
+.app-nav-link{
+  display:inline-flex;align-items:center;height:36px;line-height:1;font-size:var(--font-size-sm);
+  font-weight:var(--font-weight-regular);color:var(--color-text-tertiary);
+  border-bottom:2px solid transparent;
+}
+.app-nav-link-active{color:var(--color-text-primary);font-weight:var(--font-weight-semibold);border-bottom-color:var(--color-brand-600);}
+.app-nav-search{flex:1;max-width:280px;position:relative;display:flex;align-items:center;}
+.app-nav-search-input{
+  width:100%;height:38px;padding:0 var(--space-3) 0 40px;border-radius:var(--radius-full);
+  border:1px solid var(--color-neutral-200);background:var(--color-bg-surface);
+  color:var(--color-text-primary);font-family:var(--font-family-ui);font-size:var(--font-size-sm);
+}
+.app-nav-search-input::placeholder{color:var(--color-neutral-500);}
+.app-nav-search-icon{position:absolute;left:var(--space-3);top:50%;transform:translateY(-50%);color:var(--color-neutral-500);display:flex;}
+.app-nav-actions{display:flex;align-items:center;gap:var(--space-4);margin-left:auto;color:var(--color-neutral-500);}
+.acct-avatar{
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:var(--font-size-xs);font-weight:600;background:var(--color-primary-100);color:var(--color-primary-700);
+  font-family:var(--font-family-ui);
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);height:40px;
+  padding:0 var(--space-4);border-radius:var(--radius-md);border:1px solid transparent;
+  font-family:var(--font-family-ui);font-weight:var(--font-weight-medium);font-size:var(--font-size-sm);
+  line-height:1;white-space:nowrap;
+}
+.btn-sm{height:32px;padding:0 var(--space-3);font-size:var(--font-size-xs);}
+.btn-primary{background:var(--color-primary-500);color:var(--color-text-on-brand);border-color:var(--color-primary-500);}
+.btn-secondary{background:var(--color-bg-surface);color:var(--color-neutral-800);border-color:var(--color-border-default);}
+.btn-plain{background:transparent;border-color:transparent;color:var(--color-neutral-700);}
+.card{
+  background:var(--color-bg-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);
+  padding:var(--space-4);box-shadow:var(--shadow-sm);
+}
+.badge{
+  display:inline-flex;align-items:center;gap:var(--space-1);border-radius:var(--radius-full);
+  padding:2px var(--space-2);font-size:var(--font-size-xs);font-weight:var(--font-weight-medium);border:1px solid;line-height:1.4;white-space:nowrap;
+}
+.badge-neutral{background:var(--color-neutral-100);border-color:var(--color-neutral-300);color:var(--color-neutral-700);}
+.badge-success{background:var(--color-success-bg);border-color:var(--color-success-border);color:var(--color-success-text);}
+.badge-warning{background:var(--color-warning-bg);border-color:var(--color-warning-border);color:var(--color-warning-text);}
+.badge-ai{background:var(--color-ai-50);border-color:var(--color-ai-200);color:var(--color-ai-700);}
+.status-dot-badge{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--font-size-sm);color:var(--color-text-primary);white-space:nowrap;}
+.status-dot{width:8px;height:8px;border-radius:var(--radius-full);flex-shrink:0;}
+.status-dot-open{background:var(--color-success-base);}
+.status-dot-closed{background:var(--color-neutral-400);}
+.row{display:flex;align-items:center;gap:var(--space-3);}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);}
+.stack{display:flex;flex-direction:column;gap:var(--space-3);}
+.text-secondary{color:var(--color-text-secondary);}
+.text-tertiary{color:var(--color-text-tertiary);}
+.text-sm{font-size:var(--font-size-sm);}
+.text-xs{font-size:var(--font-size-xs);}
+.shell{
+  max-width:1400px;margin:0 auto;padding:var(--space-5) var(--space-6) var(--space-6);
+  display:flex;flex-direction:column;gap:var(--space-4);
+}
+.page-header{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin:var(--space-2) 0 var(--space-1);}
+.section-header{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin:var(--space-4) 0 var(--space-3);}
+.dashboard-grid{display:grid;grid-template-columns:1fr 360px;gap:var(--space-4);align-items:start;}
+.dashboard-col{display:flex;flex-direction:column;gap:var(--space-3);}
+.stat-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-3);}
+.stat-tile{position:relative;overflow:hidden;padding:var(--space-3);}
+.stat-tile .stat-value{font-family:var(--font-family-heading);font-size:var(--font-size-xl);font-weight:600;font-variant-numeric:tabular-nums;}
+.stat-tile .stat-label{color:var(--color-text-tertiary);font-size:var(--font-size-xs);margin-top:var(--space-1);display:block;}
+.stat-icon-badge{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.panel-title{font-size:var(--font-size-md);font-weight:600;}
+.active-matters-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-2);}
+.active-matter-row{display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3);}
+.active-matter-card-title{font-size:var(--font-size-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.active-matter-subtext{font-size:var(--font-size-xs);color:var(--color-text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.matter-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--font-size-xs);font-weight:600;background:var(--color-primary-100);color:var(--color-primary-700);flex-shrink:0;}
+.matter-avatar-xs{width:18px;height:18px;font-size:8px;}
+.cal-strip{display:flex;gap:var(--space-2);}
+.cal-day-cell{
+  display:flex;flex:0 0 44px;flex-direction:column;align-items:center;gap:3px;padding:6px var(--space-1);
+  border-radius:var(--radius-md);background:var(--color-bg-surface-sunken);border:1px solid transparent;min-height:56px;
+}
+.cal-day-today{border-color:var(--color-primary-500);background:var(--color-bg-selected);}
+.cal-day-label{font-size:var(--font-size-xs);color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em;}
+.cal-day-number{font-family:var(--font-family-heading);font-weight:600;font-size:var(--font-size-md);}
+.cal-initial-badge{min-width:20px;height:18px;padding:0 4px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;background:var(--color-primary-100);color:var(--color-primary-700);}
+.recent-row{display:flex;align-items:center;gap:var(--space-2);padding:6px var(--space-3);border-top:1px solid transparent;}
+.recent-row + .recent-row{border-top-color:var(--color-neutral-100);}
+.recent-title{flex:1;min-width:0;font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.recent-meta{font-size:11px;color:var(--color-text-tertiary);flex-shrink:0;}
+.breadcrumb{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-bottom:var(--space-3);}
+.tabs{display:flex;gap:var(--space-5);border-bottom:1px solid var(--color-neutral-200);margin-top:var(--space-4);}
+.tab{
+  display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-1);margin-bottom:-1px;
+  border:none;background:none;border-bottom:2px solid transparent;font-family:var(--font-family-ui);
+  font-size:var(--font-size-sm);color:var(--color-neutral-600);
+}
+.tab-active{color:var(--color-brand-700);font-weight:var(--font-weight-medium);border-bottom-color:var(--color-brand-600);}
+.documents-columns{display:grid;grid-template-columns:1fr 300px;gap:var(--space-5);}
+.panel-list-row{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) 0;border-bottom:1px solid var(--color-border-default);}
+.panel-list-row:last-child{border-bottom:none;}
+.panel-list-row-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--font-size-sm);}
+.panel-file-icon{flex-shrink:0;color:var(--color-text-tertiary);}
+.ask-ai-btn{
+  display:inline-flex;align-items:center;gap:var(--space-2);height:32px;padding:0 var(--space-3);
+  border-radius:var(--radius-md);border:1px solid var(--color-ai-200);background:var(--color-ai-50);
+  color:var(--color-ai-700);font-family:var(--font-family-ui);font-size:var(--font-size-xs);font-weight:var(--font-weight-medium);
+}
+.dropzone{
+  border:1px dashed var(--color-neutral-300);border-radius:var(--radius-lg);background:var(--color-neutral-50);
+  padding:var(--space-5) var(--space-4);display:flex;flex-direction:column;align-items:center;gap:var(--space-2);text-align:center;color:var(--color-text-tertiary);
+}
+.dropzone-title{font-size:var(--font-size-sm);color:var(--color-text-secondary);}
+.dropzone-hint{font-size:var(--font-size-xs);}
+.chat-msg{display:flex;gap:var(--space-3);padding:var(--space-4);border:1px solid var(--color-ai-200);background:var(--color-ai-50);border-radius:var(--radius-lg);}
+.chat-avatar{width:26px;height:26px;border-radius:50%;background:var(--color-ai-500);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-body{font-size:var(--font-size-sm);line-height:1.55;color:var(--color-neutral-800);}
+.citation{
+  display:inline-flex;align-items:center;gap:6px;margin-top:var(--space-3);padding:3px var(--space-2);
+  border-radius:var(--radius-sm);background:var(--color-citation-50);border:1px solid var(--color-citation-200);
+  color:var(--color-citation-500);font-family:var(--font-family-mono);font-size:var(--font-size-xs);
+}
+.field-label{font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-secondary);}
+.client-dl{margin:var(--space-4) 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--space-4);}
+.client-dl dt{margin-bottom:var(--space-1);}
+.client-dl dd{margin:0;font-size:var(--font-size-sm);color:var(--color-text-primary);}
+.client-matter-row{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-4);border-top:1px solid var(--color-neutral-200);}
+.client-matter-row:last-child{border-bottom:1px solid var(--color-neutral-200);}
+.client-matter-title{flex:1;min-width:0;font-weight:500;font-size:var(--font-size-sm);}
+.icon-btn{width:28px;height:28px;border-radius:var(--radius-md);border:none;background:none;color:var(--color-text-tertiary);display:inline-flex;align-items:center;justify-content:center;}
+
+
+:root{
+  --font-family-ui:'Archivo','Helvetica Neue','Segoe UI',Arial,sans-serif;
+  --font-family-heading:'Archivo','Helvetica Neue','Segoe UI',Arial,sans-serif;
+  --font-family-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{font-variant-numeric:tabular-nums;}
+h1,h2,h3,.panel-title{font-weight:700;letter-spacing:-0.025em;}
+.app-nav-brand{font-weight:700;letter-spacing:-0.03em;}
+.app-nav-link{letter-spacing:-0.01em;}
+.field-label,.cal-day-label{font-family:var(--font-family-mono);text-transform:uppercase;letter-spacing:0.03em;font-size:11px;font-weight:500;color:var(--color-neutral-500);}
+.badge,.status-dot-badge,.active-matter-subtext,.recent-meta,.breadcrumb,.cal-initial-badge,.matter-avatar,.matter-avatar-xs,.acct-avatar,.client-dl dd,.dropzone-hint{font-family:var(--font-family-mono);}
+.stat-tile .stat-value{font-family:var(--font-family-mono);font-weight:600;letter-spacing:-0.02em;}
+.client-matter-title,.recent-title{letter-spacing:-0.01em;}
+
+
+.artboard-root{width:1480px;min-height:1180px;background:linear-gradient(to left,#FFFFFF,var(--color-bg-page));overflow:hidden;}
+
+  </style>
+</helmet>
+<div class="artboard-root">
+
+<div class="type-band">
+  <b>Option D — Ledger</b><span>|</span>Display&nbsp;·&nbsp;Archivo<span>/</span>Text&nbsp;·&nbsp;Archivo<span>/</span>Mono&nbsp;·&nbsp;JetBrains Mono
+</div>
+<div class="app-nav">
+  <div class="app-nav-brand">Legal AI Assistant</div>
+  <div class="app-nav-links">
+    <div class="app-nav-link app-nav-link-active">Dashboard</div>
+    <div class="app-nav-link">Clients</div>
+    <div class="app-nav-link">Matters</div>
+  </div>
+  <div class="app-nav-search"><span class="app-nav-search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><input class="app-nav-search-input" placeholder="Search Clients &amp; Matters…" readonly></div>
+  <div class="app-nav-actions"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg><span class="acct-avatar">PN</span></div>
+</div>
+<div class="shell">
+  <div class="page-header">
+    <h1 style="font-size:var(--font-size-2xl)">Dashboard</h1>
+    <div class="row">
+      <div class="btn btn-secondary btn-plain"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> New Client</div>
+      <div class="btn btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> New Matter</div>
+    </div>
+  </div>
+  <div class="dashboard-grid">
+    <div class="dashboard-col">
+      <div class="stat-row">
+        <div class="card stat-tile">
+    <div class="row-between" style="align-items:flex-start">
+      <div class="stat-value">7</div>
+      <div class="stat-icon-badge" style="background:var(--color-primary-50);color:var(--color-primary-500)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5a1 1 0 0 0 1 1h5"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 13h6M9 17h6"/></svg></div>
+    </div>
+    <span class="stat-label">Open Matters</span>
+  </div>
+        <div class="card stat-tile">
+    <div class="row-between" style="align-items:flex-start">
+      <div class="stat-value">3</div>
+      <div class="stat-icon-badge" style="background:var(--color-warning-bg);color:var(--color-warning-base)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3v3M16 3v3"/></svg></div>
+    </div>
+    <span class="stat-label">Deadlines this week</span>
+  </div>
+        <div class="card stat-tile">
+    <div class="row-between" style="align-items:flex-start">
+      <div class="stat-value">2</div>
+      <div class="stat-icon-badge" style="background:var(--color-info-bg);color:var(--color-info-base)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div>
+    </div>
+    <span class="stat-label">Unread notifications</span>
+  </div>
+      </div>
+      <div class="card" style="padding:var(--space-4)">
+        <div class="row-between" style="margin-bottom:var(--space-3)">
+          <span class="panel-title">Active Matters</span>
+          <span class="text-tertiary text-xs">Sorted by next deadline</span>
+        </div>
+        <div class="active-matters-grid">
+          <div class="card active-matter-row">
+    <div class="row-between"><span style="color:var(--color-text-tertiary)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span><span class="status-dot-badge"><span class="status-dot status-dot-open"></span>Open</span></div>
+    <div class="row" style="gap:8px"><span class="matter-avatar">ML</span><span class="active-matter-card-title">Meridian — Warehouse Lease Renewal</span></div>
+    <div class="active-matter-subtext">Meridian Logistics · Due Apr 12</div>
+  </div>
+          <div class="card active-matter-row">
+    <div class="row-between"><span style="color:var(--color-text-tertiary)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span><span class="status-dot-badge"><span class="status-dot status-dot-open"></span>Open</span></div>
+    <div class="row" style="gap:8px"><span class="matter-avatar">AT</span><span class="active-matter-card-title">Apex Textiles — GST Dispute (FY22)</span></div>
+    <div class="active-matter-subtext">Apex Textiles · Due Apr 18</div>
+  </div>
+          <div class="card active-matter-row">
+    <div class="row-between"><span style="color:var(--color-text-tertiary)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span><span class="status-dot-badge"><span class="status-dot status-dot-open"></span>Open</span></div>
+    <div class="row" style="gap:8px"><span class="matter-avatar">SD</span><span class="active-matter-card-title">Sunrise Developers — RERA Review</span></div>
+    <div class="active-matter-subtext">Sunrise Developers LLP · Due Apr 22</div>
+  </div>
+          <div class="card active-matter-row">
+    <div class="row-between"><span style="color:var(--color-text-tertiary)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span><span class="status-dot-badge"><span class="status-dot status-dot-open"></span>Open</span></div>
+    <div class="row" style="gap:8px"><span class="matter-avatar">RD</span><span class="active-matter-card-title">Rao v. Deshmukh — Partition Suit</span></div>
+    <div class="active-matter-subtext">Grishma Rao · Due May 04</div>
+  </div>
+          <div class="card active-matter-row">
+    <div class="row-between"><span style="color:var(--color-text-tertiary)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span><span class="status-dot-badge"><span class="status-dot status-dot-open"></span>Open</span></div>
+    <div class="row" style="gap:8px"><span class="matter-avatar">ML</span><span class="active-matter-card-title">Meridian — Vendor MSA Redraft</span></div>
+    <div class="active-matter-subtext">Meridian Logistics · Due May 09</div>
+  </div>
+          <div class="card active-matter-row">
+    <div class="row-between"><span style="color:var(--color-text-tertiary)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span><span class="status-dot-badge"><span class="status-dot status-dot-open"></span>Open</span></div>
+    <div class="row" style="gap:8px"><span class="matter-avatar">KE</span><span class="active-matter-card-title">Kaveri Estates — Title Due Diligence</span></div>
+    <div class="active-matter-subtext">Kaveri Estates · Due May 15</div>
+  </div>
+        </div>
+      </div>
+    </div>
+    <div class="dashboard-col">
+      <div class="card" style="padding:var(--space-4)">
+        <div class="row-between" style="margin-bottom:var(--space-3)">
+          <span class="panel-title">April 2026</span>
+          <span class="text-tertiary text-xs">This week</span>
+        </div>
+        <div class="cal-strip">
+          <div class="cal-day-cell">
+    <span class="cal-day-label">Mon</span>
+    <span class="cal-day-number">6</span>
+    <span style="height:18px"></span>
+  </div>
+          <div class="cal-day-cell">
+    <span class="cal-day-label">Tue</span>
+    <span class="cal-day-number">7</span>
+    <span style="height:18px"></span>
+  </div>
+          <div class="cal-day-cell">
+    <span class="cal-day-label">Wed</span>
+    <span class="cal-day-number">8</span>
+    <span class="cal-initial-badge">MSA</span>
+  </div>
+          <div class="cal-day-cell cal-day-today">
+    <span class="cal-day-label">Thu</span>
+    <span class="cal-day-number">9</span>
+    <span style="height:18px"></span>
+  </div>
+          <div class="cal-day-cell">
+    <span class="cal-day-label">Fri</span>
+    <span class="cal-day-number">10</span>
+    <span style="height:18px"></span>
+  </div>
+          <div class="cal-day-cell">
+    <span class="cal-day-label">Sat</span>
+    <span class="cal-day-number">11</span>
+    <span style="height:18px"></span>
+  </div>
+          <div class="cal-day-cell">
+    <span class="cal-day-label">Sun</span>
+    <span class="cal-day-number">12</span>
+    <span class="cal-initial-badge">WL</span>
+  </div>
+        </div>
+      </div>
+      <div class="card" style="padding:var(--space-4)">
+        <div class="row-between" style="margin-bottom:var(--space-2)">
+          <span class="panel-title">Recent Matters</span>
+          <span class="text-tertiary text-xs">See all</span>
+        </div>
+        <div class="recent-row">
+    <span class="matter-avatar matter-avatar-xs">AT</span>
+    <span class="recent-title">Apex Textiles — GST Dispute (FY22)</span>
+    <span class="recent-meta mono">Apr 18</span>
+  </div>
+        <div class="recent-row">
+    <span class="matter-avatar matter-avatar-xs">ML</span>
+    <span class="recent-title">Meridian — Warehouse Lease Renewal</span>
+    <span class="recent-meta mono">Apr 12</span>
+  </div>
+        <div class="recent-row">
+    <span class="matter-avatar matter-avatar-xs">RD</span>
+    <span class="recent-title">Rao v. Deshmukh — Partition Suit</span>
+    <span class="recent-meta mono">May 04</span>
+  </div>
+        <div class="recent-row">
+    <span class="matter-avatar matter-avatar-xs">SD</span>
+    <span class="recent-title">Sunrise Developers — RERA Review</span>
+    <span class="recent-meta mono">Apr 22</span>
+  </div>
+        <div class="recent-row">
+    <span class="matter-avatar matter-avatar-xs">KE</span>
+    <span class="recent-title">Kaveri Estates — Title Due Diligence</span>
+    <span class="recent-meta mono">May 15</span>
+  </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -6,6 +6,8 @@ import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Modal } from "@/components/ui/modal";
+import { TooltipBubble } from "@/components/ui/tooltip-bubble";
+import { PlusIcon } from "@/components/ui/plus-icon";
 import { useToast } from "@/components/toast-context";
 
 function todayISO(): string {
@@ -88,9 +90,10 @@ export function NewDeadlineForm({ matterId, onUpdated }: { matterId: string; onU
 
   if (!open) {
     return (
-      <Button variant="secondary" className="btn-hold-bg" onClick={() => setOpen(true)}>
-        <span className="btn-plus-icon">+</span> New Deadline
-      </Button>
+      <button type="button" className="deadline-add-btn" onClick={() => setOpen(true)} aria-label="New Deadline">
+        <PlusIcon />
+        <TooltipBubble label="New Deadline" below />
+      </button>
     );
   }
 
