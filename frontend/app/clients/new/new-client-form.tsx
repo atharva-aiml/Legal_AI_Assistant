@@ -8,7 +8,16 @@ import { ErrorBanner } from "@/components/ui/error-banner";
 import { useToast } from "@/components/toast-context";
 
 /** Same form /clients/new has always used — extracted so NewClientModal can render it inside a popup instead of only as a standalone page. */
-export function NewClientForm() {
+export function NewClientForm({
+  onCreated,
+}: {
+  /** Called right before navigating away on success — lets a modal-wrapped
+   * instance (NewClientModal) close itself. A push to the same route the
+   * modal is already open on doesn't remount/reset the modal's own `open`
+   * state, so without this the modal was left stuck open on top of the
+   * now-refreshed page underneath it. */
+  onCreated?: () => void;
+} = {}) {
   const router = useRouter();
   const { showToast } = useToast();
   const [name, setName] = useState("");
@@ -43,7 +52,8 @@ export function NewClientForm() {
       return;
     }
 
-    showToast("Client created");
+    onCreated?.();
+    showToast("Client created successfully");
     router.push("/clients");
     router.refresh();
   }

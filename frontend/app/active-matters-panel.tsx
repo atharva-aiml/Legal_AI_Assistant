@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { StatusBadge } from "@/components/status-badge";
 import { SeeAllLink } from "@/components/see-all-link";
 import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 import { usePersistedState } from "@/lib/use-persisted-state";
@@ -18,27 +17,14 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: "nextDeadline", label: "Upcoming deadline" },
 ];
 
-function FolderIcon() {
+/** Hover affordance — slides in from the left of the title on row hover. */
+function ArrowIcon() {
   return (
-    <svg className="active-matter-folder-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      {/* Bright folder-yellow, not --color-warning-base — this is the reference logo's own color, not a semantic warning indicator. */}
-      <path
-        d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z"
-        fill="#FFC93C"
-      />
-    </svg>
-  );
-}
-
-/** Generic "has a client" indicator next to the title — decorative, mirrors the reference image. */
-function ClientIcon() {
-  return (
-    <svg className="active-matter-client-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
-      <circle cx="10" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
+    <span className="active-matter-arrow" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    </span>
   );
 }
 
@@ -50,6 +36,16 @@ function dueLabel(iso: string | undefined, today: string): string {
   if (diffDays < 0) return `Overdue by ${Math.abs(diffDays)}d`;
   if (diffDays === 0) return "Due today";
   return `Due in ${diffDays}d`;
+}
+
+/** Urgency band for the title dot — green normally, amber the day it's due, red once overdue. */
+function dueTone(iso: string | undefined, today: string): "normal" | "today" | "overdue" {
+  if (!iso) return "normal";
+  const diffMs = new Date(`${iso}T00:00:00`).getTime() - new Date(`${today}T00:00:00`).getTime();
+  const diffDays = Math.round(diffMs / 86_400_000);
+  if (diffDays < 0) return "overdue";
+  if (diffDays === 0) return "today";
+  return "normal";
 }
 
 function SortTriggerIcon() {
@@ -180,9 +176,9 @@ export function ActiveMattersPanel({
   const visible = sorted.slice(0, DISPLAY_LIMIT);
 
   return (
-    <div className="active-matters-panel-shell" style={{ flex: 1 }}>
+    <div className="active-matters-panel-shell" style={{ flex: 1, transform: "translateY(10%)" }}>
       <div className="row-between" style={{ marginBottom: "var(--space-2)", flexShrink: 0 }}>
-        <h2 style={{ fontSize: "var(--font-size-lg)", margin: 0 }}>Active Matters</h2>
+        <h2 style={{ fontSize: "calc(var(--font-size-lg) * 1.03)", margin: 0 }}>Active Matters</h2>
         <div className="row" style={{ gap: "var(--space-3)" }}>
           <SortDisclosure sortMode={sortMode} onChange={setSortMode} />
           <SeeAllLink href="/matters?status=open" iconOnly icon="chevron" />
@@ -197,14 +193,14 @@ export function ActiveMattersPanel({
         <div className="active-matters-scroll">
           <div className="active-matters-grid">
             {visible.map((matter) => (
-              <Link key={matter.id} href={`/matters?selected=${matter.id}`} className="card active-matter-row">
-                <div className="row-between">
-                  <FolderIcon />
-                  <StatusBadge status={matter.status} />
-                </div>
-                <div className="row" style={{ gap: "var(--space-1)" }}>
+              <Link key={matter.id} href={`/matters?selected=${matter.id}`} className="active-matter-row">
+                <div className="active-matter-head">
+                  <span
+                    className={`active-matter-dot active-matter-dot-${dueTone(nextDeadlineById[matter.id], today)}`}
+                    aria-hidden="true"
+                  />
                   <span className="active-matter-card-title">{matter.title}</span>
-                  <ClientIcon />
+                  <ArrowIcon />
                 </div>
                 <div className="active-matter-subtext mono">
                   {clientNameById[matter.clientId] ?? "—"} · {dueLabel(nextDeadlineById[matter.id], today)}

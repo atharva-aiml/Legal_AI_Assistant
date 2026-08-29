@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1000" viewBox="0 0 1680 1000">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0,0 L10,5 L0,10 z" fill="#5B6B85"/>
+</marker>
+<linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C4A73"/><stop offset="1" stop-color="#1E3A5F"/>
+</linearGradient>
+<linearGradient id="purpG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#6D4FBF"/><stop offset="1" stop-color="#5B3FA6"/>
+</linearGradient>
+<linearGradient id="tealG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C8A8B"/><stop offset="1" stop-color="#1F6F70"/>
+</linearGradient>
+</defs>
+<rect width="1680" height="1000" fill="#EEF1F6"/>
+<text x="40" y="46" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="700" fill="#5B3FA6" text-anchor="start" letter-spacing="2.5">STORAGE / DATA ARCHITECTURE</text>
+<text x="40" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#161B26" text-anchor="start">One Postgres schema, owned by neither backend</text>
+<text x="40" y="110" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="400" fill="#4A5568" text-anchor="start">Drizzle Kit in /database is the single migration tool. Java and Python both map onto it read/write, validate-only. Files live outside the DB.</text>
+<rect x="60" y="150" width="340" height="132" rx="10" ry="10" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2" opacity="1"/>
+<rect x="60" y="150" width="340" height="34" rx="10" ry="10" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<rect x="60" y="172" width="340" height="12" rx="0" ry="0" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="74" y="173" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="14.5" font-weight="700" fill="#fff" text-anchor="start">matters</text>
+<text x="74" y="204" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">id  ·  firm_id → firms  (BR-008)</text>
+<text x="74" y="226" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">client_id → clients  (BR-001)</text>
+<text x="74" y="248" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">title · status open|closed</text>
+<text x="74" y="270" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">active_root_message_id → chat_messages</text>
+<rect x="60" y="330" width="340" height="154" rx="10" ry="10" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2" opacity="1"/>
+<rect x="60" y="330" width="340" height="34" rx="10" ry="10" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<rect x="60" y="352" width="340" height="12" rx="0" ry="0" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="74" y="353" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="14.5" font-weight="700" fill="#fff" text-anchor="start">documents</text>
+<text x="74" y="384" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">id  ·  matter_id → matters  (BR-002)</text>
+<text x="74" y="406" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">uploaded_by → lawyers</text>
+<text x="74" y="428" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">file_name · storage_key · mime_type</text>
+<text x="74" y="450" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">status uploading|processing|ready|failed</text>
+<text x="74" y="472" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">is_draft · source_template_id · error_message</text>
+<rect x="60" y="560" width="340" height="132" rx="10" ry="10" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2" opacity="1"/>
+<rect x="60" y="560" width="340" height="34" rx="10" ry="10" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<rect x="60" y="582" width="340" height="12" rx="0" ry="0" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="74" y="583" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="14.5" font-weight="700" fill="#fff" text-anchor="start">deadlines / notifications</text>
+<text x="74" y="614" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">deadline: matter_id · due_date · status</text>
+<text x="74" y="636" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">  priority · notification_lead_days</text>
+<text x="74" y="658" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">notification: lawyer_id · deadline_id</text>
+<text x="74" y="680" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">  (ON DELETE CASCADE)</text>
+<rect x="560" y="300" width="380" height="220" rx="10" ry="10" fill="#FFFFFF" stroke="#1F6F70" stroke-width="2" opacity="1"/>
+<rect x="560" y="300" width="380" height="34" rx="10" ry="10" fill="#1F6F70" stroke="none" stroke-width="0" opacity="1"/>
+<rect x="560" y="322" width="380" height="12" rx="0" ry="0" fill="#1F6F70" stroke="none" stroke-width="0" opacity="1"/>
+<text x="574" y="323" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="14.5" font-weight="700" fill="#fff" text-anchor="start">document_chunks</text>
+<text x="574" y="354" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">id  ·  document_id → documents</text>
+<text x="574" y="376" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">        (ON DELETE CASCADE)</text>
+<text x="574" y="398" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">page_number      int   nullable</text>
+<text x="574" y="420" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">section          text  nullable  (breadcrumb)</text>
+<text x="574" y="442" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">chunk_type       prose|table_or_list|image</text>
+<text x="574" y="464" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">element_number   int   nullable  (&#x27;Table 3&#x27;)</text>
+<text x="574" y="486" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">content          text</text>
+<text x="574" y="508" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">embedding        vector(384)   ← pgvector</text>
+<rect x="560" y="590" width="380" height="154" rx="10" ry="10" fill="#FFFFFF" stroke="#5B3FA6" stroke-width="2" opacity="1"/>
+<rect x="560" y="590" width="380" height="34" rx="10" ry="10" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<rect x="560" y="612" width="380" height="12" rx="0" ry="0" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<text x="574" y="613" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="14.5" font-weight="700" fill="#fff" text-anchor="start">chat_messages</text>
+<text x="574" y="644" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">id · matter_id → matters  (BR-005)</text>
+<text x="574" y="666" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">lawyer_id  (null when role=assistant)</text>
+<text x="574" y="688" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">role user|assistant · content · pinned</text>
+<text x="574" y="710" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">parent_id → chat_messages  (CASCADE)</text>
+<text x="574" y="732" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">active_child_id → chat_messages  (branch tree)</text>
+<rect x="1060" y="590" width="380" height="154" rx="10" ry="10" fill="#FFFFFF" stroke="#5B3FA6" stroke-width="2" opacity="1"/>
+<rect x="1060" y="590" width="380" height="34" rx="10" ry="10" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<rect x="1060" y="612" width="380" height="12" rx="0" ry="0" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<text x="1074" y="613" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="14.5" font-weight="700" fill="#fff" text-anchor="start">citations</text>
+<text x="1074" y="644" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">id · chat_message_id → chat_messages</text>
+<text x="1074" y="666" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">        (ON DELETE CASCADE)</text>
+<text x="1074" y="688" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">document_id → documents</text>
+<text x="1074" y="710" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">        (ON DELETE SET NULL)  ← survives delete</text>
+<text x="1074" y="732" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">page_number · section · excerpt</text>
+<rect x="1060" y="300" width="380" height="132" rx="10" ry="10" fill="#FFFFFF" stroke="#2C333F" stroke-width="2" opacity="1"/>
+<rect x="1060" y="300" width="380" height="34" rx="10" ry="10" fill="#2C333F" stroke="none" stroke-width="0" opacity="1"/>
+<rect x="1060" y="322" width="380" height="12" rx="0" ry="0" fill="#2C333F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="1074" y="323" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="14.5" font-weight="700" fill="#fff" text-anchor="start">firms / lawyers / sessions</text>
+<text x="1074" y="354" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">lawyer: firm_id · email uniq · password_hash</text>
+<text x="1074" y="376" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">        (BCrypt 12) · role owner|member</text>
+<text x="1074" y="398" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">session: lawyer_id · token_hash (SHA-256)</text>
+<text x="1074" y="420" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.3" font-weight="400" fill="#4A5568" text-anchor="start">        expires_at  (7 days)</text>
+<line x1="400" y1="250" x2="560" y2="340" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="400" y1="400" x2="560" y2="400" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="750" y1="470" x2="750" y2="590" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="940" y1="660" x2="1060" y2="660" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<polyline points="1250,470 1250,540 1250,590" fill="none" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1264" y="545" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="10.5" font-weight="400" fill="#5B3FA6" text-anchor="start">SET NULL</text>
+<rect x="60" y="740" width="740" height="150" rx="14" ry="14" fill="#E9EEF6" stroke="#1E3A5F" stroke-width="1.8" opacity="1"/>
+<text x="78" y="770" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#1E3A5F" text-anchor="start">Owned by Java (writes)</text>
+<text x="78" y="796.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">firms · lawyers · sessions · clients · matters · deadlines ·</text>
+<text x="78" y="815.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">notifications · templates · matter_views · recent_searches ·</text>
+<text x="78" y="835.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">lawyer_preferences   +   documents.status transitions</text>
+<text x="78" y="854.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Cascade deletes done in-transaction (ClientService.deleteCascade)</text>
+<text x="78" y="874.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">— most FKs are NO ACTION, the DB won&#x27;t cascade for you.</text>
+<rect x="830" y="740" width="770" height="150" rx="14" ry="14" fill="#F4F1FB" stroke="#5B3FA6" stroke-width="1.8" opacity="1"/>
+<text x="848" y="770" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#5B3FA6" text-anchor="start">Owned by Python (writes)</text>
+<text x="848" y="796.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">document_chunks · chat_messages · citations</text>
+<text x="848" y="815.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">+ documents.status → ready / failed</text>
+<text x="848" y="835.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Raw SQL via SQLAlchemy text() with an explicit CAST(:v AS vector)</text>
+<text x="848" y="854.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">— deliberately not the ORM layer, to control the pgvector type.</text>
+<text x="848" y="874.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Files: /uploads on disk (dev) → Cloudflare R2 (prod), same interface.</text>
+<text x="1650" y="978" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#7A869A" text-anchor="end">Legal AI Assistant  ·  from database/schema/schema.ts  ·  Part 2/3</text>
+</svg>

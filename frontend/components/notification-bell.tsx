@@ -40,7 +40,7 @@ export function NotificationBell() {
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        width: 36,
+        width: 42,
         height: 36,
         borderRadius: "var(--radius-md)",
         color: "var(--color-neutral-700)",

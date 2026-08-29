@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1000" viewBox="0 0 1680 1000">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0,0 L10,5 L0,10 z" fill="#5B6B85"/>
+</marker>
+<linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C4A73"/><stop offset="1" stop-color="#1E3A5F"/>
+</linearGradient>
+<linearGradient id="purpG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#6D4FBF"/><stop offset="1" stop-color="#5B3FA6"/>
+</linearGradient>
+<linearGradient id="tealG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C8A8B"/><stop offset="1" stop-color="#1F6F70"/>
+</linearGradient>
+</defs>
+<rect width="1680" height="1000" fill="#EEF1F6"/>
+<text x="40" y="46" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="700" fill="#5B3FA6" text-anchor="start" letter-spacing="2.5">RAG DEEP-DIVE  ·  CHUNKING</text>
+<text x="40" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#161B26" text-anchor="start">Adaptive strategy, one fixed chunk shape</text>
+<text x="40" y="110" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="400" fill="#4A5568" text-anchor="start">Uploaded documents have no fixed structure — hierarchical, flat, tabular, image-bearing, any mix. So the strategy adapts; the output never changes.</text>
+<text x="40" y="150" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="700" fill="#161B26" text-anchor="start">How it got here</text>
+<rect x="40" y="168" width="150" height="34" rx="8" ry="8" fill="#9B2C2C" stroke="none" stroke-width="0" opacity="1"/>
+<text x="115" y="190" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">2026-08-14</text>
+<text x="210" y="183" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="600" fill="#161B26" text-anchor="start">join all pages → text[start:end] slice, ~2800 chars</text>
+<text x="210" y="200" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#4A5568" text-anchor="start">mid-word cuts; page_number held the chunk index</text>
+<rect x="40" y="214" width="150" height="34" rx="8" ry="8" fill="#256B4A" stroke="none" stroke-width="0" opacity="1"/>
+<text x="115" y="236" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">2026-08-15</text>
+<text x="210" y="229" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="600" fill="#161B26" text-anchor="start">ExtractedPage per real page → chunk_pages() per page</text>
+<text x="210" y="246" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#4A5568" text-anchor="start">sentence-boundary split, whole-sentence overlap, real page #</text>
+<rect x="40" y="260" width="150" height="34" rx="8" ry="8" fill="#256B4A" stroke="none" stroke-width="0" opacity="1"/>
+<text x="115" y="282" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">2026-08-19</text>
+<text x="210" y="275" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="600" fill="#161B26" text-anchor="start">CHUNK_SIZE 2800 → 1000  (measured 5.0 ch/tok, 256-tok limit)</text>
+<text x="210" y="292" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#4A5568" text-anchor="start">old size silently truncated 45–100% of chunks at embed time</text>
+<rect x="40" y="306" width="150" height="34" rx="8" ry="8" fill="#256B4A" stroke="none" stroke-width="0" opacity="1"/>
+<text x="115" y="328" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">2026-08-19</text>
+<text x="210" y="321" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="600" fill="#161B26" text-anchor="start">DOCX-adaptive: Segment + heading-aware packer</text>
+<text x="210" y="338" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#4A5568" text-anchor="start">section / chunk_type columns; branch on data shape not file type</text>
+<rect x="40" y="352" width="150" height="34" rx="8" ry="8" fill="#256B4A" stroke="none" stroke-width="0" opacity="1"/>
+<text x="115" y="374" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">2026-08-20</text>
+<text x="210" y="367" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="600" fill="#161B26" text-anchor="start">PDF-adaptive via pdfplumber font metrics + real page #s</text>
+<text x="210" y="384" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#4A5568" text-anchor="start">table &amp; image element_number; label shown to the LLM</text>
+<rect x="40" y="430" width="780" height="300" rx="14" ry="14" fill="#E7F1F1" stroke="#1F6F70" stroke-width="1.8" opacity="1"/>
+<text x="58" y="460" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#1F6F70" text-anchor="start">The packer   (_pack_typed_segments / _pack_segments)</text>
+<text x="58" y="486.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">1.  segments arrive typed: (text, heading_path, chunk_type,</text>
+<text x="58" y="505.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">        element_number, page_number)</text>
+<text x="58" y="525.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">2.  group runs that share ALL of heading_path + chunk_type +</text>
+<text x="58" y="544.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">        element_number + page_number  — a change in ANY is a</text>
+<text x="58" y="564.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">        hard boundary (a chunk never straddles one)</text>
+<text x="58" y="583.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">3.  greedy-fill to the size budget:</text>
+<text x="58" y="603.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">        prose  → 1000 chars     table_or_list → 850 chars</text>
+<text x="58" y="622.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">4.  overlap ≈ 150 chars, carried as WHOLE trailing sentences</text>
+<text x="58" y="642.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">        (never a raw character slice) → next chunk starts clean</text>
+<text x="58" y="661.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">5.  a single over-budget segment (long table row) → word-boundary</text>
+<text x="58" y="681.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">        hard split, last resort only</text>
+<rect x="860" y="430" width="780" height="300" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="878" y="460" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#161B26" text-anchor="start">Why these numbers</text>
+<text x="878" y="486.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• all-MiniLM-L6-v2 max_seq_length = 256 tokens (checked against</text>
+<text x="878" y="505.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   the loaded model, not assumed)</text>
+<text x="878" y="525.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• this corpus&#x27;s legal text: ~5.0–5.1 chars/token (number- and</text>
+<text x="878" y="544.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   citation-heavy → less token-efficient than prose)</text>
+<text x="878" y="564.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• 1000 chars = largest sweep value with 0 / 418 real fixture</text>
+<text x="878" y="583.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   chunks over the limit  (max observed 216 tokens, ~15% margin)</text>
+<text x="878" y="603.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• table rows measure ~3.8–4 chars/token → tighter 850 budget</text>
+<text x="878" y="622.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• overlap ratio kept at ~14% (was 400/2800, now 150/1000)</text>
+<text x="878" y="642.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• runtime token-count check logs a warning if a rare dense</text>
+<text x="878" y="661.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   segment would still truncate — a backstop, not a guarantee</text>
+<rect x="40" y="760" width="1600" height="150" rx="14" ry="14" fill="#E9EEF6" stroke="#1E3A5F" stroke-width="1.8" opacity="1"/>
+<text x="58" y="790" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#1E3A5F" text-anchor="start">Fixed output — TextChunk</text>
+<text x="58" y="816.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">content   ·   index   ·   page_number (int | None)   ·   metadata{ section, chunk_type, element_number }</text>
+<text x="58" y="835.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="58" y="855.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Every downstream stage — embedding, vector/keyword search, the numbered prompt context, and every Citation row —</text>
+<text x="58" y="874.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">consumes this one shape, whether it came from a 4-level-nested DOCX, a flat paragraph brief, or a scanned image.</text>
+<text x="1650" y="978" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#7A869A" text-anchor="end">Legal AI Assistant  ·  from app/domain/chunk.py + RAG-Pipeline-Development-History.md Phases 1,3,4  ·  Part 3/3</text>
+</svg>

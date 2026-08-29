@@ -67,7 +67,7 @@ export function QuickStatsPanel({
 
   return (
     <>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "var(--space-3)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "var(--space-3)", transform: "translateY(12%) scaleY(1.05)", transformOrigin: "top" }}>
         {statTiles.map((tile) => (
           <QuickStatCard
             key={tile.label}

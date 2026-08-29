@@ -16,7 +16,20 @@ function todayISO(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
-export function NewMatterForm({ clients, initialClientId }: { clients: Client[]; initialClientId?: string }) {
+export function NewMatterForm({
+  clients,
+  initialClientId,
+  onCreated,
+}: {
+  clients: Client[];
+  initialClientId?: string;
+  /** Called right before navigating away on success — lets a modal-wrapped
+   * instance (NewMatterModal) close itself. A push to the same route the
+   * modal is already open on doesn't remount/reset the modal's own `open`
+   * state, so without this the modal was left stuck open on top of the
+   * now-refreshed page underneath it. */
+  onCreated?: () => void;
+}) {
   const router = useRouter();
   const { showToast } = useToast();
   const [clientId, setClientId] = useState(initialClientId ?? clients[0]?.id ?? "");
@@ -81,14 +94,18 @@ export function NewMatterForm({ clients, initialClientId }: { clients: Client[];
       if (!deadlineRes.ok) {
         // The Matter itself was created successfully — don't lose that on a deadline-only failure.
         // Land on the Matter's own page, where the lawyer can add the Deadline directly instead.
-        showToast("Matter created");
+        setSubmitting(false);
+        onCreated?.();
+        showToast("Matter created successfully");
         router.push(`/matters?selected=${created.id}`);
         router.refresh();
         return;
       }
     }
 
-    showToast("Matter created");
+    setSubmitting(false);
+    onCreated?.();
+    showToast("Matter created successfully");
     router.push(`/matters?selected=${created.id}`);
     router.refresh();
   }

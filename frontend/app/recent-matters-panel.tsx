@@ -28,13 +28,13 @@ export function RecentMattersPanel({
   today: string;
 }) {
   return (
-    <div className="active-matters-panel-shell" style={{ flex: 1 }}>
+    <div className="active-matters-panel-shell" style={{ flex: 1, transform: "translateY(-2%)" }}>
       <div className="row-between" style={{ marginBottom: "var(--space-2)", flexShrink: 0 }}>
         <h2 style={{ fontSize: "var(--font-size-lg)", margin: 0, marginLeft: "var(--space-3)" }}>Recent Matters</h2>
         <SeeAllLink href="/matters" iconOnly icon="chevron" />
       </div>
       {matters.length === 0 ? (
-        <div className="card text-secondary">No recently viewed Matters yet.</div>
+        <div className="text-secondary" style={{ padding: "5px var(--space-3)" }}>No recently viewed Matters yet.</div>
       ) : (
         <div className="active-matters-scroll">
           <div className="stack" style={{ gap: 0 }}>

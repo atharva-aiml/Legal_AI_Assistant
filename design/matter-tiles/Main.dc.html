@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --n0:#FFFFFF;--n50:#F7F8F9;--n100:#EEF0F2;--n200:#E1E4E8;--n300:#C9CED4;--n400:#A7AEB8;
+  --n500:#838C97;--n600:#626B76;--n700:#48505A;--n800:#313740;--n900:#1B1F24;
+  --primary:#27272A;--primary-600:#18181B;
+  --success:#1E7B4D;--warning-text:#7A5107;--error-text:#7C1A14;
+  --bg-page:#F7F8F9;--surface:#FFFFFF;--sunken:#EEF0F2;
+  --text-primary:#1B1F24;--text-secondary:#626B76;--text-tertiary:#838C97;
+  --border:#E1E4E8;--border-strong:#C9CED4;--folder:#FFC93C;
+  --serif:'Source Serif 4','Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;
+  --ui:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --radius-sm:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:linear-gradient(to left,#FFFFFF,var(--bg-page));background-attachment:fixed;color:var(--text-primary);font-family:var(--ui);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+a{color:var(--primary);text-decoration:none;}
+a:hover{color:var(--primary-600);}
+
+.wrap{max-width:1180px;margin:0 auto;padding:36px 40px 40px;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.sec-head h2{font-family:var(--serif);font-weight:700;font-size:26px;letter-spacing:-0.01em;margin:0;}
+.sec-tools{display:flex;align-items:center;gap:4px;}
+.icon-btn{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:none;background:none;border-radius:var(--radius-sm);color:var(--text-tertiary);cursor:pointer;transition:background-color 140ms ease,color 140ms ease;}
+.icon-btn:hover{background:var(--n100);color:var(--text-primary);}
+
+/* ---- Option A — Docket Rules ---------------------------------------------
+   Full-width rows, no per-tile box. Hairline rule between rows; due dates
+   right-aligned in a fixed mono column so they stack like a ledger. Hover
+   lifts the row to solid white and firms its rules (the pattern the app
+   already uses on Recent Matters). Rows stagger-fade in on load. */
+.docket{border-top:1px solid var(--border);}
+.drow{
+  position:relative;display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:16px;
+  padding:13px 14px;margin:0 -14px;border-bottom:1px solid var(--border);
+  transition:background-color 150ms ease,border-color 150ms ease;
+  animation:rowin 440ms cubic-bezier(0.16,1,0.3,1) backwards;
+}
+.drow:nth-child(1){animation-delay:0ms}
+.drow:nth-child(2){animation-delay:45ms}
+.drow:nth-child(3){animation-delay:90ms}
+.drow:nth-child(4){animation-delay:135ms}
+.drow:nth-child(5){animation-delay:180ms}
+.drow:nth-child(6){animation-delay:225ms}
+.drow:nth-child(7){animation-delay:270ms}
+.drow:nth-child(8){animation-delay:315ms}
+.drow:hover,.drow.is-hover{background:#FFFFFF;border-bottom-color:var(--border-strong);}
+.folder{display:inline-flex;flex-shrink:0;}
+.dtitle{font-family:var(--serif);font-size:15.5px;font-weight:600;line-height:1.3;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dsub{font-family:var(--mono);font-size:12px;color:var(--text-tertiary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dright{display:flex;align-items:center;gap:22px;justify-self:end;}
+.dstatus{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text-secondary);white-space:nowrap;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;}
+.ddue{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--text-secondary);width:98px;text-align:right;white-space:nowrap;}
+.ddue.over{color:var(--error-text);}
+.ddue.today{color:var(--warning-text);}
+.dchev{display:inline-flex;color:var(--text-tertiary);opacity:0;transform:translateX(-4px);transition:opacity 150ms ease,transform 150ms ease;}
+.drow:hover .dchev,.drow.is-hover .dchev{opacity:1;transform:translateX(0);}
+.hover-note{margin-top:20px;font-family:var(--mono);font-size:11px;color:var(--text-tertiary);}
+
+@keyframes rowin{from{opacity:0;transform:translateY(6px);}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</helmet>
+<div class="wrap">
+  <header class="sec-head">
+    <h2>Active Matters</h2>
+    <div class="sec-tools">
+      <button class="icon-btn" type="button" aria-label="Sort Active Matters"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M4 12h7M4 17h4"/><path d="M17 6v13M17 19l-3-3M17 19l3-3"/></svg></button>
+      <button class="icon-btn" type="button" aria-label="See all"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
+  </header>
+
+  <div class="docket">
+    <div class="drow is-hover">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="dtitle">Meridian Textiles — Trademark Opposition</div>
+        <div class="dsub">Meridian Textiles Pvt. Ltd.</div>
+      </div>
+      <div class="dright">
+        <span class="dstatus"><span class="dot"></span>Open</span>
+        <span class="ddue">Due in 3d</span>
+        <span class="dchev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+    <div class="drow">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="dtitle">Priya Nair — Tenancy Dispute</div>
+        <div class="dsub">Priya Nair</div>
+      </div>
+      <div class="dright">
+        <span class="dstatus"><span class="dot"></span>Open</span>
+        <span class="ddue over">Overdue 1d</span>
+        <span class="dchev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+    <div class="drow">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="dtitle">Sundaram Logistics — Supply Breach</div>
+        <div class="dsub">Sundaram Logistics Pvt. Ltd.</div>
+      </div>
+      <div class="dright">
+        <span class="dstatus"><span class="dot"></span>Open</span>
+        <span class="ddue">Due in 12d</span>
+        <span class="dchev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+    <div class="drow">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="dtitle">Kabir Malhotra — Will &amp; Probate</div>
+        <div class="dsub">Kabir Malhotra</div>
+      </div>
+      <div class="dright">
+        <span class="dstatus"><span class="dot"></span>Open</span>
+        <span class="ddue">No deadline</span>
+        <span class="dchev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+    <div class="drow">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="dtitle">Rao &amp; Rao Associates — Contract Review</div>
+        <div class="dsub">Rao &amp; Rao Associates</div>
+      </div>
+      <div class="dright">
+        <span class="dstatus"><span class="dot"></span>Open</span>
+        <span class="ddue">Due in 5d</span>
+        <span class="dchev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+    <div class="drow">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="dtitle">Anjali Desai — Employment Claim</div>
+        <div class="dsub">Anjali Desai</div>
+      </div>
+      <div class="dright">
+        <span class="dstatus"><span class="dot"></span>Open</span>
+        <span class="ddue today">Due today</span>
+        <span class="dchev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+    <div class="drow">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="dtitle">Vaidya Diagnostics — Data Compliance</div>
+        <div class="dsub">Vaidya Diagnostics Pvt. Ltd.</div>
+      </div>
+      <div class="dright">
+        <span class="dstatus"><span class="dot"></span>Open</span>
+        <span class="ddue">Due in 21d</span>
+        <span class="dchev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+    <div class="drow">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="dtitle">Nirmal Shah — Property Partition</div>
+        <div class="dsub">Nirmal Shah</div>
+      </div>
+      <div class="dright">
+        <span class="dstatus"><span class="dot"></span>Open</span>
+        <span class="ddue">No deadline</span>
+        <span class="dchev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+  </div>
+
+  <p class="hover-note">First row shown in its hover state.</p>
+</div>
+</x-dc>
+</body>
+</html>

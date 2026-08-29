@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1320" viewBox="0 0 1680 1320">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0,0 L10,5 L0,10 z" fill="#5B6B85"/>
+</marker>
+<linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C4A73"/><stop offset="1" stop-color="#1E3A5F"/>
+</linearGradient>
+<linearGradient id="purpG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#6D4FBF"/><stop offset="1" stop-color="#5B3FA6"/>
+</linearGradient>
+<linearGradient id="tealG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C8A8B"/><stop offset="1" stop-color="#1F6F70"/>
+</linearGradient>
+</defs>
+<rect width="1680" height="1320" fill="#EEF1F6"/>
+<text x="40" y="46" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="700" fill="#5B3FA6" text-anchor="start" letter-spacing="2.5">CHUNK &amp; RETRIEVE · §04 — UPDATED</text>
+<text x="40" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#161B26" text-anchor="start">The two retrieval paths</text>
+<text x="40" y="110" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="400" fill="#4A5568" text-anchor="start">Cap raised 150K → 400K chars; an exact-identifier leg added; the answer now carries a full_context signal.  Amber = changed.</text>
+<rect x="620.0" y="128" width="440" height="48" rx="12" ry="12" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="840.0" y="158" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">Lawyer asks a question</text>
+<rect x="600" y="200" width="480" height="82" rx="12" ry="12" fill="#FFFFFF" stroke="#9B2C2C" stroke-width="1.9" opacity="1"/>
+<text x="840.0" y="232" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="15.5" font-weight="700" fill="#161B26" text-anchor="middle">Matter has ≥ 1 ready Document?</text>
+<text x="840.0" y="256" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11.8" font-weight="400" fill="#4A5568" text-anchor="middle">ready_document_count(matter)</text>
+<text x="1120" y="244" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9B2C2C" text-anchor="start">no  →  HTTP 422  NO_READY_DOCUMENTS</text>
+<line x1="840" y1="282" x2="840" y2="312" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="600" y="316" width="480" height="82" rx="12" ry="12" fill="#FFFFFF" stroke="#1F6F70" stroke-width="1.9" opacity="1"/>
+<text x="840.0" y="348" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="15.5" font-weight="700" fill="#161B26" text-anchor="middle">save user ChatMessage → Σ len(chunk.content)</text>
+<text x="840.0" y="372" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11.8" font-weight="400" fill="#4A5568" text-anchor="middle">over ALL ready chunks</text>
+<line x1="840" y1="398" x2="840" y2="430" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="560" y="434" width="560" height="88" rx="12" ry="12" fill="#FFFFFF" stroke="#9A6B12" stroke-width="1.9" opacity="1"/>
+<text x="840.0" y="466" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="15.5" font-weight="700" fill="#161B26" text-anchor="middle">Σ chars  ≤  FULL_CONTEXT_CHAR_CAP  =  400,000</text>
+<text x="840.0" y="490" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11.8" font-weight="400" fill="#4A5568" text-anchor="middle">was 150,000 — raised 2026-08-25 after a real API spike (~80K tokens)</text>
+<rect x="1040.2" y="420" width="71.80000000000001" height="22" rx="11" ry="11" fill="#9A6B12" stroke="none" stroke-width="0" opacity="1"/>
+<text x="1076.1" y="435" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">UPDATED</text>
+<line x1="700" y1="522" x2="430" y2="556" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="980" y1="522" x2="1250" y2="556" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<text x="430" y="550" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#256B4A" text-anchor="middle">≤ CAP  ·  FULL CONTEXT</text>
+<text x="1250" y="550" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#9A6B12" text-anchor="middle">&gt; CAP  ·  HYBRID RETRIEVAL</text>
+<rect x="80" y="564" width="660" height="470" rx="16" ry="16" fill="#F1F6F2" stroke="#256B4A" stroke-width="2" opacity="1"/>
+<rect x="100" y="582" width="620" height="150" rx="14" ry="14" fill="#FFFFFF" stroke="#256B4A" stroke-width="1.8" opacity="1"/>
+<text x="118" y="612" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#256B4A" text-anchor="start">Every ready chunk → the LLM</text>
+<text x="118" y="638.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">no ranking · no threshold gate · no top-K</text>
+<text x="118" y="657.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">nothing a broad question could miss</text>
+<text x="118" y="677.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">the common case in practice</text>
+<rect x="100" y="748" width="620" height="118" rx="14" ry="14" fill="#FBF3E4" stroke="#9A6B12" stroke-width="1.8" opacity="1"/>
+<text x="118" y="778" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#9A6B12" text-anchor="start">full_context = True</text>
+<text x="118" y="804.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">returned to the lawyer on the response.</text>
+<text x="118" y="823.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">The below-threshold no-LLM guarantee does</text>
+<text x="118" y="843.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">NOT apply here — verification is the backstop.</text>
+<rect x="640.2" y="734" width="71.80000000000001" height="22" rx="11" ry="11" fill="#9A6B12" stroke="none" stroke-width="0" opacity="1"/>
+<text x="676.1" y="749" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">UPDATED</text>
+<rect x="100" y="882" width="620" height="130" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="118" y="912" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#161B26" text-anchor="start">measured cost</text>
+<text x="118" y="938.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">whole-document calls 10–15.5 s (over the 8 s</text>
+<text x="118" y="957.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">p95 target); narrow questions 2–7 s.</text>
+<text x="118" y="977.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Accepted with the user&#x27;s sign-off.</text>
+<rect x="760" y="564" width="840" height="588" rx="16" ry="16" fill="#FBF6EC" stroke="#9A6B12" stroke-width="2" opacity="1"/>
+<rect x="780" y="582" width="800" height="148" rx="14" ry="14" fill="#FBF3E4" stroke="#9A6B12" stroke-width="1.8" opacity="1"/>
+<text x="798" y="612" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#9A6B12" text-anchor="start">Exact-identifier match   —   NEW (gap #1, 2026-08-25)</text>
+<text x="798" y="638.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">extract_identifier_refs(question) → any (page | section | table | image, N)?</text>
+<text x="798" y="657.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">→ exact_match_chunks(): direct SQL on the real column</text>
+<text x="798" y="677.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   (page_number / element_number+chunk_type / section ~ &#x27;(^|&gt; )N\.&#x27;)</text>
+<text x="798" y="696.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">NO LIMIT · NO ranking · BYPASSES the relevance-threshold refusal</text>
+<rect x="1500.2" y="568" width="71.80000000000001" height="22" rx="11" ry="11" fill="#9A6B12" stroke="none" stroke-width="0" opacity="1"/>
+<text x="1536.1" y="583" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">UPDATED</text>
+<rect x="780" y="744" width="800" height="120" rx="14" ry="14" fill="#FFFFFF" stroke="#9A6B12" stroke-width="1.8" opacity="1"/>
+<text x="798" y="774" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#9A6B12" text-anchor="start">Vector + keyword, in parallel</text>
+<text x="798" y="800.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">vector_search : top 20 by pgvector cosine  &lt;=&gt;</text>
+<text x="798" y="819.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">keyword_search : top 20 by ts_rank over to_tsvector(section || &#x27; &#x27; || content),</text>
+<text x="798" y="839.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   OR-flipped tsquery so one absent word doesn&#x27;t zero the match</text>
+<rect x="780" y="878" width="800" height="88" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="798" y="908" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#161B26" text-anchor="start">Reciprocal Rank Fusion  (k = 60)</text>
+<text x="798" y="934.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">fused[id] = Σ 1 / (60 + rank) over each list a chunk appears in — no hand-tuned weight.</text>
+<rect x="780" y="980" width="800" height="152" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="798" y="1010" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#161B26" text-anchor="start">Gate &amp; assemble</text>
+<text x="798" y="1036.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">no exact hit  AND  max fused &lt; 0.01  →  NO LLM call:</text>
+<text x="798" y="1055.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   metadata exists → answer from real system facts only;  else fixed NOT_FOUND</text>
+<text x="798" y="1075.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">otherwise → exact chunks (uncapped)  +  top fused to fill CONTEXT_SIZE = 8</text>
+<text x="798" y="1094.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">low_confidence = (no exact hit) AND (max fused &lt; 0.02)</text>
+<text x="798" y="1114.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">full_context = False   → UI note: &quot;this Matter is large…&quot;</text>
+<rect x="1500.2" y="966" width="71.80000000000001" height="22" rx="11" ry="11" fill="#9A6B12" stroke="none" stroke-width="0" opacity="1"/>
+<text x="1536.1" y="981" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">UPDATED</text>
+<polyline points="410,1034 410,1176 840,1176" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="1180,1152 1180,1176 840,1176" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="840" y1="1176" x2="840" y2="1202" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="558.74" y="1206" width="562.52" height="48" rx="12" ry="12" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<text x="840.0" y="1236" font-family="Georgia, 'Times New Roman', serif" font-size="13.5" font-weight="700" fill="#fff" text-anchor="middle">LLM generates, temp 0 — every factual sentence carries a [N] marker</text>
+<text x="1650" y="1298" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#7A869A" text-anchor="end">Legal AI Assistant  ·  updated from chat_service.py  ·  cap raise + full_context: Phase 8;  exact-match leg: Phase 5</text>
+</svg>

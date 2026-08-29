@@ -168,6 +168,68 @@ function MinimizeIcon() {
   );
 }
 
+const STREAM_TARGET_TICKS = 90; // long answers finish in ~1.5s at 60fps
+const STREAM_MIN_CHARS_PER_TICK = 2;
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/**
+ * Reveals an assistant answer progressively. The chat endpoint returns the
+ * reply in a single response (no token stream), so this is a client-side
+ * "streaming" reveal — text fills in a few characters per frame with a
+ * blinking caret. `animate` is true only for a just-arrived reply; every
+ * already-seen message renders in full immediately.
+ */
+function StreamingBubble({
+  text,
+  animate,
+  onSettled,
+  onTick,
+}: {
+  text: string;
+  animate: boolean;
+  onSettled: () => void;
+  onTick: () => void;
+}) {
+  const [shown, setShown] = useState(() => (animate && !prefersReducedMotion() ? 0 : text.length));
+
+  useEffect(() => {
+    if (!animate) return;
+    if (prefersReducedMotion()) {
+      setShown(text.length);
+      onSettled();
+      return;
+    }
+    setShown(0);
+    const perTick = Math.max(STREAM_MIN_CHARS_PER_TICK, Math.ceil(text.length / STREAM_TARGET_TICKS));
+    let i = 0;
+    let raf = requestAnimationFrame(function step() {
+      i = Math.min(text.length, i + perTick);
+      setShown(i);
+      onTick();
+      if (i < text.length) raf = requestAnimationFrame(step);
+      else onSettled();
+    });
+    return () => cancelAnimationFrame(raf);
+    // onTick/onSettled are effectively stable; text + animate drive the reveal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animate, text]);
+
+  const streaming = animate && shown < text.length;
+  return (
+    <div className="chat-bubble" style={{ whiteSpace: "pre-wrap" }}>
+      {streaming ? text.slice(0, shown) : text}
+      {streaming && <span className="chat-stream-caret" aria-hidden="true" />}
+    </div>
+  );
+}
+
 export function ChatPanel({
   matterId,
   messages,
@@ -221,7 +283,11 @@ export function ChatPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [branchSwitchingId, setBranchSwitchingId] = useState<string | null>(null);
+  // Id of the assistant message currently doing its client-side streaming
+  // reveal (null once it settles) — see StreamingBubble.
+  const [streamingId, setStreamingId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const prevMessageCount = useRef(messages.length);
   // Web Speech API has no bundled TS types (webkitSpeechRecognition is a
   // non-standard, vendor-prefixed constructor) — `any` is the recognition
@@ -274,6 +340,21 @@ export function ChatPanel({
     window.speechSynthesis.speak(utterance);
   }
 
+  // Keep the transcript pinned to the newest text while a reply streams in,
+  // but only if the reader hasn't scrolled up to look at something earlier.
+  function stickToBottom() {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 96) el.scrollTop = el.scrollHeight;
+  }
+
+  // Trigger the streaming reveal on the last message of a freshly-loaded path
+  // (edit / regenerate return the whole active path, newest last).
+  function streamIfAssistant(list: ChatMsg[]) {
+    const last = list[list.length - 1];
+    if (last && last.role === "assistant") setStreamingId(last.id);
+  }
+
   // Shared by sendQuestion and regenerate — posts a question, returns the
   // assistant's reply, or null (with `error` already set) on failure.
   async function postQuestion(text: string): Promise<ChatMsg | null> {
@@ -305,7 +386,10 @@ export function ChatPanel({
     setError(null);
     const newMessages = await postEdit(precedingQuestion.id, precedingQuestion.content);
     setRegeneratingId(null);
-    if (newMessages) setMessages(newMessages);
+    if (newMessages) {
+      setMessages(newMessages);
+      streamIfAssistant(newMessages);
+    }
   }
 
   // Shared by regenerate and submitEdit — creates a sibling version of
@@ -370,6 +454,7 @@ export function ChatPanel({
     setSending(false);
     if (newMessages) {
       setMessages(newMessages);
+      streamIfAssistant(newMessages);
     } else {
       // postEdit already set `error` — put the conversation back exactly as
       // it was and reopen the editor with the attempted text, so nothing
@@ -493,6 +578,7 @@ export function ChatPanel({
         );
         return [...withRealUserId, assistantMessage];
       });
+      setStreamingId(assistantMessage.id);
     }
   }
 
@@ -650,7 +736,7 @@ export function ChatPanel({
         </div>
       ) : (
         <>
-      <div className="chat-messages-scroll">
+      <div className="chat-messages-scroll" ref={scrollRef}>
         <div className="stack-4">
           {messages.map((m) => (
             <div key={m.id} className={`chat-row${m.role === "user" ? " chat-row-user" : ""}`}>
@@ -674,6 +760,13 @@ export function ChatPanel({
                       </button>
                     </div>
                   </div>
+                ) : m.role === "assistant" ? (
+                  <StreamingBubble
+                    text={m.content}
+                    animate={streamingId === m.id}
+                    onSettled={() => setStreamingId((cur) => (cur === m.id ? null : cur))}
+                    onTick={stickToBottom}
+                  />
                 ) : (
                   <div className="chat-bubble" style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
                 )}
@@ -737,7 +830,7 @@ export function ChatPanel({
                   </div>
                 )}
 
-                {m.role === "assistant" && (
+                {m.role === "assistant" && streamingId !== m.id && (
                   <div className="row" style={{ gap: "var(--space-1)", marginTop: "var(--space-2)" }}>
                     <button
                       type="button"
@@ -781,19 +874,19 @@ export function ChatPanel({
                     </button>
                   </div>
                 )}
-                {m.lowConfidence && (
+                {m.lowConfidence && streamingId !== m.id && (
                   <div className="text-xs text-tertiary" style={{ marginTop: "var(--space-2)" }}>
                     This answer is based on limited matching content — verify against the source documents.
                   </div>
                 )}
-                {m.fullContext === false && (
+                {m.fullContext === false && streamingId !== m.id && (
                   <div className="text-xs text-tertiary" style={{ marginTop: "var(--space-2)" }}>
                     This Matter is large — this answer used the most relevant sections rather than the
                     entire document. For a guaranteed complete answer, ask about a specific page, section,
                     table, or image.
                   </div>
                 )}
-                {m.citations.length > 0 && (
+                {m.citations.length > 0 && streamingId !== m.id && (
                   <div className="stack" style={{ gap: "var(--space-1)", marginTop: "var(--space-2)" }}>
                     {m.citations.map((c) => (
                       <div key={c.id} className="text-xs mono">

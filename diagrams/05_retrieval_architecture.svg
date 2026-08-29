@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="980" viewBox="0 0 1680 980">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0,0 L10,5 L0,10 z" fill="#5B6B85"/>
+</marker>
+<linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C4A73"/><stop offset="1" stop-color="#1E3A5F"/>
+</linearGradient>
+<linearGradient id="purpG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#6D4FBF"/><stop offset="1" stop-color="#5B3FA6"/>
+</linearGradient>
+<linearGradient id="tealG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C8A8B"/><stop offset="1" stop-color="#1F6F70"/>
+</linearGradient>
+</defs>
+<rect width="1680" height="980" fill="#EEF1F6"/>
+<text x="40" y="46" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="700" fill="#5B3FA6" text-anchor="start" letter-spacing="2.5">RAG DEEP-DIVE  ·  RETRIEVAL</text>
+<text x="40" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#161B26" text-anchor="start">Hybrid retrieval: exact + semantic + lexical, fused</text>
+<text x="40" y="110" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="400" fill="#4A5568" text-anchor="start">Legal text leans on exact tokens — party names, statute numbers, &quot;§54&quot;. Semantic search blurs those; keyword search catches them; RRF merges both without a magic weight.</text>
+<rect x="660" y="150" width="360" height="60" rx="14" ry="14" fill="url(#navyG)" stroke="none" stroke-width="1.8" opacity="1"/>
+<text x="678" y="180" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#fff" text-anchor="start">User question  (current turn only)</text>
+<text x="840" y="232" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#4A5568" text-anchor="middle">retrieval always re-runs on the current question — never the whole conversation (prevents topic drift)</text>
+<rect x="70" y="250" width="500" height="320" rx="16" ry="16" fill="#FFFFFF" stroke="#1F6F70" stroke-width="2" opacity="1"/>
+<text x="90" y="284" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#1F6F70" text-anchor="start">Exact-identifier match</text>
+<text x="90" y="312.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">extract_identifier_refs(question) — pure regex over</text>
+<text x="90" y="328.6" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">page / pg / section / sec / table / tbl / image / img /</text>
+<text x="90" y="345.2" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">figure / fig  (+ optional &quot;no.&quot; / &quot;#&quot;) → (kind, N) pairs.</text>
+<text x="90" y="361.8" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="90" y="378.4" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">SQL, one branch per ref, UNION&#x27;d:</text>
+<text x="90" y="395.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">  page   → dc.page_number = N</text>
+<text x="90" y="411.6" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">  table  → element_number = N AND chunk_type=&#x27;table_or_list&#x27;</text>
+<text x="90" y="428.20000000000005" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">  image  → element_number = N AND chunk_type=&#x27;image&#x27;</text>
+<text x="90" y="444.8" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">  section→ dc.section ~ &#x27;(^|&gt; )N\.&#x27;   (breadcrumb-anchored)</text>
+<text x="90" y="461.4" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="90" y="478.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">No LIMIT. No ranking. A page&#x27;s own chunk count is</text>
+<text x="90" y="494.6" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">small and bounded — capping it would re-break the</text>
+<text x="90" y="511.20000000000005" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">completeness this exists to guarantee.</text>
+<rect x="580" y="250" width="500" height="320" rx="16" ry="16" fill="#FFFFFF" stroke="#5B3FA6" stroke-width="2" opacity="1"/>
+<text x="600" y="284" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#5B3FA6" text-anchor="start">Vector similarity</text>
+<text x="600" y="312.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">embed the question with the SAME model used at</text>
+<text x="600" y="328.6" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">ingestion — all-MiniLM-L6-v2, 384-dim.</text>
+<text x="600" y="345.2" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="600" y="361.8" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">ORDER BY dc.embedding &lt;=&gt; CAST(:q AS vector)</text>
+<text x="600" y="378.4" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">LIMIT 20      (pgvector cosine distance)</text>
+<text x="600" y="395.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="600" y="411.6" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">Catches paraphrase / conceptual matches:</text>
+<text x="600" y="428.20000000000005" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">&quot;how long is the lease&quot; ≈ &quot;the term is 36 months&quot;.</text>
+<text x="600" y="444.8" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="600" y="461.4" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">WHERE matter_id = :m AND documents.status=&#x27;ready&#x27;</text>
+<text x="600" y="478.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">— the isolation is a SQL predicate, not a prompt</text>
+<text x="600" y="494.6" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">instruction the model could ignore.</text>
+<rect x="1090" y="250" width="500" height="320" rx="16" ry="16" fill="#FFFFFF" stroke="#9A6B12" stroke-width="2" opacity="1"/>
+<text x="1110" y="284" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#9A6B12" text-anchor="start">Keyword / full-text</text>
+<text x="1110" y="312.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">Postgres to_tsvector / to_tsquery, English config.</text>
+<text x="1110" y="328.6" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="1110" y="345.2" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">searchable = section || &#x27; &#x27; || content   — a heading&#x27;s</text>
+<text x="1110" y="361.8" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">own words never appear in its body prose, so folding</text>
+<text x="1110" y="378.4" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">section in is what makes &quot;Access to Justice&quot; findable.</text>
+<text x="1110" y="395.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="1110" y="411.6" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">plainto_tsquery ANDs every word ⇒ one word absent</text>
+<text x="1110" y="428.20000000000005" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">from the source zeroes the match. Fix: reuse its</text>
+<text x="1110" y="444.8" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">stemming but flip &#x27;&amp;&#x27; → &#x27;|&#x27; so any word hits;</text>
+<text x="1110" y="461.4" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">ts_rank still favours chunks matching more words.</text>
+<text x="1110" y="478.0" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="12.1" font-weight="400" fill="#4A5568" text-anchor="start">LIMIT 20.</text>
+<polyline points="320,570 320,600 840,600" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="1340,570 1340,600 840,600" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="830" y1="570" x2="830" y2="636" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="540" y="640" width="600" height="92" rx="14" ry="14" fill="#E7F1F1" stroke="#1F6F70" stroke-width="1.8" opacity="1"/>
+<text x="558" y="670" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#1F6F70" text-anchor="start">Reciprocal Rank Fusion   (reciprocal_rank_fusion, k=60)</text>
+<text x="558" y="696.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">fused[id] = Σ  1 / (60 + rank)  over the vector list and the keyword list.</text>
+<text x="558" y="715.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">A chunk both methods rank highly outscores one only one liked. Pure fn, unit-tested.</text>
+<line x1="840" y1="732" x2="840" y2="762" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="210" y="766" width="1260" height="150" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="228" y="796" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#161B26" text-anchor="start">Assemble the numbered context window  →  generation</text>
+<text x="228" y="822.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">exact-match chunks (uncapped)  +  top of the fused ranking, filling CONTEXT_SIZE = 8  +  every Ready Document&#x27;s metadata row.</text>
+<text x="228" y="841.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">each item numbered [1..n], prefixed with its REAL verified label:</text>
+<text x="228" y="861.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">     [7] (Page 12) …    [10] (Section: &quot;53. Access to Justice &gt; Mass claims …&quot;) …    [4] (Table 3) …    [9] (Image 2) …</text>
+<text x="228" y="880.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">low_confidence  =  (no exact-match hit)  AND  (max fused score &lt; 0.02).</text>
+<text x="1650" y="958" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#7A869A" text-anchor="end">Legal AI Assistant  ·  from chat_repository.py (SQL) + retrieval.py (RRF) + chat_service.py  ·  Part 3/3</text>
+</svg>

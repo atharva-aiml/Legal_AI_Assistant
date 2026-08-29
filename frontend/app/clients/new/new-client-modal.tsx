@@ -39,7 +39,7 @@ export function NewClientModal({ buttonClassName = "btn-hold-bg" }: { buttonClas
 
   return (
     <Modal title="New Client" onClose={() => setOpen(false)} width={480}>
-      <NewClientForm />
+      <NewClientForm onCreated={() => setOpen(false)} />
     </Modal>
   );
 }

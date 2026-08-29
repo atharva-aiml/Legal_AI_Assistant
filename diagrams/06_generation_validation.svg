@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1080" viewBox="0 0 1680 1080">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0,0 L10,5 L0,10 z" fill="#5B6B85"/>
+</marker>
+<linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C4A73"/><stop offset="1" stop-color="#1E3A5F"/>
+</linearGradient>
+<linearGradient id="purpG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#6D4FBF"/><stop offset="1" stop-color="#5B3FA6"/>
+</linearGradient>
+<linearGradient id="tealG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C8A8B"/><stop offset="1" stop-color="#1F6F70"/>
+</linearGradient>
+</defs>
+<rect width="1680" height="1080" fill="#EEF1F6"/>
+<text x="40" y="46" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="700" fill="#5B3FA6" text-anchor="start" letter-spacing="2.5">RAG DEEP-DIVE  ·  GENERATION + GROUNDING</text>
+<text x="40" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#161B26" text-anchor="start">Generation is cheap. The grounding around it is the product.</text>
+<text x="40" y="110" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="400" fill="#4A5568" text-anchor="start">Temperature 0. A citation-required prompt. Then a mechanical, per-sentence verification pass the model is never trusted to self-police.</text>
+<rect x="90" y="160" width="700" height="250" rx="14" ry="14" fill="#F4F1FB" stroke="#5B3FA6" stroke-width="1.8" opacity="1"/>
+<text x="108" y="190" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#5B3FA6" text-anchor="start">1 · Prompt assembly   (_format_context / _format_history)</text>
+<text x="108" y="216.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">SYSTEM_PROMPT (~1.8 KB): answer ONLY from the numbered items · no</text>
+<text x="108" y="235.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">outside knowledge · restating/organising is allowed, inferring a legal</text>
+<text x="108" y="255.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">conclusion is not · reproduce every amount/date/name/section-number</text>
+<text x="108" y="274.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">verbatim · a label says WHERE an item is, never WHAT it says · every</text>
+<text x="108" y="294.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">factual sentence needs its OWN [n] marker · use the fixed NOT_FOUND</text>
+<text x="108" y="313.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">string only if the topic is genuinely absent · use OUT_OF_SCOPE for</text>
+<text x="108" y="333.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">&quot;which side is stronger / should we settle&quot; — that judgment is the lawyer&#x27;s.</text>
+<text x="108" y="352.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="108" y="372.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">USER: last 4 turns on this branch  +  numbered context  +  the question</text>
+<rect x="890" y="160" width="700" height="250" rx="14" ry="14" fill="#FBF3E4" stroke="#9A6B12" stroke-width="1.8" opacity="1"/>
+<text x="908" y="190" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#9A6B12" text-anchor="start">2 · Model call   (OpenAIChatLLM.generate)</text>
+<text x="908" y="216.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">OpenAI gpt-4o-mini · temperature = 0  (fact-retrieval, not creative)</text>
+<text x="908" y="235.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">system + user messages · single completion, no streaming</text>
+<text x="908" y="255.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="908" y="274.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Chosen by asking the user directly (paid API on legal data), spiked</text>
+<text x="908" y="294.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">for real before any pipeline code: a 2-chunk grounded prompt produced</text>
+<text x="908" y="313.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">correct [1]/[2] citations and correctly refused an uncovered question.</text>
+<text x="908" y="333.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="908" y="352.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">gpt-4o-mini vision reused for embedded-diagram captions at ingestion —</text>
+<text x="908" y="372.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">no second vendor.</text>
+<line x1="440" y1="410" x2="440" y2="452" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="1240" y1="410" x2="1240" y2="452" stroke="#5B6B85" stroke-width="2" stroke-linecap="round"/>
+<polyline points="1240,430 1240,452" fill="none" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="890,285 840,285" fill="none" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="866" y="305" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#7A869A" text-anchor="middle">raw answer</text>
+<rect x="90" y="456" width="1500" height="250" rx="14" ry="14" fill="#F1F6F2" stroke="#256B4A" stroke-width="1.8" opacity="1"/>
+<text x="108" y="486" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#256B4A" text-anchor="start">3 · Citation verification   (verify_citations — pure function, unit-tested, no I/O)</text>
+<text x="108" y="512.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Split the answer into sentences (the shared abbreviation-aware splitter). For each sentence:</text>
+<text x="108" y="531.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   • markers = every [n] it contains        • valid = markers where 1 ≤ n ≤ (chunks + metadata items)</text>
+<text x="108" y="551.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   • no valid marker            → DROP the sentence (unsupported claim, Grounding Rule 4)</text>
+<text x="108" y="570.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   • some valid + some invalid  → keep it, but flag the whole answer with a gap note</text>
+<text x="108" y="590.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">If nothing survives  → the fixed NOT_FOUND_RESPONSE.   Otherwise: kept text + first-cited-order [n] list + all_valid flag.</text>
+<text x="108" y="609.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="108" y="629.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">cited_chunk_numbers → one Citation row each:  (document_id, page_number, section, excerpt = chunk.content[:300], file_name).</text>
+<line x1="590" y1="706" x2="590" y2="748" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<text x="610" y="732" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#9B2C2C" text-anchor="start">all_valid == False</text>
+<rect x="90" y="752" width="900" height="116" rx="14" ry="14" fill="#FFFFFF" stroke="#9B2C2C" stroke-width="1.8" opacity="1"/>
+<text x="108" y="782" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#9B2C2C" text-anchor="start">4 · One corrective regeneration</text>
+<text x="108" y="808.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Re-prompt: &quot;…cite ONLY items 1..n, state only what they directly support.&quot;</text>
+<text x="108" y="827.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">If the retry verifies clean → use it. If it still doesn&#x27;t → keep the first,</text>
+<text x="108" y="847.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">already-stripped answer + gap note. Never left in as if it were verified.</text>
+<rect x="1030" y="752" width="560" height="116" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="1048" y="782" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#161B26" text-anchor="start">5 · Persist   (BR-006 gate on the write path)</text>
+<text x="1048" y="808.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">validate_assistant_message(): an assistant row with content but zero</text>
+<text x="1048" y="827.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">citations cannot be constructed — unless it&#x27;s the fixed NOT_FOUND or</text>
+<text x="1048" y="847.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">OUT_OF_SCOPE string. Enforced in code, not just asked of the model.</text>
+<text x="840" y="930" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="600" fill="#161B26" text-anchor="middle">Grounding is structural, not a polite request:  SQL matter-scope  ·  no-call-below-threshold  ·  context-only prompt  ·  per-sentence marker check  ·  one corrective retry  ·  temp 0  ·  write-path invariant</text>
+<text x="840" y="958" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#4A5568" text-anchor="middle" font-style="italic">What it does NOT do: no independent fact-checking model, no external truth source. &quot;Grounded in retrieved evidence&quot; — not &quot;hallucination-free&quot;.</text>
+<text x="1650" y="1058" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#7A869A" text-anchor="end">Legal AI Assistant  ·  from chat_service.py + domain/citation_verification.py + domain/chat.py  ·  Part 3/3</text>
+</svg>

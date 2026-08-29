@@ -697,10 +697,12 @@ a.text-citation:hover { color: var(--color-citation-700); }
 .toast-stack {
   position: fixed;
   bottom: var(--space-5);
-  right: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 60;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-2);
   pointer-events: none;
 }
@@ -791,41 +793,80 @@ a.text-citation:hover { color: var(--color-citation-700); }
   scrollbar-gutter: stable;
 }
 
-/* Active Matters — compact tiles (per reference image): folder icon + status
-   top row, bold title + client-icon row, gray metadata line underneath.
+/* Active Matters — "contents page" treatment: no card, no rule, no fill. The
+   serif Matter title is the object; a single urgency dot sits ahead of it; a
+   quiet mono line (client · deadline) underneath. Grouping is vertical rhythm
+   alone. Hover deepens the title and slides an arrow in; on load each title is
+   unmasked left-to-right (see the entrance block further down).
    Deliberately its own classes, not shared with .active-matter-title/-meta,
    which Recent Matters (app/page.tsx) still uses unchanged. */
-.active-matters-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.active-matters-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--space-6); row-gap: 0; }
 a.active-matter-row {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3);
-  overflow: hidden;
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  padding: var(--space-3) var(--space-1);
+  color: inherit;
+  text-decoration: none;
 }
-a.active-matter-row:hover { transform: scale(1.06); z-index: 3; }
-/* White "reflection" sweep — a diagonal glare band that travels across the
-   card on hover, snapping back to its start position once the hover ends. */
-a.active-matter-row::before {
-  content: "";
+a.active-matter-row:hover { text-decoration: none; }
+
+.active-matter-head { display: flex; align-items: baseline; gap: var(--space-2); padding-left: calc(8px + var(--space-2)); }
+/* Urgency mark: an 8px dot at rest that, on row hover, stretches into a
+   full-height rule down the tile's left edge — same colour throughout. */
+.active-matter-dot {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.75) 50%, transparent 65%);
-  transform: translateX(-120%);
-  pointer-events: none;
+  left: var(--space-1);
+  top: 19px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-success-base);
+  transition: top 220ms cubic-bezier(0.16, 1, 0.3, 1), left 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 220ms cubic-bezier(0.16, 1, 0.3, 1), height 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-a.active-matter-row:hover::before { transform: translateX(120%); transition: transform 950ms ease; }
-.active-matter-folder-icon { flex-shrink: 0; }
-.active-matter-card-title { font-size: var(--font-size-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.active-matter-subtext { font-size: var(--font-size-xs); color: var(--color-text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.active-matter-row:hover .active-matter-dot {
+  left: 0;
+  top: var(--space-2);
+  width: 3px;
+  height: calc(100% - var(--space-2) * 2);
+}
+.active-matter-dot-today { background: var(--color-warning-base); }
+.active-matter-dot-overdue { background: var(--color-error-base); }
+@media (prefers-reduced-motion: reduce) {
+  .active-matter-dot { transition: none; }
+}
+
+.active-matter-card-title {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  text-wrap: pretty;
+}
+
+.active-matter-arrow {
+  display: inline-flex;
+  align-self: center;
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  opacity: 0;
+  transform: translateX(-7px);
+  transition: opacity 190ms ease, transform 190ms ease;
+}
+a.active-matter-row:hover .active-matter-arrow { opacity: 1; transform: translateX(0); }
+
+/* Aligns the mono line under the title's first character, clearing the dot. */
+.active-matter-subtext { font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-left: calc(8px + var(--space-2)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .active-matter-title { font-size: var(--font-size-sm); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .active-matter-meta { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Recent Matters — the shortest row on the dashboard. No card background;
-   a subtle tint fades in on hover instead (bg-only, no border/shadow). */
+/* Recent Matters — the shortest row on the dashboard. No card background and
+   no border at rest; a subtle tint plus a wiping bottom rule fade in on hover
+   (see the border animation below). */
 a.recent-matter-row {
   position: relative;
   display: flex;
@@ -838,22 +879,23 @@ a.recent-matter-row {
   transition: background-color 150ms ease;
 }
 a.recent-matter-row:hover { background: #FFFFFF; text-decoration: none; }
-/* Top/bottom edges only — no left/right border — and each fades to
-   transparent at both ends instead of a flat line all the way across. */
-a.recent-matter-row::before, a.recent-matter-row::after {
+/* Border animation ported from the canvas's Option C (Baseline Tabs): no
+   baseline at rest — on hover a 2px near-black rule wipes in from the left,
+   its two ends softened to transparent. */
+a.recent-matter-row::after {
   content: "";
   position: absolute;
   left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--color-neutral-300), transparent);
-  opacity: 0;
-  transition: opacity 150ms ease;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--color-primary-500) 10%, var(--color-primary-500) 90%, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
-a.recent-matter-row::before { top: 0; }
-a.recent-matter-row::after { bottom: 0; }
-a.recent-matter-row:hover::before, a.recent-matter-row:hover::after { opacity: 1; }
+a.recent-matter-row:hover::after { transform: scaleX(1); }
 
 /* Client detail panel's Matters list — same no-card/hover-only-white idea as
    .recent-matter-row above, but full card-sized padding (not the dashboard
@@ -1441,6 +1483,19 @@ a.recent-matter-row:hover::before, a.recent-matter-row:hover::after { opacity: 1
 .active-matter-row:nth-child(8) { animation-delay: 210ms; }
 .active-matter-row { animation: cal-cell-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+/* Contents-page reveal — each Matter title unmasks left-to-right, offset a
+   beat behind its row's fade so the two reads land in sequence. */
+.active-matter-card-title { clip-path: inset(0 0 0 0); animation: active-matter-title-wipe 520ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.active-matter-row:nth-child(1) .active-matter-card-title { animation-delay: 70ms; }
+.active-matter-row:nth-child(2) .active-matter-card-title { animation-delay: 100ms; }
+.active-matter-row:nth-child(3) .active-matter-card-title { animation-delay: 130ms; }
+.active-matter-row:nth-child(4) .active-matter-card-title { animation-delay: 160ms; }
+.active-matter-row:nth-child(5) .active-matter-card-title { animation-delay: 190ms; }
+.active-matter-row:nth-child(6) .active-matter-card-title { animation-delay: 220ms; }
+.active-matter-row:nth-child(7) .active-matter-card-title { animation-delay: 250ms; }
+.active-matter-row:nth-child(8) .active-matter-card-title { animation-delay: 280ms; }
+@keyframes active-matter-title-wipe { from { clip-path: inset(0 104% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
 /* Recent Matters rows — entrance stagger + avatar pop on hover */
 a.recent-matter-row:nth-child(1) { animation-delay: 0ms; }
 a.recent-matter-row:nth-child(2) { animation-delay: 30ms; }
@@ -1461,7 +1516,8 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
 .cal-day-matter-row:hover .matter-avatar { transform: scale(1.1); }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav-bell-btn:hover svg, .nav-bell-badge, .active-matter-row, a.recent-matter-row { animation: none; }
+  .nav-bell-btn:hover svg, .nav-bell-badge, .active-matter-row, .active-matter-card-title, a.recent-matter-row { animation: none; }
+  a.recent-matter-row::after { transition: none; }
 }
 
 /* Dark pill tooltip (dashboard icon buttons) — TooltipBubble renders this as
@@ -1476,10 +1532,10 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
   transform: translateX(-50%) scale(0.92);
   background: #000000;
   color: #FFFFFF;
-  font-size: var(--font-size-xs);
+  font-size: 0.45rem;
   font-weight: 500;
-  padding: 6px 10px;
-  border-radius: var(--radius-md);
+  padding: 4px 6px;
+  border-radius: 5px;
   border: none;
   box-shadow: none;
   white-space: nowrap;
@@ -1496,14 +1552,14 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
   width: 0;
   height: 0;
   transform: translateX(-50%);
-  border: 5px solid transparent;
+  border: 3px solid transparent;
   border-top-color: #000000;
   border-bottom-width: 0;
 }
 /* Drops below the trigger instead of above — for toolbars flush against the
    top of an overflow-hidden container, where the default upward bubble clips. */
 .tooltip-bubble-below { top: calc(100% + 8px); bottom: auto; transform-origin: top center; }
-.tooltip-bubble-below::after { top: auto; bottom: 100%; border-top-width: 0; border-top-color: transparent; border-bottom-width: 5px; border-bottom-color: #000000; }
+.tooltip-bubble-below::after { top: auto; bottom: 100%; border-top-width: 0; border-top-color: transparent; border-bottom-width: 3px; border-bottom-color: #000000; }
 *:hover > .tooltip-bubble, *:focus-visible > .tooltip-bubble { opacity: 1; transform: translateX(-50%) scale(1); }
 @media (prefers-reduced-motion: reduce) {
   .tooltip-bubble { transition: opacity 150ms ease; transform: translateX(-50%); }
@@ -1530,16 +1586,20 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
   background: transparent;
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  animation: cal-cell-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: cal-cell-in 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .client-row:nth-child(1) { animation-delay: 0ms; }
-.client-row:nth-child(2) { animation-delay: 30ms; }
-.client-row:nth-child(3) { animation-delay: 60ms; }
-.client-row:nth-child(4) { animation-delay: 90ms; }
-.client-row:nth-child(5) { animation-delay: 120ms; }
-.client-row:nth-child(6) { animation-delay: 150ms; }
-.client-row:nth-child(7) { animation-delay: 180ms; }
-.client-row:nth-child(8) { animation-delay: 210ms; }
+.client-row:nth-child(2) { animation-delay: 45ms; }
+.client-row:nth-child(3) { animation-delay: 90ms; }
+.client-row:nth-child(4) { animation-delay: 135ms; }
+.client-row:nth-child(5) { animation-delay: 180ms; }
+.client-row:nth-child(6) { animation-delay: 225ms; }
+.client-row:nth-child(7) { animation-delay: 270ms; }
+.client-row:nth-child(8) { animation-delay: 315ms; }
+.client-row:nth-child(9) { animation-delay: 360ms; }
+.client-row:nth-child(10) { animation-delay: 405ms; }
+.client-row:nth-child(11) { animation-delay: 450ms; }
+.client-row:nth-child(12) { animation-delay: 495ms; }
 /* A thin border starts as a small mark at the vertical middle of the left
    edge and grows both upward and downward (plus rightward, to close the
    loop) on hover until it traces the tile's full outline. clip-path's four
@@ -1579,16 +1639,20 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
   background: transparent;
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  animation: cal-cell-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: cal-cell-in 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .matter-row:nth-child(1) { animation-delay: 0ms; }
-.matter-row:nth-child(2) { animation-delay: 30ms; }
-.matter-row:nth-child(3) { animation-delay: 60ms; }
-.matter-row:nth-child(4) { animation-delay: 90ms; }
-.matter-row:nth-child(5) { animation-delay: 120ms; }
-.matter-row:nth-child(6) { animation-delay: 150ms; }
-.matter-row:nth-child(7) { animation-delay: 180ms; }
-.matter-row:nth-child(8) { animation-delay: 210ms; }
+.matter-row:nth-child(2) { animation-delay: 45ms; }
+.matter-row:nth-child(3) { animation-delay: 90ms; }
+.matter-row:nth-child(4) { animation-delay: 135ms; }
+.matter-row:nth-child(5) { animation-delay: 180ms; }
+.matter-row:nth-child(6) { animation-delay: 225ms; }
+.matter-row:nth-child(7) { animation-delay: 270ms; }
+.matter-row:nth-child(8) { animation-delay: 315ms; }
+.matter-row:nth-child(9) { animation-delay: 360ms; }
+.matter-row:nth-child(10) { animation-delay: 405ms; }
+.matter-row:nth-child(11) { animation-delay: 450ms; }
+.matter-row:nth-child(12) { animation-delay: 495ms; }
 /* No background fill on hover — a thin border starts as a small mark at the
    vertical middle of the left edge and grows both upward and downward (plus
    rightward, to close the loop) until it traces the tile's full outline.
@@ -1630,8 +1694,21 @@ a.recent-matter-row:hover .matter-avatar-xs { transform: scale(1.15); }
    name (master-detail-col-header) stays fixed, Deadlines/Documents/Chat
    (master-detail-col-scroll) scroll beneath it. */
 .master-detail-panel-col { min-width: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; animation: cal-cell-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* Detail panel reveals with the same left-to-right wipe the dashboard's Active
+   Matters titles use (active-matter-title-wipe). ClientDetailPanel /
+   MatterDetailPanel each carry a React key on the selected id, so they remount
+   on selection and this replays; on screen load it runs in parallel with the
+   list-row stagger. */
+.client-detail-panel, .matter-detail-panel {
+  clip-path: inset(0 0 0 0);
+  animation: detail-panel-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes detail-panel-in {
+  from { clip-path: inset(0 104% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .master-detail-panel-col { animation: none; }
+  .master-detail-panel-col, .client-detail-panel, .matter-detail-panel { animation: none; }
 }
 @media (max-width: 900px) {
   .master-detail-shell { height: auto; overflow: visible; }
@@ -1725,6 +1802,19 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
   font-size: var(--font-size-sm);
 }
 .chat-row-user .chat-bubble { background: var(--color-bg-surface-sunken); border: 1px solid var(--color-primary-200); }
+/* Blinking caret trailing an assistant answer while it streams in (StreamingBubble). */
+.chat-stream-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  background: var(--color-ai-500);
+  animation: chat-caret-blink 1s steps(1, end) infinite;
+}
+@keyframes chat-caret-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .chat-stream-caret { display: none; } }
 .chat-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -1790,6 +1880,13 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
   font-size: var(--font-size-md);
   color: var(--color-text-primary);
 }
+/* The app-wide input:focus-visible rule (globals.css, "every interactive
+   element gets a real focus ring") puts a small rectangular box-shadow ring
+   directly on the <input>, which reads as a stray square border floating
+   inside this pill-shaped bar. .chat-input-bar:focus-within above already
+   gives the whole bar its own focus feedback, so the redundant inner ring
+   is dropped here rather than suppressed globally. */
+.chat-input:focus-visible { box-shadow: none; }
 .chat-input::placeholder { color: var(--color-text-tertiary); }
 .chat-send-btn {
   display: inline-flex;
@@ -1800,13 +1897,13 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
   border-radius: var(--radius-full);
   flex-shrink: 0;
   border: none;
-  background: var(--color-primary-500);
-  color: var(--color-text-on-brand);
+  background: none;
+  color: var(--color-primary-500);
   cursor: pointer;
-  transition: background-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.chat-send-btn:hover:not(:disabled) { background: var(--color-primary-600); transform: scale(1.06); }
-.chat-send-btn:disabled { background: var(--color-neutral-200); color: var(--color-text-disabled); cursor: not-allowed; }
+.chat-send-btn:hover:not(:disabled) { color: var(--color-primary-600); transform: scale(1.06); }
+.chat-send-btn:disabled { color: var(--color-text-disabled); cursor: not-allowed; }
 
 .chat-mic-btn {
   display: inline-flex;
@@ -2020,6 +2117,7 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
 }
 .ask-ai-btn svg { flex-shrink: 0; }
 .ask-ai-btn:hover, .ask-ai-btn[aria-pressed="true"] { background-position: 0% 0; border-color: var(--color-ai-500); transform: scale(1.04); }
+.ask-ai-btn:active { transform: scale(0.94); }
 
 /* Documents section: file list on the left, drag-and-drop upload on the
    right, each taking half the section's width. */
@@ -2114,5 +2212,5 @@ a.panel-list-row:hover { color: var(--color-text-link); text-decoration: none; }
 @media (max-width: 640px) {
   .app-nav-links { gap: 0; }
   .app-nav-link { font-size: var(--font-size-xs); }
-  .active-matters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .active-matters-grid { grid-template-columns: 1fr; }
 }

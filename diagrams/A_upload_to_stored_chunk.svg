@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1140" viewBox="0 0 1680 1140">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0,0 L10,5 L0,10 z" fill="#5B6B85"/>
+</marker>
+<linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C4A73"/><stop offset="1" stop-color="#1E3A5F"/>
+</linearGradient>
+<linearGradient id="purpG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#6D4FBF"/><stop offset="1" stop-color="#5B3FA6"/>
+</linearGradient>
+<linearGradient id="tealG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C8A8B"/><stop offset="1" stop-color="#1F6F70"/>
+</linearGradient>
+</defs>
+<rect width="1680" height="1140" fill="#EEF1F6"/>
+<text x="40" y="46" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="700" fill="#5B3FA6" text-anchor="start" letter-spacing="2.5">CHUNK &amp; RETRIEVE · §02 — UPDATED</text>
+<text x="40" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#161B26" text-anchor="start">Upload → stored chunk</text>
+<text x="40" y="110" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="400" fill="#4A5568" text-anchor="start">IngestionService.ingest(): fetch → extract (adaptive) → chunk → embed → persist.  Amber = changed since the report.</text>
+<rect x="534.8" y="132" width="610.4000000000001" height="48" rx="12" ry="12" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="840.0" y="162" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">POST /ingest/{document_id}   (Java writes /uploads · Python reads)</text>
+<rect x="620" y="200" width="440" height="82" rx="12" ry="12" fill="#FFFFFF" stroke="#5B3FA6" stroke-width="1.9" opacity="1"/>
+<text x="840.0" y="232" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="15.5" font-weight="700" fill="#161B26" text-anchor="middle">branch on MIME type</text>
+<text x="840.0" y="256" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11.8" font-weight="400" fill="#4A5568" text-anchor="middle">app/infrastructure/extraction.py</text>
+<rect x="60" y="296" width="360" height="208" rx="14" ry="14" fill="#F4F1FB" stroke="#6D4FBF" stroke-width="1.8" opacity="1"/>
+<text x="78" y="326" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14" font-weight="700" fill="#5B3FA6" text-anchor="start">application/pdf → pdfplumber + pypdf</text>
+<text x="78" y="352.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">per-character font size + bold →</text>
+<text x="78" y="371.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  heading levels (body = weighted mode)</text>
+<text x="78" y="391.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">find_tables() + bbox-exclude from prose</text>
+<text x="78" y="410.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">real page numbers from PDF structure</text>
+<text x="78" y="430.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">pypdf: embedded image objects</text>
+<rect x="440" y="296" width="360" height="208" rx="14" ry="14" fill="#F4F1FB" stroke="#6D4FBF" stroke-width="1.8" opacity="1"/>
+<text x="458" y="326" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14" font-weight="700" fill="#5B3FA6" text-anchor="start">.docx → python-docx</text>
+<text x="458" y="352.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">iter_block_items() = true document order</text>
+<text x="458" y="371.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">&#x27;Heading N&#x27; / &#x27;Title&#x27; styles → heading stack</text>
+<text x="458" y="391.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">real &lt;w:tbl&gt; → rows as &#x27;col: value&#x27; pairs</text>
+<text x="458" y="410.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">&lt;w:br w:type=&quot;page&quot;/&gt; → real page counter</text>
+<text x="458" y="430.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  (only if the file has any; else None)</text>
+<rect x="820" y="296" width="320" height="208" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="838" y="326" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14" font-weight="700" fill="#161B26" text-anchor="start">image/*  and  text/plain</text>
+<text x="838" y="352.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">image → whole image OCR&#x27;d (EasyOCR),</text>
+<text x="838" y="371.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  one page, page_number = 1</text>
+<text x="838" y="391.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">text/plain → UTF-8 decode, page = None</text>
+<text x="838" y="410.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  (generated drafts, V0.8)</text>
+<text x="838" y="430.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">→ plain ExtractedPage, no segments</text>
+<rect x="1160" y="200" width="460" height="304" rx="16" ry="16" fill="#FBF3E4" stroke="#9A6B12" stroke-width="2" opacity="1"/>
+<rect x="1532.2" y="186" width="71.80000000000001" height="22" rx="11" ry="11" fill="#9A6B12" stroke="none" stroke-width="0" opacity="1"/>
+<text x="1568.1" y="201" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">UPDATED</text>
+<text x="1180" y="232" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#9A6B12" text-anchor="start">Embedded-image handling</text>
+<text x="1180" y="252" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#4A5568" text-anchor="start">(inside PDF &amp; DOCX)</text>
+<text x="1180" y="282.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">gap #2 (Tier 1) — OCR alone was lossy:</text>
+<text x="1180" y="299.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">EasyOCR (character-exact) + gpt-4o-mini</text>
+<text x="1180" y="317.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">vision caption (step / arrow structure)</text>
+<text x="1180" y="334.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">→ _combine_ocr_and_caption() keeps both.</text>
+<text x="1180" y="352.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">NO_CONTENT sentinel → image dropped,</text>
+<text x="1180" y="369.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">never a placeholder chunk.</text>
+<text x="1180" y="408.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">gap #6 — PDF&#x27;s shared /Resources tree:</text>
+<text x="1180" y="425.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">_truly_drawn_xobject_identities() checks the</text>
+<text x="1180" y="443.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">page content stream (Do operator) → attribute</text>
+<text x="1180" y="460.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">to EVERY real drawing page; OCR + caption</text>
+<text x="1180" y="478.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#4A5568" text-anchor="start">computed once per unique image (SHA-256).</text>
+<line x1="840" y1="252" x2="240" y2="296" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="840" y1="252" x2="620" y2="296" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="840" y1="252" x2="980" y2="296" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<text x="600" y="556" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#4A5568" text-anchor="middle">PDF / DOCX  →  list[Segment]   (text · heading_path · chunk_type ∈ {prose, table_or_list, image} · element_number · page_number)</text>
+<text x="600" y="578" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#4A5568" text-anchor="middle">image / text  →  plain ExtractedPage</text>
+<polyline points="240,504 240,530 600,530" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="620,504 620,530 600,530" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="980,504 980,530 600,530" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="600" y1="530" x2="600" y2="592" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="90" y="596" width="1500" height="150" rx="14" ry="14" fill="#E7F1F1" stroke="#1F6F70" stroke-width="1.8" opacity="1"/>
+<text x="108" y="626" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#1F6F70" text-anchor="start">chunk_pages()   —   app/domain/chunk.py  (pure; branches on data SHAPE, not file type)</text>
+<text x="108" y="652.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">segments populated  →  _pack_typed_segments : greedy-pack to ~1000 chars (850 for table_or_list); NEVER merges across a</text>
+<text x="108" y="671.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">                       heading / chunk_type / element_number / page_number change  ⇒  one chunk = exactly one real location</text>
+<text x="108" y="691.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">no segments         →  _pack_segments : sentence-boundary greedy pack, ~150-char whole-sentence overlap</text>
+<text x="108" y="710.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">shared abbreviation-aware sentence splitter (Pvt. / Ltd. / Rs. / month names / initials)</text>
+<line x1="840" y1="746" x2="840" y2="780" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="90" y="784" width="720" height="156" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="108" y="814" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#161B26" text-anchor="start">Embed   —   app/infrastructure/embedding.py</text>
+<text x="108" y="840.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">all-MiniLM-L6-v2 · 384-dim · local · no API key · no per-call cost</text>
+<text x="108" y="859.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">batch: embedder.embed([c.content for c in chunks])</text>
+<text x="108" y="879.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="108" y="898.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">safety net: real token count vs the model&#x27;s 256-token limit →</text>
+<text x="108" y="918.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">WARNING log if it would still truncate  (backstop, not a block)</text>
+<rect x="870" y="784" width="720" height="156" rx="14" ry="14" fill="#F3F6F2" stroke="#256B4A" stroke-width="1.8" opacity="1"/>
+<text x="888" y="814" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="700" fill="#256B4A" text-anchor="start">Persist + terminal state   —   repository.py</text>
+<text x="888" y="840.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">INSERT INTO document_chunks (content, embedding, page_number,</text>
+<text x="888" y="859.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   section, chunk_type, element_number)  VALUES (…, CAST(:e AS vector), now())</text>
+<text x="888" y="879.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="888" y="898.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">no extractable text → status = &#x27;failed&#x27;  ·  any exception → &#x27;failed&#x27;</text>
+<text x="888" y="918.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">success → status = &#x27;ready&#x27;   (Java marks &#x27;failed&#x27; if Python is unreachable)</text>
+<polyline points="450,940 450,968 840,968" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="1230,940 1230,968 840,968" fill="none" stroke="#5B6B85" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="840" y1="968" x2="840" y2="992" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="590.0" y="996" width="500" height="48" rx="12" ry="12" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="840.0" y="1026" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">Document.status = &#x27;ready&#x27;  →  queryable in chat</text>
+<text x="1650" y="1118" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#7A869A" text-anchor="end">Legal AI Assistant  ·  updated from ingestion_service.py / extraction.py / chunk.py  ·  gaps #2 (Tier 1) &amp; #6 closed 2026-08-25</text>
+</svg>

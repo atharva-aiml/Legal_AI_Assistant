@@ -1,0 +1,18 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1260, "h": 760, "title": "Option A — Docket Rules" },
+    { "file": "ColumnRules.dc.html", "x": 1360, "y": 0, "w": 1260, "h": 720, "title": "Option B — Column Rules" },
+    { "file": "BaselineTabs.dc.html", "x": 2720, "y": 0, "w": 1260, "h": 680, "title": "Option C — Baseline Tabs" },
+    { "file": "ContentsPage.dc.html", "x": 0, "y": 1060, "w": 1260, "h": 720, "title": "Option D — Contents Page" },
+    { "file": "PrioritySpine.dc.html", "x": 1360, "y": 1060, "w": 1260, "h": 800, "title": "Option E — Priority Spine" }
+  ],
+  "annotations": [
+    { "id": "intro", "x": 0, "y": -196, "w": 1040, "text": "Active Matters — five ways to show the tiles WITHOUT a card box.\nEvery option uses the same design-system tokens (Source Serif 4 titles, Public Sans, JetBrains Mono for dates/clients, the neutral + green-status scale). No option uses a surface-plus-border-plus-shadow container, a gradient fill, or a rounded box with a left accent bar. The first tile of each artboard is frozen in its hover state so you can see the interaction; the rest animate in on load. Tell me which to build into the dashboard." },
+    { "id": "note-a", "x": 0, "y": 792, "w": 384, "text": "OPTION A — Docket Rules\nHairline-ruled full-width rows; due dates right-aligned in a fixed mono column so they read down like a ledger. Hover lifts the row to solid white and firms its rules — the exact treatment the app already uses on Recent Matters.\nGood for: density, a docket / printed-brief register, fitting 8+ at a glance.\nTrade-off: status reads quieter than a coloured pill; rows can feel uniform." },
+    { "id": "note-b", "x": 1360, "y": 792, "w": 384, "text": "OPTION B — Column Rules\n3-up grid held together only by thin rules — vertical between columns, horizontal between rows, nothing on the outer edge. Hover thickens the cell's left rule to near-black, tints the cell faintly and nudges its content right.\nGood for: keeping the current 3-across shape, a statute / newspaper-column feel.\nTrade-off: interior rules at 3 columns can look busy; needs crisp alignment." },
+    { "id": "note-c", "x": 2720, "y": 792, "w": 384, "text": "OPTION C — Baseline Tabs\nEach tile sits on one hairline baseline, like a filled-in form field. Status drops the pill for a small-caps eyebrow. Hover wipes a 2px near-black rule in from the left; the baselines draw themselves L→R on load.\nGood for: a light, form-like / index-card register with a satisfying hover.\nTrade-off: only a bottom edge — needs generous spacing or it can read unfinished." },
+    { "id": "note-d", "x": 0, "y": 1792, "w": 384, "text": "OPTION D — Contents Page\nNo chrome at all. The serif title is the object; status is a single coloured dot ahead of it; a quiet mono line underneath. Grouping is vertical rhythm alone. Hover deepens the title grey→black and slides a serif arrow in; on load each title is unmasked left-to-right.\nGood for: maximum restraint, an editorial contents-page feel.\nTrade-off: no grouping cue; status is subtle; fewer items fit per screen." },
+    { "id": "note-e", "x": 1360, "y": 1872, "w": 384, "text": "OPTION E — Priority Spine\nOne vertical spine; every matter is a node on it, dot coloured by urgency, ordered top-down from most pressing to no deadline. Hover swells the node, pushes its connector to near-black and slides the row right. The spine draws downward on load, then nodes drop in.\nGood for: making urgency spatial — the eye starts at the top.\nTrade-off: implies an order that fights the sort control; single column, so taller." }
+  ],
+  "launch": { "view": "canvas" }
+}

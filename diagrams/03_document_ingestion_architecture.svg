@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1180" viewBox="0 0 1680 1180">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0,0 L10,5 L0,10 z" fill="#5B6B85"/>
+</marker>
+<linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C4A73"/><stop offset="1" stop-color="#1E3A5F"/>
+</linearGradient>
+<linearGradient id="purpG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#6D4FBF"/><stop offset="1" stop-color="#5B3FA6"/>
+</linearGradient>
+<linearGradient id="tealG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C8A8B"/><stop offset="1" stop-color="#1F6F70"/>
+</linearGradient>
+</defs>
+<rect width="1680" height="1180" fill="#EEF1F6"/>
+<text x="40" y="46" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="700" fill="#5B3FA6" text-anchor="start" letter-spacing="2.5">PIPELINE  ·  SD-004  (BACKEND-PYTHON)</text>
+<text x="40" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#161B26" text-anchor="start">Document ingestion — adaptive by content, one fixed chunk shape</text>
+<text x="40" y="110" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="400" fill="#4A5568" text-anchor="start">IngestionService.ingest(): fetch → extract → chunk → embed → persist. Every path ends in a visible Document status.</text>
+<rect x="483.55999999999995" y="140" width="712.8800000000001" height="48" rx="12" ry="12" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="840.0" y="170" font-family="Georgia, 'Times New Roman', serif" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">POST /ingest/{document_id}   (called once by Java right after upload)</text>
+<rect x="60" y="230" width="1560" height="300" rx="16" ry="16" fill="#FFFFFF" stroke="#5B3FA6" stroke-width="1.8" opacity="1"/>
+<text x="80" y="262" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16" font-weight="700" fill="#5B3FA6" text-anchor="start">1 · Extraction   —   app/infrastructure/extraction.py   (branches on MIME type)</text>
+<rect x="80" y="282" width="360" height="228" rx="14" ry="14" fill="#F4F1FB" stroke="#6D4FBF" stroke-width="1.8" opacity="1"/>
+<text x="98" y="312" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#5B3FA6" text-anchor="start">PDF  →  pdfplumber + pypdf</text>
+<text x="98" y="338.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• body font size = char-weighted mode</text>
+<text x="98" y="357.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• bold &amp; larger-than-body ⇒ heading level</text>
+<text x="98" y="377.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• running header/footer = repeats on &gt;50%</text>
+<text x="98" y="396.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  of real pages (not a raw count)</text>
+<text x="98" y="416.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• find_tables() + bbox-exclude from prose</text>
+<text x="98" y="435.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• real page numbers from PDF structure</text>
+<text x="98" y="455.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• images: content-stream Do-check →</text>
+<text x="98" y="474.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  every true drawing page, SHA-256 dedup</text>
+<rect x="460" y="282" width="360" height="228" rx="14" ry="14" fill="#F4F1FB" stroke="#6D4FBF" stroke-width="1.8" opacity="1"/>
+<text x="478" y="312" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#5B3FA6" text-anchor="start">DOCX  →  python-docx</text>
+<text x="478" y="338.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• iter_block_items() = true document order</text>
+<text x="478" y="357.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• heading stack from paragraph.style &#x27;Heading N&#x27;</text>
+<text x="478" y="377.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• real &lt;w:tbl&gt; objects → row = &#x27;col: value&#x27; pairs</text>
+<text x="478" y="396.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• page numbers from &lt;w:br w:type=&quot;page&quot;/&gt;</text>
+<text x="478" y="416.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  markers when present, else honest None</text>
+<text x="478" y="435.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• embedded images via blip relationships</text>
+<text x="478" y="455.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• image caption cached by content hash</text>
+<rect x="840" y="282" width="350" height="228" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="858" y="312" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#161B26" text-anchor="start">Images  →  EasyOCR</text>
+<text x="858" y="338.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• standalone image upload = 1 OCR pass</text>
+<text x="858" y="357.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• page_number = 1</text>
+<text x="858" y="377.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• plain text path (no segments)</text>
+<text x="858" y="396.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start"></text>
+<text x="858" y="416.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">text/plain  → UTF-8 decode</text>
+<text x="858" y="435.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">(generated drafts, V0.8)</text>
+<rect x="1210" y="282" width="390" height="228" rx="14" ry="14" fill="#FBF3E4" stroke="#9A6B12" stroke-width="1.8" opacity="1"/>
+<text x="1228" y="312" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#9A6B12" text-anchor="start">Embedded diagrams  →  OCR + Vision</text>
+<text x="1228" y="338.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">EasyOCR: character-exact but loses</text>
+<text x="1228" y="357.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">structure.  gpt-4o-mini vision caption:</text>
+<text x="1228" y="377.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">reconstructs the step/arrow flow.</text>
+<text x="1228" y="396.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">_combine_ocr_and_caption() keeps both.</text>
+<text x="1228" y="416.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">NO_CONTENT sentinel ⇒ blank/decorative</text>
+<text x="1228" y="435.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">image dropped, never a placeholder chunk.</text>
+<text x="840" y="555" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.8" font-weight="400" fill="#4A5568" text-anchor="middle">Output of extraction:  a list of ExtractedPage, each carrying raw text OR a list of typed Segment (heading_path, chunk_type ∈ {prose, table_or_list, image}, element_number, page_number)</text>
+<line x1="840" y1="568" x2="840" y2="600" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="60" y="604" width="1560" height="210" rx="16" ry="16" fill="#FFFFFF" stroke="#1F6F70" stroke-width="1.8" opacity="1"/>
+<text x="80" y="636" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16" font-weight="700" fill="#1F6F70" text-anchor="start">2 · Chunking   —   app/domain/chunk.py   (pure, zero I/O — branches on data SHAPE, not file type)</text>
+<rect x="80" y="656" width="470" height="144" rx="14" ry="14" fill="#E7F1F1" stroke="#2C8A8B" stroke-width="1.8" opacity="1"/>
+<text x="98" y="686" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14" font-weight="700" fill="#1F6F70" text-anchor="start">Greedy sentence-boundary packer</text>
+<text x="98" y="712.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">CHUNK_SIZE_CHARS = 1000  (~200 tokens at this</text>
+<text x="98" y="731.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">corpus&#x27;s real ~5.0 chars/token)   overlap = 150</text>
+<text x="98" y="751.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">TABLE_CHUNK_SIZE_CHARS = 850  (denser text)</text>
+<text x="98" y="770.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">shared abbreviation-aware sentence splitter</text>
+<text x="98" y="790.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">(Pvt. / Ltd. / Rs. / month names / initials)</text>
+<rect x="570" y="656" width="480" height="144" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="588" y="686" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14" font-weight="700" fill="#161B26" text-anchor="start">Hard chunk boundaries (never merged across)</text>
+<text x="588" y="712.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• a real page change      • a heading change</text>
+<text x="588" y="731.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">• a chunk_type change     • an element_number change</text>
+<text x="588" y="751.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">⇒ a chunk never spans two pages, two sections,</text>
+<text x="588" y="770.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  or two different tables — so a citation always</text>
+<text x="588" y="790.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  points at exactly one real location.</text>
+<rect x="1070" y="656" width="530" height="144" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="1088" y="686" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14" font-weight="700" fill="#161B26" text-anchor="start">Safety net</text>
+<text x="1088" y="712.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">SentenceTransformerEmbedder checks each text&#x27;s</text>
+<text x="1088" y="731.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">real token count vs the model&#x27;s 256-token limit</text>
+<text x="1088" y="751.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">and logs a warning if it would still truncate —</text>
+<text x="1088" y="770.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">a silent truncation must never be silent twice.</text>
+<text x="1088" y="790.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">(a real bug: old 2800-char size truncated 45–100% of chunks)</text>
+<line x1="840" y1="818" x2="840" y2="850" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="60" y="854" width="1560" height="250" rx="16" ry="16" fill="#FFFFFF" stroke="#2C333F" stroke-width="1.8" opacity="1"/>
+<text x="80" y="886" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16" font-weight="700" fill="#2C333F" text-anchor="start">3 · Embed &amp; persist   —   app/infrastructure/embedding.py  +  repository.py</text>
+<rect x="80" y="906" width="470" height="180" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="98" y="936" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#161B26" text-anchor="start">Embed</text>
+<text x="98" y="962.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">all-MiniLM-L6-v2  (sentence-transformers 5.7)</text>
+<text x="98" y="981.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">384 dimensions · runs locally · no API key</text>
+<text x="98" y="1001.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">no per-call cost · ~53 ms per chunk</text>
+<text x="98" y="1020.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">model loaded once per process (lazy singleton)</text>
+<text x="98" y="1040.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">batch: embedder.embed([c.content for c in chunks])</text>
+<rect x="570" y="906" width="480" height="180" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="588" y="936" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#161B26" text-anchor="start">Persist  (raw SQL, explicit ::vector cast)</text>
+<text x="588" y="962.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">INSERT INTO document_chunks</text>
+<text x="588" y="981.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  (document_id, page_number, section,</text>
+<text x="588" y="1001.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   chunk_type, element_number, content,</text>
+<text x="588" y="1020.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">   embedding, created_at)</text>
+<text x="588" y="1040.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">  VALUES (…, CAST(:embedding AS vector), now())</text>
+<rect x="1070" y="906" width="530" height="180" rx="14" ry="14" fill="#F3F6F2" stroke="#256B4A" stroke-width="1.8" opacity="1"/>
+<text x="1088" y="936" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#256B4A" text-anchor="start">Terminal state — no failure is invisible</text>
+<text x="1088" y="962.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">no extractable text  → mark_failed(&quot;No extractable</text>
+<text x="1088" y="981.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">                       text found in this document.&quot;)</text>
+<text x="1088" y="1001.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">any exception        → mark_failed(str(e)[:500])</text>
+<text x="1088" y="1020.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">success              → mark_ready(); status=&#x27;ready&#x27;</text>
+<text x="1088" y="1040.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Java marks &#x27;failed&#x27; if it can&#x27;t even reach Python.</text>
+<text x="1650" y="1158" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#7A869A" text-anchor="end">Legal AI Assistant  ·  from app/application/ingestion_service.py, extraction.py, chunk.py  ·  Part 3/3</text>
+</svg>

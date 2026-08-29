@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1140" viewBox="0 0 1680 1140">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0,0 L10,5 L0,10 z" fill="#5B6B85"/>
+</marker>
+<linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C4A73"/><stop offset="1" stop-color="#1E3A5F"/>
+</linearGradient>
+<linearGradient id="purpG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#6D4FBF"/><stop offset="1" stop-color="#5B3FA6"/>
+</linearGradient>
+<linearGradient id="tealG" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2C8A8B"/><stop offset="1" stop-color="#1F6F70"/>
+</linearGradient>
+</defs>
+<rect width="1680" height="1140" fill="#EEF1F6"/>
+<text x="40" y="46" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13" font-weight="700" fill="#5B3FA6" text-anchor="start" letter-spacing="2.5">SYSTEM ARCHITECTURE</text>
+<text x="40" y="82" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#161B26" text-anchor="start">Three services, one database, one hard rule</text>
+<text x="40" y="110" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="15" font-weight="400" fill="#4A5568" text-anchor="start">The browser never touches the database. Every read/write is an HTTP call to Java (CRUD/auth) or Python (AI).</text>
+<rect x="660" y="140" width="360" height="66" rx="14" ry="14" fill="url(#navyG)" stroke="none" stroke-width="1.8" opacity="1"/>
+<text x="678" y="170" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#fff" text-anchor="start">Lawyer&#x27;s browser</text>
+<text x="840" y="186" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#ffffffcc" text-anchor="middle">Next.js 15 App Router · React 19 · UI only</text>
+<rect x="560" y="250" width="560" height="96" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="578" y="280" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#161B26" text-anchor="start">Frontend  —  Next.js (SD-001)</text>
+<text x="578" y="300" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.7" font-weight="400" fill="#4A5568" text-anchor="start">Server Components call javaFetch() (forwards session cookie server-side);</text>
+<text x="578" y="317" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.7" font-weight="400" fill="#4A5568" text-anchor="start">client components fetch JAVA_API_URL_PUBLIC with credentials:&#x27;include&#x27;.</text>
+<text x="578" y="334" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.7" font-weight="400" fill="#4A5568" text-anchor="start">No DB driver. No /api routes. No business logic. Renders 16 screens.</text>
+<line x1="840" y1="346" x2="840" y2="392" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="120" y="400" width="720" height="250" rx="16" ry="16" fill="#E9EEF6" stroke="#1E3A5F" stroke-width="2" opacity="1"/>
+<text x="140" y="432" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#1E3A5F" text-anchor="start">Java backend — Spring Boot 4.1 / Java 21  (SD-002 / SD-003)</text>
+<text x="140" y="456" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.8" font-weight="400" fill="#4A5568" text-anchor="start">Owns auth + all CRUD  ·  &quot;the rest of the backend&quot;</text>
+<rect x="140" y="476" width="130" height="34" rx="9" ry="9" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="205.0" y="498.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">Auth</text>
+<text x="285" y="499" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.6" font-weight="400" fill="#4A5568" text-anchor="start">BCrypt(12) · SHA-256 session token · httpOnly cookie · per-request DB check</text>
+<rect x="140" y="518" width="130" height="34" rx="9" ry="9" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="205.0" y="540.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">Domain CRUD</text>
+<text x="285" y="541" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.6" font-weight="400" fill="#4A5568" text-anchor="start">Firm · Client · Matter · Document · Deadline · Notification · Template</text>
+<rect x="140" y="560" width="130" height="34" rx="9" ry="9" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="205.0" y="582.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">Isolation</text>
+<text x="285" y="583" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.6" font-weight="400" fill="#4A5568" text-anchor="start">CurrentLawyerResolver.resolve() per controller method — BR-008, 404 not 403</text>
+<rect x="140" y="602" width="130" height="34" rx="9" ry="9" fill="#1E3A5F" stroke="none" stroke-width="0" opacity="1"/>
+<text x="205.0" y="624.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">AI gateway</text>
+<text x="285" y="625" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.6" font-weight="400" fill="#4A5568" text-anchor="start">HttpChatGateway / HttpIngestionTrigger — calls Python, relays response verbatim</text>
+<rect x="880" y="400" width="680" height="250" rx="16" ry="16" fill="#F4F1FB" stroke="#5B3FA6" stroke-width="2" opacity="1"/>
+<text x="900" y="432" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#5B3FA6" text-anchor="start">Python backend — FastAPI / Python 3.13  (SD-004 / SD-005)</text>
+<text x="900" y="456" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.8" font-weight="400" fill="#4A5568" text-anchor="start">Owns all AI  ·  internal only — never called by the browser</text>
+<rect x="900" y="476" width="130" height="34" rx="9" ry="9" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<text x="965.0" y="498.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">Ingestion</text>
+<text x="1045" y="499" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.6" font-weight="400" fill="#4A5568" text-anchor="start">extract → adaptive chunk → embed (all-MiniLM-L6-v2) → write document_chunks</text>
+<rect x="900" y="518" width="130" height="34" rx="9" ry="9" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<text x="965.0" y="540.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">AI Chat</text>
+<text x="1045" y="541" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.6" font-weight="400" fill="#4A5568" text-anchor="start">full-context OR hybrid retrieval → grounded prompt → gpt-4o-mini → verify citations</text>
+<rect x="900" y="560" width="130" height="34" rx="9" ry="9" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<text x="965.0" y="582.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">Grounding</text>
+<text x="1045" y="583" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.6" font-weight="400" fill="#4A5568" text-anchor="start">SQL matter-scope · below-threshold refusal · per-sentence citation check</text>
+<rect x="900" y="602" width="130" height="34" rx="9" ry="9" fill="#5B3FA6" stroke="none" stroke-width="0" opacity="1"/>
+<text x="965.0" y="624.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">Layering</text>
+<text x="1045" y="625" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12.6" font-weight="400" fill="#4A5568" text-anchor="start">domain (pure) → application (Protocol ports) → infrastructure → web</text>
+<line x1="480" y1="400" x2="480" y2="346" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<text x="492" y="372" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#4A5568" text-anchor="start">HTTPS / JSON  (today)</text>
+<polyline points="700,346 700,375 1180,375 1180,400" fill="none" stroke="#5B6B85" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arrow)" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="940" y="370" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#7A869A" text-anchor="middle">chat &amp; upload proxied through Java (auth + BR-008 first)</text>
+<line x1="300" y1="650" x2="300" y2="706" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="1180" y1="650" x2="1180" y2="706" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<line x1="430" y1="650" x2="620" y2="706" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linecap="round"/>
+<rect x="120" y="714" width="900" height="210" rx="16" ry="16" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="140" y="746" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#2C333F" text-anchor="start">Data layer</text>
+<rect x="140" y="762" width="270" height="140" rx="14" ry="14" fill="#E7F1F1" stroke="#1F6F70" stroke-width="1.8" opacity="1"/>
+<text x="158" y="792" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#1F6F70" text-anchor="start">PostgreSQL 16</text>
+<text x="158" y="818.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">+ pgvector (vector 384)</text>
+<text x="158" y="837.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">schema owned by /database</text>
+<text x="158" y="857.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">(Drizzle Kit, TS) — neither</text>
+<text x="158" y="876.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">backend&#x27;s ORM authors it;</text>
+<text x="158" y="896.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">both map with validate-only</text>
+<rect x="430" y="762" width="270" height="140" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="448" y="792" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#161B26" text-anchor="start">Local filesystem  /uploads</text>
+<text x="448" y="818.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">dev stand-in for Cloudflare R2</text>
+<text x="448" y="837.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Java writes · Python reads</text>
+<text x="448" y="857.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">same directory, both services</text>
+<text x="448" y="876.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">R2StorageService swaps in</text>
+<text x="448" y="896.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">behind one interface later</text>
+<rect x="720" y="762" width="280" height="140" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="738" y="792" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#161B26" text-anchor="start">No message queue (yet)</text>
+<text x="738" y="818.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">Java → Python ingestion is a</text>
+<text x="738" y="837.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">direct fire-and-forget HTTP call</text>
+<text x="738" y="857.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">chat call is blocking (browser</text>
+<text x="738" y="876.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">waits). BullMQ/Redis deferred</text>
+<text x="738" y="896.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">until a real reliability need.</text>
+<rect x="1060" y="714" width="500" height="210" rx="16" ry="16" fill="#FFFFFF" stroke="#9A6B12" stroke-width="1.8" opacity="1"/>
+<text x="1080" y="746" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#9A6B12" text-anchor="start">External services</text>
+<rect x="1080" y="762" width="210" height="140" rx="14" ry="14" fill="#FBF3E4" stroke="#9A6B12" stroke-width="1.8" opacity="1"/>
+<text x="1098" y="792" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#9A6B12" text-anchor="start">OpenAI gpt-4o-mini</text>
+<text x="1098" y="818.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">chat generation (temp 0)</text>
+<text x="1098" y="837.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">+ vision captioning of</text>
+<text x="1098" y="857.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">embedded diagrams</text>
+<text x="1098" y="876.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">the only paid API in the</text>
+<text x="1098" y="896.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">system</text>
+<rect x="1310" y="762" width="230" height="140" rx="14" ry="14" fill="#FFFFFF" stroke="#D3DAE6" stroke-width="1.8" opacity="1"/>
+<text x="1328" y="792" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="17.5" font-weight="700" fill="#161B26" text-anchor="start">Runs locally (no API)</text>
+<text x="1328" y="818.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">EasyOCR 1.7.2  (CPU)</text>
+<text x="1328" y="837.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">all-MiniLM-L6-v2  (384-dim,</text>
+<text x="1328" y="857.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">sentence-transformers)</text>
+<text x="1328" y="876.5" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">→ zero per-call cost, fits the</text>
+<text x="1328" y="896.0" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="13.8" font-weight="400" fill="#4A5568" text-anchor="start">solo / low-budget constraint</text>
+<polyline points="1180,650 1180,690 1185,690 1185,714" fill="none" stroke="#5B6B85" stroke-width="2" marker-end="url(#arrow)" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1650" y="1118" font-family="'Segoe UI', system-ui, -apple-system, Arial, sans-serif" font-size="12" font-weight="400" fill="#7A869A" text-anchor="end">Legal AI Assistant  ·  architecture derived from source  ·  Part 2/3 of the LinkedIn series</text>
+</svg>

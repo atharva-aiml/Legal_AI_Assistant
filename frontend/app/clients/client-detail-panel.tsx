@@ -5,7 +5,6 @@ import Link from "next/link";
 import { JAVA_API_URL_PUBLIC } from "@/lib/api/public-config";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { EditClientModal } from "./[id]/edit-client-modal";
 import { DeleteClientModal } from "./[id]/delete-client-modal";
 import { NewMatterModal } from "./[id]/new-matter-modal";
@@ -82,7 +81,7 @@ export function ClientDetailPanel({ clientId, onDeleted }: { clientId: string; o
     return <div className="card text-secondary">Loading…</div>;
   }
   if (status === "error" || !client) {
-    return <ErrorBanner>Couldn&apos;t load this client — retry.</ErrorBanner>;
+    return null;
   }
 
   return (
@@ -96,22 +95,22 @@ export function ClientDetailPanel({ clientId, onDeleted }: { clientId: string; o
       <div className="master-detail-col-scroll">
         <div style={{ marginTop: "var(--space-4)" }}>
           <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "var(--space-4)" }}>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Contact email</dt>
-              <dd style={{ margin: 0 }}>{client.contactEmail || "—"}</dd>
+              <dd style={{ margin: 0, overflowWrap: "anywhere" }}>{client.contactEmail || "—"}</dd>
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Contact phone</dt>
-              <dd style={{ margin: 0 }}>{client.contactPhone || "—"}</dd>
+              <dd style={{ margin: 0, overflowWrap: "anywhere" }}>{client.contactPhone || "—"}</dd>
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Added</dt>
               <dd style={{ margin: 0 }}>{new Date(client.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</dd>
             </div>
             {client.notes && (
-              <div style={{ gridColumn: "1 / -1" }}>
+              <div style={{ gridColumn: "1 / -1", minWidth: 0 }}>
                 <dt className="field-label" style={{ marginBottom: "var(--space-1)" }}>Notes</dt>
-                <dd style={{ margin: 0, whiteSpace: "pre-wrap" }}>{client.notes}</dd>
+                <dd style={{ margin: 0, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{client.notes}</dd>
               </div>
             )}
           </dl>

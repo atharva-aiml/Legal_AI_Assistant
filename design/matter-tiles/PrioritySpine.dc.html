@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --n0:#FFFFFF;--n50:#F7F8F9;--n100:#EEF0F2;--n200:#E1E4E8;--n300:#C9CED4;--n400:#A7AEB8;
+  --n500:#838C97;--n600:#626B76;--n700:#48505A;--n800:#313740;--n900:#1B1F24;
+  --primary:#27272A;--primary-600:#18181B;
+  --success:#1E7B4D;--warning:#B5790A;--warning-text:#7A5107;--error:#B3261E;--error-text:#7C1A14;
+  --bg-page:#F7F8F9;--surface:#FFFFFF;--sunken:#EEF0F2;
+  --text-primary:#1B1F24;--text-secondary:#626B76;--text-tertiary:#838C97;
+  --border:#E1E4E8;--border-strong:#C9CED4;--folder:#FFC93C;
+  --serif:'Source Serif 4','Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;
+  --ui:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --radius-sm:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:linear-gradient(to left,#FFFFFF,var(--bg-page));background-attachment:fixed;color:var(--text-primary);font-family:var(--ui);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+a{color:var(--primary);text-decoration:none;}
+a:hover{color:var(--primary-600);}
+
+.wrap{max-width:1180px;margin:0 auto;padding:36px 40px 44px;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sec-head h2{font-family:var(--serif);font-weight:700;font-size:26px;letter-spacing:-0.01em;margin:0;}
+.sec-tools{display:flex;align-items:center;gap:4px;}
+.icon-btn{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:none;background:none;border-radius:var(--radius-sm);color:var(--text-tertiary);cursor:pointer;transition:background-color 140ms ease,color 140ms ease;}
+.icon-btn:hover{background:var(--n100);color:var(--text-primary);}
+.axis-label{font-family:var(--mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-tertiary);margin:0 0 4px 2px;}
+
+/* ---- Option E — Priority Spine ------------------------------------
+   One vertical spine down the left; every matter is a node on it,
+   its dot coloured by urgency, ordered top-down from most pressing
+   to no deadline. No box around any tile. Hover swells the node,
+   pushes its connector out to near-black and slides the row right.
+   On load the spine draws downward, then nodes drop in top to bottom. */
+.spine{position:relative;padding-left:46px;}
+.spine::before{content:"";position:absolute;left:6px;top:10px;bottom:10px;width:2px;background:var(--border-strong);transform:scaleY(1);transform-origin:top;animation:draw 560ms cubic-bezier(0.16,1,0.3,1) 40ms backwards;}
+.node{
+  position:relative;display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:14px;
+  padding:15px 0;transition:transform 190ms cubic-bezier(0.16,1,0.3,1);
+  animation:nodein 460ms ease backwards;
+}
+.node:nth-child(1){animation-delay:120ms}
+.node:nth-child(2){animation-delay:170ms}
+.node:nth-child(3){animation-delay:220ms}
+.node:nth-child(4){animation-delay:270ms}
+.node:nth-child(5){animation-delay:320ms}
+.node:nth-child(6){animation-delay:370ms}
+.node:nth-child(7){animation-delay:420ms}
+.node:nth-child(8){animation-delay:470ms}
+.node::before{content:"";position:absolute;left:-40px;top:50%;margin-top:-5px;width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px var(--bg-page);transition:transform 190ms ease,box-shadow 190ms ease;}
+.node::after{content:"";position:absolute;left:-31px;top:50%;margin-top:-1px;height:2px;width:22px;background:var(--border-strong);transition:width 190ms ease,background-color 190ms ease;}
+.node.warn::before{background:var(--warning);}
+.node.over::before{background:var(--error);}
+.node:hover,.node.is-hover{transform:translateX(6px);}
+.node:hover::before,.node.is-hover::before{transform:scale(1.45);box-shadow:0 0 0 4px rgba(30,123,77,0.14);}
+.node.warn:hover::before,.node.warn.is-hover::before{box-shadow:0 0 0 4px rgba(181,121,10,0.16);}
+.node.over:hover::before,.node.over.is-hover::before{box-shadow:0 0 0 4px rgba(179,38,30,0.16);}
+.node:hover::after,.node.is-hover::after{width:28px;background:var(--primary);}
+.folder{display:inline-flex;}
+.ntitle{font-family:var(--serif);font-size:15.5px;font-weight:600;line-height:1.3;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nsub{font-family:var(--mono);font-size:12px;color:var(--text-tertiary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nright{display:flex;align-items:center;gap:20px;justify-self:end;white-space:nowrap;}
+.nstatus{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text-secondary);}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;}
+.ndue{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--text-secondary);width:96px;text-align:right;}
+.ndue.over{color:var(--error-text);}
+.ndue.today{color:var(--warning-text);}
+.hover-note{margin-top:18px;font-family:var(--mono);font-size:11px;color:var(--text-tertiary);}
+
+@keyframes draw{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+@keyframes nodein{from{opacity:0;transform:translateY(9px);}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.spine::before{transform:scaleY(1);}}
+</style>
+</helmet>
+<div class="wrap">
+  <header class="sec-head">
+    <h2>Active Matters</h2>
+    <div class="sec-tools">
+      <button class="icon-btn" type="button" aria-label="Sort Active Matters"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M4 12h7M4 17h4"/><path d="M17 6v13M17 19l-3-3M17 19l3-3"/></svg></button>
+      <button class="icon-btn" type="button" aria-label="See all"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
+  </header>
+  <p class="axis-label">Most pressing first</p>
+
+  <div class="spine">
+    <div class="node over is-hover">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="ntitle">Priya Nair — Tenancy Dispute</div>
+        <div class="nsub">Priya Nair</div>
+      </div>
+      <div class="nright"><span class="nstatus"><span class="sdot"></span>Open</span><span class="ndue over">Overdue 1d</span></div>
+    </div>
+    <div class="node warn">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="ntitle">Anjali Desai — Employment Claim</div>
+        <div class="nsub">Anjali Desai</div>
+      </div>
+      <div class="nright"><span class="nstatus"><span class="sdot"></span>Open</span><span class="ndue today">Due today</span></div>
+    </div>
+    <div class="node">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="ntitle">Meridian Textiles — Trademark Opposition</div>
+        <div class="nsub">Meridian Textiles Pvt. Ltd.</div>
+      </div>
+      <div class="nright"><span class="nstatus"><span class="sdot"></span>Open</span><span class="ndue">Due in 3d</span></div>
+    </div>
+    <div class="node">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="ntitle">Rao &amp; Rao Associates — Contract Review</div>
+        <div class="nsub">Rao &amp; Rao Associates</div>
+      </div>
+      <div class="nright"><span class="nstatus"><span class="sdot"></span>Open</span><span class="ndue">Due in 5d</span></div>
+    </div>
+    <div class="node">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="ntitle">Global Exim — Customs Appeal</div>
+        <div class="nsub">Global Exim Pvt. Ltd.</div>
+      </div>
+      <div class="nright"><span class="nstatus"><span class="sdot"></span>Open</span><span class="ndue">Due in 8d</span></div>
+    </div>
+    <div class="node">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="ntitle">Sundaram Logistics — Supply Breach</div>
+        <div class="nsub">Sundaram Logistics Pvt. Ltd.</div>
+      </div>
+      <div class="nright"><span class="nstatus"><span class="sdot"></span>Open</span><span class="ndue">Due in 12d</span></div>
+    </div>
+    <div class="node">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="ntitle">Vaidya Diagnostics — Data Compliance</div>
+        <div class="nsub">Vaidya Diagnostics Pvt. Ltd.</div>
+      </div>
+      <div class="nright"><span class="nstatus"><span class="sdot"></span>Open</span><span class="ndue">Due in 21d</span></div>
+    </div>
+    <div class="node">
+      <span class="folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4.05c.58 0 1.14.22 1.56.63L12.5 7H18.5A2.5 2.5 0 0 1 21 9.5V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7.5Z" fill="#FFC93C"/></svg></span>
+      <div style="min-width:0;">
+        <div class="ntitle">Kabir Malhotra — Will &amp; Probate</div>
+        <div class="nsub">Kabir Malhotra</div>
+      </div>
+      <div class="nright"><span class="nstatus"><span class="sdot"></span>Open</span><span class="ndue">No deadline</span></div>
+    </div>
+  </div>
+
+  <p class="hover-note">Top node shown in its hover state.</p>
+</div>
+</x-dc>
+</body>
+</html>

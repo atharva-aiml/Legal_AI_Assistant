@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --n0:#FFFFFF;--n50:#F7F8F9;--n100:#EEF0F2;--n200:#E1E4E8;--n300:#C9CED4;--n400:#A7AEB8;
+  --n500:#838C97;--n600:#626B76;--n700:#48505A;--n800:#313740;--n900:#1B1F24;
+  --primary:#27272A;--primary-600:#18181B;
+  --success:#1E7B4D;--warning:#B5790A;--error:#B3261E;
+  --bg-page:#F7F8F9;--surface:#FFFFFF;--sunken:#EEF0F2;
+  --text-primary:#1B1F24;--text-secondary:#626B76;--text-tertiary:#838C97;
+  --border:#E1E4E8;--border-strong:#C9CED4;--folder:#FFC93C;
+  --serif:'Source Serif 4','Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;
+  --ui:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --radius-sm:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:linear-gradient(to left,#FFFFFF,var(--bg-page));background-attachment:fixed;color:var(--text-primary);font-family:var(--ui);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+a{color:var(--primary);text-decoration:none;}
+a:hover{color:var(--primary-600);}
+
+.wrap{max-width:1180px;margin:0 auto;padding:36px 40px 44px;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-head h2{font-family:var(--serif);font-weight:700;font-size:26px;letter-spacing:-0.01em;margin:0;}
+.sec-tools{display:flex;align-items:center;gap:4px;}
+.icon-btn{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:none;background:none;border-radius:var(--radius-sm);color:var(--text-tertiary);cursor:pointer;transition:background-color 140ms ease,color 140ms ease;}
+.icon-btn:hover{background:var(--n100);color:var(--text-primary);}
+
+/* ---- Option D — Contents Page --------------------------------------
+   No chrome at all — no box, no rule, no fill. The serif title is the
+   object; status is a single coloured dot ahead of it; a quiet mono
+   line sits underneath. Grouping comes from vertical rhythm alone.
+   Hover deepens the title from grey to near-black and slides a serif
+   arrow in. On load each title is unmasked left-to-right, then its
+   meta line fades up. */
+.toc{display:grid;grid-template-columns:1fr 1fr;column-gap:72px;}
+.entry{padding:17px 0;animation:entryin 460ms ease backwards;}
+.entry:nth-child(1){animation-delay:0ms}
+.entry:nth-child(2){animation-delay:70ms}
+.entry:nth-child(3){animation-delay:140ms}
+.entry:nth-child(4){animation-delay:210ms}
+.entry:nth-child(5){animation-delay:280ms}
+.entry:nth-child(6){animation-delay:350ms}
+.entry:nth-child(7){animation-delay:420ms}
+.entry:nth-child(8){animation-delay:490ms}
+.ehead{display:flex;align-items:baseline;gap:11px;}
+.edot{width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0;transform:translateY(-1px);}
+.edot.today{background:var(--warning);}
+.edot.over{background:var(--error);}
+.etitle{
+  font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.3;color:var(--text-secondary);
+  text-wrap:pretty;transition:color 190ms ease;
+  clip-path:inset(0 0 0 0);animation:wipe 640ms cubic-bezier(0.16,1,0.3,1) backwards;
+}
+.entry:nth-child(1) .etitle{animation-delay:80ms}
+.entry:nth-child(2) .etitle{animation-delay:150ms}
+.entry:nth-child(3) .etitle{animation-delay:220ms}
+.entry:nth-child(4) .etitle{animation-delay:290ms}
+.entry:nth-child(5) .etitle{animation-delay:360ms}
+.entry:nth-child(6) .etitle{animation-delay:430ms}
+.entry:nth-child(7) .etitle{animation-delay:500ms}
+.entry:nth-child(8) .etitle{animation-delay:570ms}
+.earrow{display:inline-flex;align-self:center;color:var(--text-tertiary);opacity:0;transform:translateX(-7px);transition:opacity 190ms ease,transform 190ms ease;}
+.entry:hover .etitle,.entry.is-hover .etitle{color:var(--text-primary);}
+.entry:hover .earrow,.entry.is-hover .earrow{opacity:1;transform:translateX(0);}
+.emeta{font-family:var(--mono);font-size:12px;color:var(--text-tertiary);margin-top:8px;margin-left:19px;}
+.hover-note{margin-top:20px;font-family:var(--mono);font-size:11px;color:var(--text-tertiary);}
+
+@keyframes entryin{from{opacity:0;}}
+@keyframes wipe{from{clip-path:inset(0 104% 0 0);}to{clip-path:inset(0 0 0 0);}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.etitle{clip-path:inset(0 0 0 0);}}
+</style>
+</helmet>
+<div class="wrap">
+  <header class="sec-head">
+    <h2>Active Matters</h2>
+    <div class="sec-tools">
+      <button class="icon-btn" type="button" aria-label="Sort Active Matters"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M4 12h7M4 17h4"/><path d="M17 6v13M17 19l-3-3M17 19l3-3"/></svg></button>
+      <button class="icon-btn" type="button" aria-label="See all"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
+  </header>
+
+  <div class="toc">
+    <div class="entry is-hover">
+      <div class="ehead">
+        <span class="edot"></span>
+        <span class="etitle">Meridian Textiles — Trademark Opposition</span>
+        <span class="earrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="emeta">Meridian Textiles Pvt. Ltd. &nbsp;·&nbsp; Due in 3d</div>
+    </div>
+    <div class="entry">
+      <div class="ehead">
+        <span class="edot over"></span>
+        <span class="etitle">Priya Nair — Tenancy Dispute</span>
+        <span class="earrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="emeta">Priya Nair &nbsp;·&nbsp; Overdue by 1d</div>
+    </div>
+    <div class="entry">
+      <div class="ehead">
+        <span class="edot"></span>
+        <span class="etitle">Sundaram Logistics — Supply Breach</span>
+        <span class="earrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="emeta">Sundaram Logistics Pvt. Ltd. &nbsp;·&nbsp; Due in 12d</div>
+    </div>
+    <div class="entry">
+      <div class="ehead">
+        <span class="edot"></span>
+        <span class="etitle">Kabir Malhotra — Will &amp; Probate</span>
+        <span class="earrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="emeta">Kabir Malhotra &nbsp;·&nbsp; No deadline</div>
+    </div>
+    <div class="entry">
+      <div class="ehead">
+        <span class="edot"></span>
+        <span class="etitle">Rao &amp; Rao Associates — Contract Review</span>
+        <span class="earrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="emeta">Rao &amp; Rao Associates &nbsp;·&nbsp; Due in 5d</div>
+    </div>
+    <div class="entry">
+      <div class="ehead">
+        <span class="edot today"></span>
+        <span class="etitle">Anjali Desai — Employment Claim</span>
+        <span class="earrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="emeta">Anjali Desai &nbsp;·&nbsp; Due today</div>
+    </div>
+    <div class="entry">
+      <div class="ehead">
+        <span class="edot"></span>
+        <span class="etitle">Vaidya Diagnostics — Data Compliance</span>
+        <span class="earrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="emeta">Vaidya Diagnostics Pvt. Ltd. &nbsp;·&nbsp; Due in 21d</div>
+    </div>
+    <div class="entry">
+      <div class="ehead">
+        <span class="edot"></span>
+        <span class="etitle">Nirmal Shah — Property Partition</span>
+        <span class="earrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="emeta">Nirmal Shah &nbsp;·&nbsp; No deadline</div>
+    </div>
+  </div>
+
+  <p class="hover-note">Top-left entry shown in its hover state.</p>
+</div>
+</x-dc>
+</body>
+</html>

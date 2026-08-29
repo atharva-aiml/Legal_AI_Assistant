@@ -70,7 +70,7 @@ export function NewMatterModal({
 
   return (
     <Modal title="New Matter" onClose={() => setOpen(false)} width={480}>
-      <NewMatterForm clients={clients} initialClientId={clientId} />
+      <NewMatterForm clients={clients} initialClientId={clientId} onCreated={() => setOpen(false)} />
     </Modal>
   );
 }

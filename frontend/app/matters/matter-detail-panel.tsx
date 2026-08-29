@@ -8,7 +8,6 @@ import { usePersistedState } from "@/lib/use-persisted-state";
 import { TooltipBubble } from "@/components/ui/tooltip-bubble";
 import { PlusIcon } from "@/components/ui/plus-icon";
 import { StatusBadge } from "@/components/status-badge";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { ChatPanel } from "./[id]/chat-panel";
 import { NewDeadlineForm } from "./[id]/new-deadline-form";
 import { CloseMatterButton } from "./[id]/close-matter-button";
@@ -515,7 +514,7 @@ export function MatterDetailPanel({
     return <div className="card text-secondary">Loading…</div>;
   }
   if (status === "error" || !matter) {
-    return <ErrorBanner>Couldn&apos;t load this matter — retry.</ErrorBanner>;
+    return null;
   }
 
   const hasReadyDocuments = documents.some((d) => d.status === "ready");
