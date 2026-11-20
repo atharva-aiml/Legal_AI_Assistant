@@ -1,0 +1,199 @@
+"""Ports for the CRUD side of the backend (auth, Firm, Client, Matter,
+Deadline, Notification, Template, Search, Document storage) — ported from the
+former Java backend's application-layer repository interfaces. Kept separate
+from ports.py, which belongs to Document Ingestion/AI Chat and is unchanged.
+
+Application-layer tests satisfy these with hand-written in-memory fakes
+(tests/application/fakes.py), never mocks — same rule as ports.py."""
+
+from contextlib import AbstractContextManager
+from dataclasses import dataclass
+from datetime import date, datetime
+from typing import Protocol
+
+from app.domain.client import Client, NewClient
+from app.domain.deadline import Deadline, DeadlinePriority, DeadlineStatus, NewDeadline
+from app.domain.document import Document, DocumentStatus, NewDocument, NewDraftDocument
+from app.domain.lawyer import Firm, Lawyer, LawyerPreferences
+from app.domain.matter import Matter, MatterView, NewMatter
+from app.domain.notification import NewNotification, Notification
+from app.domain.search import RecentSearch, SearchQuery
+from app.domain.template import Template
+
+
+class UnitOfWork(Protocol):
+    def transaction(self) -> AbstractContextManager[None]:
+        """Every repository call made inside the block commits or rolls back
+        together (the former Java @Transactional). Nested blocks join the outer one."""
+        ...
+
+
+@dataclass(frozen=True)
+class LawyerWithHash:
+    lawyer: Lawyer
+    password_hash: str
+
+
+class LawyerRepository(Protocol):
+    def find_by_email_with_hash(self, email: str) -> LawyerWithHash | None: ...
+    def find_by_id(self, lawyer_id: str) -> Lawyer | None: ...
+    def find_by_id_with_hash(self, lawyer_id: str) -> LawyerWithHash | None: ...
+    def list_by_firm(self, firm_id: str) -> list[Lawyer]: ...
+    def create(self, firm_id: str, name: str, email: str, password_hash: str) -> LawyerWithHash: ...
+    def create_firm(self, name: str) -> Firm: ...
+    def update_name(self, lawyer_id: str, name: str) -> Lawyer | None: ...
+    def update_password(self, lawyer_id: str, new_password_hash: str) -> None: ...
+
+
+class SessionRepository(Protocol):
+    def create(self, lawyer_id: str, token_hash: str, expires_at: datetime) -> None: ...
+    def find_lawyer_by_valid_token_hash(self, token_hash: str) -> Lawyer | None:
+        """Only returns the Lawyer if a matching, unexpired Session row exists."""
+        ...
+    def delete_by_token_hash(self, token_hash: str) -> None: ...
+
+
+class PasswordHasher(Protocol):
+    def hash(self, raw_password: str) -> str: ...
+    def matches(self, raw_password: str, password_hash: str) -> bool: ...
+
+
+class LawyerPreferencesRepository(Protocol):
+    def find_by_lawyer_id(self, lawyer_id: str) -> LawyerPreferences | None:
+        """None means the Lawyer has never touched this preference — callers decide the default."""
+        ...
+    def upsert(self, lawyer_id: str, deadline_reminders_enabled: bool) -> LawyerPreferences: ...
+
+
+class ClientRepository(Protocol):
+    def create(self, record: NewClient) -> Client: ...
+    def list_by_firm(self, firm_id: str) -> list[Client]: ...
+    def find_by_id(self, firm_id: str, client_id: str) -> Client | None: ...
+    def update(self, firm_id: str, client_id: str, name: str, contact_email: str | None, contact_phone: str | None, notes: str | None) -> Client | None: ...
+    def delete(self, firm_id: str, client_id: str) -> bool:
+        """Cascade-delete only — the caller has already removed every child row."""
+        ...
+
+
+class MatterRepository(Protocol):
+    def create(self, record: NewMatter) -> Matter: ...
+    def list_by_firm(self, firm_id: str) -> list[Matter]: ...
+    def list_by_client(self, firm_id: str, client_id: str) -> list[Matter]: ...
+    def find_by_id(self, firm_id: str, matter_id: str) -> Matter | None: ...
+    def update_title(self, firm_id: str, matter_id: str, title: str) -> Matter | None: ...
+    def close(self, firm_id: str, matter_id: str) -> Matter | None:
+        """REQ-010: status='closed', closed_at=now(). The caller has already verified BR-003."""
+        ...
+    def reopen(self, firm_id: str, matter_id: str) -> Matter | None:
+        """I-35: status='open', closed_at=null. The caller has already verified it was Closed."""
+        ...
+    def delete(self, firm_id: str, matter_id: str) -> bool: ...
+
+
+@dataclass(frozen=True)
+class DeadlineWithFirm:
+    deadline: Deadline
+    firm_id: str
+
+
+class DeadlineRepository(Protocol):
+    """Deadline carries no firm_id of its own (only matter_id) — BR-008
+    isolation is enforced via a join to matters in the real implementation."""
+
+    def create(self, record: NewDeadline) -> Deadline: ...
+    def list_by_matter(self, firm_id: str, matter_id: str) -> list[Deadline]: ...
+    def find_by_id(self, firm_id: str, deadline_id: str) -> Deadline | None: ...
+    def update(self, firm_id: str, deadline_id: str, title: str, due_date: date, status: DeadlineStatus, priority: DeadlinePriority, notification_lead_days: int) -> Deadline | None: ...
+    def list_upcoming(self, firm_id: str, days: int) -> list[Deadline]:
+        """REQ-017: every open Deadline due within `days`, across all the Firm's Matters."""
+        ...
+    def list_all_open_with_firm(self) -> list[DeadlineWithFirm]:
+        """SD-006 scanner only — intentionally unscoped (no firm_id): a trusted
+        internal system process across every Firm, never reachable from the API."""
+        ...
+    def delete_by_matter(self, matter_id: str) -> None:
+        """Cascade-delete only. Notifications cascade off Deadlines at the DB level."""
+        ...
+
+
+class DocumentRepository(Protocol):
+    def create(self, record: NewDocument) -> Document: ...
+    def create_draft(self, record: NewDraftDocument) -> Document: ...
+    def list_by_matter(self, firm_id: str, matter_id: str) -> list[Document]: ...
+    def find_by_id(self, firm_id: str, document_id: str) -> Document | None: ...
+    def update_status(self, document_id: str, status: DocumentStatus, error_message: str | None) -> None: ...
+    def delete(self, firm_id: str, document_id: str) -> bool:
+        """REQ-027. document_chunks cascade at the DB level."""
+        ...
+
+
+class StorageService(Protocol):
+    """SD-008. LocalFilesystemStorage implements this in dev; a future R2
+    implementation satisfies the same contract for production."""
+
+    def store(self, original_file_name: str | None, content: bytes) -> str:
+        """Stores the bytes under a new, unique key and returns that key."""
+        ...
+    def retrieve(self, storage_key: str) -> bytes: ...
+    def delete(self, storage_key: str) -> None:
+        """REQ-027. No-op (not an error) if the key is already gone."""
+        ...
+
+
+class IngestionTrigger(Protocol):
+    """Fire-and-forget hand-off to Document Ingestion (SD-004): the caller
+    never waits for ingestion to finish before responding to the browser."""
+
+    def trigger_ingestion(self, document_id: str) -> None: ...
+
+
+class ChatMessageRepository(Protocol):
+    """Cascade-delete-only port over chat_messages (Client/Matter delete). AI
+    Chat (SD-005) owns every other read/write of that table."""
+
+    def delete_by_matter(self, matter_id: str) -> None: ...
+
+
+class MatterViewRepository(Protocol):
+    def record_view(self, lawyer_id: str, matter_id: str) -> None:
+        """Upsert: re-viewing updates the timestamp, never adds a second row."""
+        ...
+    def list_recently_viewed(self, lawyer_id: str, limit: int) -> list[MatterView]: ...
+    def delete_by_matter(self, matter_id: str) -> None: ...
+
+
+class NotificationRepository(Protocol):
+    def list_by_lawyer(self, lawyer_id: str) -> list[Notification]: ...
+    def mark_read(self, lawyer_id: str, notification_id: str) -> Notification | None: ...
+    def mark_all_read(self, lawyer_id: str) -> int:
+        """I-44: returns how many unread notifications were actually updated."""
+        ...
+    def create(self, record: NewNotification) -> Notification: ...
+    def exists_for_deadline_and_lawyer_on_day(self, deadline_id: str, lawyer_id: str, day: date) -> bool:
+        """SD-006 idempotency per (deadline, lawyer, UTC day), so a scan
+        interrupted partway through can resume without double-sending."""
+        ...
+
+
+class RecentSearchRepository(Protocol):
+    def record(self, lawyer_id: str, query: str) -> None: ...
+    def list_recent(self, lawyer_id: str, limit: int) -> list[RecentSearch]: ...
+
+
+@dataclass(frozen=True)
+class SearchResult:
+    clients: list[Client]
+    matters: list[Matter]
+
+
+class SearchRepository(Protocol):
+    def search(self, firm_id: str, query: SearchQuery) -> SearchResult:
+        """BR-007: never filters out Closed Matters by default."""
+        ...
+
+
+class TemplateRepository(Protocol):
+    """"Available" = every system Template (firm_id null) plus the Firm's own."""
+
+    def list_available(self, firm_id: str) -> list[Template]: ...
+    def find_available(self, firm_id: str, template_id: str) -> Template | None: ...

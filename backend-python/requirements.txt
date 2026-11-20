@@ -12,6 +12,10 @@ pillow==12.3.0
 numpy==2.5.2
 openai==3.0.0
 python-dotenv==1.2.2
+# Auth/CRUD API (ported from the former Java backend, 2026-11-20):
+bcrypt==5.0.0              # password hashing, cost 12 — verifies existing $2a$ (Spring) and $2b$ (Node) hashes
+python-multipart==0.0.34   # FastAPI multipart parsing for Document upload
+httpx==0.28.1              # test-only: FastAPI's TestClient (tests/web)
 
 # CPU-only build — installed separately via:
 # pip install --index-url https://download.pytorch.org/whl/cpu torch

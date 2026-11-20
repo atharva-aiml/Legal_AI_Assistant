@@ -58,18 +58,19 @@ Feature highlights:
 
 ## Architecture
 
-**Three services, one database, one rule that is never bent: the browser never touches the database.** Every read/write is an HTTP call to a backend.
+**A frontend, one backend, one database — and one rule that is never bent: the browser never touches the database.** Every read/write is an HTTP call to the backend.
 
-| Service | Owns | Notes |
+| Component | Owns | Notes |
 |---|---|---|
 | **`/frontend`** — Next.js 15 (App Router), React 19 | UI only | No DB driver, no API routes of its own. Server Components forward the session cookie explicitly; client components use `credentials: 'include'`. |
-| **`/backend-java`** — Spring Boot 4.1, Java 21 | Auth + all CRUD | Self-hosted auth (BCrypt passwords, SHA-256 session tokens, httpOnly cookie, per-request DB check). Firm isolation is a SQL predicate **plus** an explicit authorization call at the top of every controller method. Proxies AI calls to Python after checking auth + matter ownership. |
-| **`/backend-python`** — FastAPI, Python 3.13 | All AI | Document ingestion and the chat retrieval/generation pipeline. Internal only — never called by the browser. Layered `domain → application (Protocol ports) → infrastructure → web`. |
-| **`/database`** — Drizzle Kit (TypeScript) | The Postgres schema | A standalone migration CLI, owned by neither backend's ORM. Both backends map onto it with validate-only. |
+| **`/backend-python`** — FastAPI, Python 3.13 | Auth, all CRUD, **and** all AI | One process. The public `/api/*` surface: self-hosted auth (bcrypt passwords, SHA-256 session tokens, httpOnly cookie, per-request DB check) and Firm / Client / Matter / Deadline / Notification / Template / Search CRUD — Firm isolation is a SQL predicate **plus** an explicit authorization call at the top of every route handler. Plus document ingestion and the chat retrieval/generation pipeline, which `/api` reaches **in-process** after checking auth + matter ownership. Layered `domain → application (Protocol ports) → infrastructure → web`. |
+| **`/database`** — Drizzle Kit (TypeScript) | The Postgres schema | A standalone migration CLI, owned by no backend ORM. The backend maps onto it read/write only — it never creates or alters tables. |
 
-Both backends connect to the same **PostgreSQL 16 + `pgvector`** instance. Files live outside the DB — a local `/uploads` directory in dev (Java writes, Python reads), behind a `StorageService` interface that a Cloudflare R2 implementation slots into for production.
+The backend connects to **PostgreSQL 16 + `pgvector`**. Files live outside the DB — a local `/uploads` directory in dev, behind a `StorageService` interface that a Cloudflare R2 implementation slots into for production.
 
-The Java → Python hand-off is **fire-and-forget for ingestion** (the upload response doesn't wait) and **blocking for chat** (the browser is waiting on an answer). There is no message queue yet — a deliberate scope decision; every failure still resolves to a visible `Document.status`.
+The hand-off from the CRUD layer to the AI layer is **fire-and-forget for ingestion** (a background thread — the upload response doesn't wait) and **blocking for chat** (the browser is waiting on an answer). There is no message queue yet — a deliberate scope decision; every failure still resolves to a visible `Document.status`.
+
+> Until 2026-11-20 auth/CRUD lived in a separate Spring Boot service (`/backend-java`) that called the AI service over HTTP; it was ported to Python with response-for-response parity (`08-Technology-Decision-Log.md`). The diagrams in `/diagrams` still draw that earlier three-service split.
 
 <p align="center">
   <img src="diagrams/04_query_processing_architecture.png" alt="Query processing: two regimes chosen by corpus size" width="880">
@@ -107,27 +108,26 @@ More diagrams (PNG + editable SVG) live in [`/diagrams`](diagrams/): document in
 | Area | Choice | Why |
 |---|---|---|
 | Frontend | Next.js 15 · React 19 · TypeScript (strict) · pnpm | UI only; TypeScript catches shape drift against the backend DTOs. |
-| CRUD backend | Java 21 · Spring Boot 4.1 · Spring Data JPA · Maven Wrapper | Everything that must simply be correct, in a boring, statically-typed stack. |
-| Auth | `spring-security-crypto` BCrypt (cost 12) + SHA-256 session-token hashing | Self-hosted; no third-party auth provider. |
-| AI backend | Python 3.13 · FastAPI · SQLAlchemy (raw `text()` + `::vector`) | Python's OCR / embedding / LLM ecosystem is the reason for the split. |
+| Backend | Python 3.13 · FastAPI · SQLAlchemy (raw `text()` + `::vector`) | One language for CRUD and AI; Python's OCR / embedding / LLM ecosystem decides which. |
+| Auth | `bcrypt` (cost 12) + SHA-256 session-token hashing | Self-hosted; no third-party auth provider. Verifies every hash already stored (`$2a$` and `$2b$`). |
 | Database | PostgreSQL 16 + `pgvector` (`vector(384)`) | One database for relational data *and* embeddings at this scale. |
-| Migrations | Drizzle Kit (TypeScript), standalone in `/database` | One schema-authoring tool across two backend languages. |
+| Migrations | Drizzle Kit (TypeScript), standalone in `/database` | Schema authoring kept independent of the backend's language. |
 | LLM | OpenAI `gpt-4o-mini`, `temperature = 0` | The only paid external API. Also used for embedded-diagram vision captions. |
 | Embeddings | `sentence-transformers` · `all-MiniLM-L6-v2` (384-dim) | Runs locally, no API key, zero per-call cost. |
 | OCR | EasyOCR 1.7.2 (CPU) | No system binary needed; installs via pip. |
 | PDF / DOCX | `pypdf` · `pdfplumber` · `python-docx` · `cryptography` (AES-encrypted PDFs) | Structure-aware extraction. |
 | Storage | Local filesystem in dev; Cloudflare R2 in production (same interface) | No R2 credentials in this environment. |
-| Testing | JUnit 5 (Java) · pytest (Python) · Playwright (end-to-end) | Domain tests are plain; application tests use hand-written in-memory fakes. |
+| Testing | pytest · FastAPI `TestClient` · Playwright (end-to-end) | Domain tests are plain; application tests use hand-written in-memory fakes; API tests run against the real database. |
 
 ## Repository layout
 
 ```
 /frontend         Next.js 15 — UI only. No database access, no API routes.
-/backend-java     Spring Boot — auth + all CRUD (Firm, Client, Matter, Deadline,
-                  Notification, Template, Search).
-/backend-python   FastAPI — AI: document ingestion + the chat RAG pipeline.
+/backend-python   FastAPI — the whole backend: auth + all CRUD (Firm, Client, Matter,
+                  Deadline, Notification, Template, Search) + AI (document ingestion
+                  and the chat RAG pipeline).
 /database         Drizzle schema + migrations. A CLI tool, not an application.
-/uploads          Shared local-dev file storage (gitignored). Java writes, Python reads.
+/uploads          Local-dev file storage (gitignored).
 /tests            Playwright end-to-end tests (the 5 core UX journeys).
 /diagrams         Architecture / flow diagrams (PNG + editable SVG + generator).
 
@@ -149,7 +149,6 @@ CLAUDE.md                        Working conventions + a running list of stack g
 
 - **Docker** (for PostgreSQL + `pgvector`)
 - **Node.js 20+** and **pnpm** (`npm i -g pnpm`)
-- **JDK 21**
 - **Python 3.13**
 - An **OpenAI API key** (`gpt-4o-mini` access) — the only paid dependency
 
@@ -173,16 +172,7 @@ psql postgresql://legal_ai:legal_ai_dev_password@localhost:5432/legal_ai_assista
 # optional: pnpm db:studio                 # Drizzle Studio GUI
 ```
 
-### 2. Java backend (`:8080`)
-
-```bash
-cd backend-java
-./mvnw spring-boot:run
-```
-
-Configuration lives in `src/main/resources/application.properties` (DB URL, `app.frontend-origin`, `app.python-api-url`, `app.storage.local-dir`). Defaults match the Docker Compose setup above.
-
-### 3. Python backend (`:8000`)
+### 2. Backend (`:8080`)
 
 ```bash
 cd backend-python
@@ -196,15 +186,17 @@ pip install -r requirements.txt
 # secrets — OPENAI_API_KEY has no default and must be set
 cat > .env <<'EOF'
 OPENAI_API_KEY=sk-...
-# DATABASE_URL, STORAGE_DIR, EMBEDDING_MODEL_NAME, OPENAI_CHAT_MODEL have working defaults
+# Everything else has a working default: DATABASE_URL, STORAGE_DIR, EMBEDDING_MODEL_NAME,
+# OPENAI_CHAT_MODEL, FRONTEND_ORIGIN (http://localhost:3000), SECURE_COOKIES (false),
+# MAX_UPLOAD_BYTES (25 MB), EXPOSE_INTERNAL_AI_ROUTES (false)
 EOF
 
-uvicorn app.main:app --port 8000 --reload
+uvicorn app.main:app --port 8080 --reload
 ```
 
-The first request loads the embedding model (~7 s) and, on first use, downloads the EasyOCR model (~30 s). On Windows, set `PYTHONIOENCODING=utf-8` for that first OCR download.
+Settings live in `app/infrastructure/config.py`. The first chat/ingestion request loads the embedding model (~7 s) and, on first use, downloads the EasyOCR model (~30 s). On Windows, set `PYTHONIOENCODING=utf-8` for that first OCR download. An hourly Deadline-reminder scan starts with the server (first run 60 s after startup).
 
-### 4. Frontend (`:3000`)
+### 3. Frontend (`:3000`)
 
 ```bash
 cd frontend
@@ -213,11 +205,11 @@ cp .env.local.example .env.local           # JAVA_API_URL + NEXT_PUBLIC_JAVA_API
 pnpm dev
 ```
 
+(The frontend's env vars and `javaFetch()` helper keep their historical "Java" names; they simply point at the backend on `:8080`.)
+
 Open **http://localhost:3000**, register a firm, create a Client and a Matter, upload a document, and ask a question once it's `ready`.
 
-> **Low-RAM machines (~8 GB):** running the Java backend and the Next.js dev server together at default heap can OOM. Start them constrained:
-> `MAVEN_OPTS="-Xmx384m" ./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Xmx256m"` and
-> `NODE_OPTIONS="--max-old-space-size=512" pnpm dev`.
+> **Low-RAM machines (~8 GB):** start the Next.js dev server with a constrained heap: `NODE_OPTIONS="--max-old-space-size=512" pnpm dev`.
 
 ## Running the app
 
@@ -225,8 +217,7 @@ Open **http://localhost:3000**, register a firm, create a Client and a Matter, u
 |---|---|---|
 | Frontend dev server | `pnpm dev` | `/frontend` |
 | Type-check frontend | `pnpm typecheck` | `/frontend` |
-| Java backend | `./mvnw spring-boot:run` | `/backend-java` |
-| Python backend | `uvicorn app.main:app --port 8000 --reload` (in `.venv`) | `/backend-python` |
+| Backend | `uvicorn app.main:app --port 8080 --reload` (in `.venv`) | `/backend-python` |
 | Generate a migration | `pnpm db:generate` | `/database` |
 | Apply migrations | `pnpm db:migrate` | `/database` |
 | Inspect data (GUI) | `pnpm db:studio` | `/database` |
@@ -234,10 +225,7 @@ Open **http://localhost:3000**, register a firm, create a Client and a Matter, u
 ## Testing
 
 ```bash
-# Java — domain + application-layer (JUnit 5)
-cd backend-java && ./mvnw test
-
-# Python — domain / application / infrastructure (pytest)
+# Backend — domain / application / infrastructure / web (pytest; Postgres must be running)
 cd backend-python && source .venv/Scripts/activate && pytest
 
 # End-to-end — the 5 core UX journeys (Playwright), all services live
@@ -276,6 +264,7 @@ Honest, and traceable to code:
 - **Broad questions on very large Matters (> ~400K chars) are best-effort**, not complete — and the answer says so (`full_context = False`).
 - **Latency:** whole-document (full-context) calls have been measured at 10–15.5 s, over the 8 s p95 target; narrow questions stay 2–7 s.
 - **No formal evaluation harness** — verification is unit tests, live manual testing, and the Playwright journeys.
+- **The Playwright specs in `/tests/e2e` predate the latest UI redesign** — they target selectors (e.g. `#document-upload-input`) the current UI no longer renders, so they fail before reaching any backend behavior until they're updated.
 - Draft generation renders **plain text**, not real DOCX/PDF.
 
 ## Design documentation
