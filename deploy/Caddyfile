@@ -1,0 +1,18 @@
+# Caddy gets and renews the Let's Encrypt certificate for {$DOMAIN} on its own.
+{$DOMAIN} {
+	encode gzip
+
+	# The backend's public API + health check. Upload ceiling mirrors the
+	# backend's own MAX_UPLOAD_BYTES (25 MB) plus multipart overhead.
+	@backend path /api/* /health
+	handle @backend {
+		request_body {
+			max_size 30MB
+		}
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+}

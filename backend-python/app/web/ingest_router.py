@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException
 
 from app.application.ingestion_service import IngestionService
-from app.infrastructure.embedding import SentenceTransformerEmbedder
+from app.infrastructure.embedding import OnnxEmbedder
 from app.infrastructure.extraction import DocumentTextExtractor
 from app.infrastructure.repository import SqlAlchemyIngestionRepository
 from app.infrastructure.storage import LocalFileStorage
-from app.infrastructure.vision import OpenAIImageCaptioner
+from app.infrastructure.vision import GeminiImageCaptioner
 
 router = APIRouter()
 
@@ -26,8 +26,8 @@ def ingest(document_id: str):
 
     service = IngestionService(
         storage=LocalFileStorage(),
-        extractor=DocumentTextExtractor(captioner=OpenAIImageCaptioner()),
-        embedder=SentenceTransformerEmbedder(),
+        extractor=DocumentTextExtractor(captioner=GeminiImageCaptioner()),
+        embedder=OnnxEmbedder(),
         repository=repository,
     )
     service.ingest(document_id, document["storage_key"], document["mime_type"])

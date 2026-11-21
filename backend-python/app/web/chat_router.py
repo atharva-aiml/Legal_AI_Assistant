@@ -10,8 +10,8 @@ from app.application.chat_service import (
 )
 from app.domain.chat import ChatMessage, Citation
 from app.infrastructure.chat_repository import SqlAlchemyChatRepository
-from app.infrastructure.embedding import SentenceTransformerEmbedder
-from app.infrastructure.llm import OpenAIChatLLM
+from app.infrastructure.embedding import OnnxEmbedder
+from app.infrastructure.llm import GeminiChatLLM
 
 router = APIRouter()
 
@@ -48,7 +48,7 @@ def _citation_dict(citation: Citation) -> dict:
 
 def _service() -> ChatService:
     repository = SqlAlchemyChatRepository()
-    return ChatService(retrieval=repository, messages=repository, embedder=SentenceTransformerEmbedder(), llm=OpenAIChatLLM())
+    return ChatService(retrieval=repository, messages=repository, embedder=OnnxEmbedder(), llm=GeminiChatLLM())
 
 
 @router.get("/chat/{matter_id}")

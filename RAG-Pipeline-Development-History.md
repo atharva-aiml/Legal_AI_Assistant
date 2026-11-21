@@ -328,6 +328,48 @@ Two real bugs, found by the user's own real upload attempt — the first a sever
 
 ---
 
+## Phase 9 — LLM swapped from OpenAI `gpt-4o-mini` to Gemini free tier, pipeline unchanged (2026-11-21)
+
+**Provider change only — retrieval, prompts, citation verification, thresholds and `FULL_CONTEXT_CHAR_CAP` are byte-for-byte unchanged.** Explicit user decision to stop paying for OpenAI; the account was also out of credits, so chat was returning 502.
+
+**Spiked for real first, per standing rule**, with the production pipeline pieces (`SYSTEM_PROMPT`, `_format_context`, `verify_citations`, the corrective retry) against real dev-DB Matters, nothing persisted. No live gpt-4o-mini was available, so the one stored gpt-4o-mini answer on a spiked Matter ("explain section 27") was the baseline:
+- `gemini-2.5-flash` → 404, retired for new users. `gemini-3.8-flash` → 212 s for one 14.6K-token answer: **rejected**, would hang every chat.
+- **`gemini-3.5-flash-lite` (chosen):** "explain section 27" cited the same items [78]/[79]/[80] as the baseline with all 8 points; matter overview in the required Client / Opposing Party / Forum format with exact ₹ amounts (first draft failed sentence-level citation check → the existing corrective retry produced an `all_valid` answer, i.e. Grounding Rule 5 still does real work); out-of-scope and absent-fact questions → exact `NOT_FOUND_RESPONSE`, confirmed correct ("settle" appears nowhere in that Matter); page-count question answered from Document metadata items; the 353,336-char Matter (`ad5872f7…`, 83,457 prompt tokens) produced a fully cited chronology in 4.8 s. Latency 1.5–6 s across all questions, faster than gpt-4o-mini's ~10 s.
+- Vision: the 3 real Apex PDF diagrams captioned with their labels reproduced exactly; a synthetic blank image → `NO_CONTENT`. One caption took 85 s (free-tier variance) — tolerable because ingestion runs in the background.
+
+**New drawback, disclosed:** the free tier caps input at **250,000 tokens/min per model**. Measured live: the 4th back-to-back 80K-token prompt got a 429 (`retryDelay` 12 s). On the largest Matter that is ~3 full-context questions/min, fewer when the corrective retry fires (it doubles the tokens). Mitigation built: `llm.complete()` tries `LLM_CHAT_MODELS` in order and falls through **only on a 429** (each model has its own quota); any other error still surfaces as `ASSISTANT_UNAVAILABLE`. `FULL_CONTEXT_CHAR_CAP` was deliberately **not** raised despite Gemini's larger context window — bigger prompts would hit the per-minute quota sooner.
+
+**Live-verified through the real `/api`:** fresh backend, register → Client → Matter → upload the 10-page Apex PDF → `ready` in 64 s (Gemini captions during ingestion) → overview in 6.0 s with 5 resolvable page citations; "What does Figure 1 show?" answered correctly *from the Gemini caption written at ingestion*; out-of-scope question → not-found; cleanup delete 204. 296/296 pytest, including 4 new fallback tests.
+
+**Not solved:** free-tier prompts may be used by Google for training. Fine for dev fixtures; real client data needs Gemini's paid tier (same code, different key).
+
+---
+
+## Phase 10 — PyTorch removed: same embedding model on ONNX, EasyOCR → RapidOCR (2026-11-21)
+
+**Goal (user):** shrink the backend for free hosting (~500 MB target) without touching quality or flow. PyTorch (667 MB on Linux) was installed for exactly two things — `sentence-transformers` and EasyOCR — so both were replaced with ONNX Runtime equivalents. Chunking, retrieval, prompts, thresholds and citation verification are untouched.
+
+**Embeddings — improvement, zero quality change.** `fastembed` runs the *same* `all-MiniLM-L6-v2` weights as ONNX. Spiked against the 669 stored chunks: cosine **1.000000** on every chunk whose stored vector matches its own text (665; the other 4 are `lease*.pdf` test fixtures with placeholder-looking vectors that neither library reproduces — a pre-existing data oddity, worth knowing about if those fixtures ever look "unretrievable"). Queries and over-limit texts identical too, so no re-ingestion and no threshold retuning. RAM with the model loaded: 470 → 206 MB.
+- **Drawback found and fixed:** fastembed's default `batch_size=256` crashed ONNX Runtime with `bad allocation` on this 7.3 GB machine; pinned to 32. Truncation pinned to 256 tokens (it already defaulted to 256, but the stored vectors depend on it, so it's enforced, not assumed).
+
+**OCR — improvement, plus a real latent bug removed.** While building the A/B, **EasyOCR crashed the whole Python process** (`0xC0000005`, inside torch's conv in the CRAFT detector) on every full-size page image — 6 of 9 rendered Apex pages, clean or scanned — with ~1 GB RAM free; it also crashed on a *low-res* page when the embedder was loaded in the same process, which is exactly the backend's situation. A standalone scanned-page upload could therefore kill the backend mid-ingestion, leaving the Document stuck in `processing` (a "no failure is invisible" violation nobody had hit only because real uploads so far were PDFs/DOCX with small embedded diagrams). RapidOCR: mean word recall **0.941 vs 0.277** against the PDF text layer across clean/scanned/low-res pages; higher even on the pages EasyOCR survived.
+- **Drawback found and fixed:** RapidOCR silently returned `""` for **CMYK JPEGs** and **palette GIFs** (EasyOCR read both). `_ocr_text()` now converts those color modes first; 13 generated-image tests lock it in.
+- **Small, disclosed text differences on diagrams:** RapidOCR keeps punctuation EasyOCR dropped (`FIGURE 1 — SCHEMATIC SITE PLAN`, `WATER INGRESS / PRODUCTION AREA`) and adds one stray `0` on Figure 2 (an icon read as a digit). Those chunk embeddings move by cosine 0.967–0.992 — the only chunks that change at all.
+
+**Verified:** full old-vs-new pipeline A/B (old code + torch venv vs new code + ONNX venv, captioning disabled to isolate the change) on the 10-page PDF, 10-page DOCX and 30-page PDF: same chunk counts (39/38/130), **every text/table chunk byte-identical with cosine 1.000000**, page/section/type/element metadata 100% identical. 309/309 pytest on a fresh venv with no torch installed. Live `/api`: upload PDF, DOCX, scanned JPEG, CMYK JPEG → all `ready` (7–23 s) → cited answers, Figure-1 answered from OCR text, off-topic → not-found.
+
+**Not solved:** ~0.69 GB unpacked (~306 MB compressed) is half the old size but still over 500 MB unpacked; the biggest remaining piece is `opencv-python-headless` (172 MB), which RapidOCR requires.
+
+---
+
+## Phase 11 — Gemini captioning failed whole Documents on JPEG2000 images (2026-11-21)
+
+**Drawback found by the user's own real upload, right after Phase 9/10:** `Bhopal_Gas_Tragedy_Strict_Hierarchy_60_Pages(3).pdf` went to `failed` with `Error code: 400 - ... 'Unable to process input image' ... INVALID_ARGUMENT`. Not OCR or embeddings: the **Gemini captioner**. Probed image by image — the PDF embeds two **JPEG2000** (`/JPXDecode`) images; `vision.py` labeled every image `data:image/png` whatever its real format. OpenAI tolerated that; Gemini rejects JPEG2000 outright (the 1264×752 `LA` timeline diagram → 400) or silently "sees" nothing (the 1950×92 strip → `NO_CONTENT`). And because the captioner had no error handling, **one diagram's caption failed the entire 60-page Document** — contradicting the intended "captions degrade gracefully" behavior.
+
+**Fix:** `_as_gemini_image()` sends PNG/JPEG/WEBP as-is with their real MIME type and re-encodes everything else (JPEG2000, TIFF, BMP, CMYK, palette) to PNG; any captioning exception is now logged (`Image caption skipped (OCR text still used)`) and the image keeps its OCR text. **Verified:** the same file re-uploaded through the live `/api` → `ready` in 40 s, 95 chunks; "What does the timeline flowchart of legal events show?" answered from the previously-failing JPEG2000 diagram (Gas release 2–3 Dec 1984 → victim claims → 1989 settlement $470 million) with a citation. 6 new tests in `tests/infrastructure/test_vision.py` (no live API calls); 315/315 pytest.
+
+---
+
 ## Working list status (updated 2026-08-25)
 
 These originally surfaced from directly reading the current code, not from the historical log — gaps the timeline hadn't reached yet, not regressions. As of 2026-08-25, all 7 have been investigated and closed one way or another: #1, #2 (Tier 1), #4, #6, and #7 shipped real, live-verified code changes; #3 was investigated and deliberately deferred with real evidence (zero real fixtures show it causing a wrong answer); #2's Tier 2 (persisted image bytes + live vision Q&A) and #7's map-reduce option were likewise deliberately deferred — real, bigger engineering with no real Matter currently needing them. None were closed by assumption — every one has a real spike, a real audit, or a real live verification behind the outcome recorded below.

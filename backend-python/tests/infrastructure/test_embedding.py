@@ -1,5 +1,5 @@
 from app.domain.chunk import ExtractedPage, chunk_pages
-from app.infrastructure.embedding import _get_model
+from app.infrastructure.embedding import MAX_SEQ_LENGTH, count_tokens
 
 
 def _dense_legal_text(sentence_count: int) -> str:
@@ -34,9 +34,7 @@ def test_every_real_chunk_fits_within_the_embedding_models_real_token_limit():
     embedding, invisibly, with no error anywhere. This is the cross-layer
     contract chunk.py's CHUNK_SIZE_CHARS is tuned against; verified here
     with the real tokenizer, not another char-based guess."""
-    model = _get_model()
-    limit = model.max_seq_length
-    tokenizer = model.tokenizer
+    limit = MAX_SEQ_LENGTH
 
     page = ExtractedPage(page_number=1, text=_dense_legal_text(200))
     chunks = chunk_pages([page])
@@ -44,11 +42,11 @@ def test_every_real_chunk_fits_within_the_embedding_models_real_token_limit():
     assert len(chunks) > 1  # actually exercises multiple chunks, not a degenerate single-chunk case
 
     for chunk in chunks:
-        token_count = len(tokenizer.encode(chunk.content, add_special_tokens=True))
+        token_count = count_tokens(chunk.content)
         assert token_count <= limit, (
             f"chunk {chunk.index} has {token_count} tokens, exceeding the model's "
             f"{limit}-token limit — its back {token_count - limit} tokens would be "
-            f"silently truncated by model.encode() with no error."
+            f"silently truncated by the model with no error."
         )
 
 
@@ -56,12 +54,11 @@ def test_embed_warns_but_does_not_raise_when_given_oversized_text(caplog):
     """The safety net for whatever still slips past chunk.py's sizing —
     embedding an oversized text must not crash (it's still a valid,
     if-degraded, embedding), but the truncation must be logged, not silent."""
-    from app.infrastructure.embedding import SentenceTransformerEmbedder
+    from app.infrastructure.embedding import OnnxEmbedder
 
-    embedder = SentenceTransformerEmbedder()
-    model = _get_model()
+    embedder = OnnxEmbedder()
     # One long word per token-ish, comfortably past the real limit regardless of tokenizer quirks.
-    oversized_text = "Clause obligates party " * (model.max_seq_length * 2)
+    oversized_text = "Clause obligates party " * (MAX_SEQ_LENGTH * 2)
 
     with caplog.at_level("WARNING"):
         vectors = embedder.embed([oversized_text])
@@ -72,9 +69,9 @@ def test_embed_warns_but_does_not_raise_when_given_oversized_text(caplog):
 
 
 def test_embed_does_not_warn_for_a_normally_sized_chunk(caplog):
-    from app.infrastructure.embedding import SentenceTransformerEmbedder
+    from app.infrastructure.embedding import OnnxEmbedder
 
-    embedder = SentenceTransformerEmbedder()
+    embedder = OnnxEmbedder()
     page = ExtractedPage(page_number=1, text=_dense_legal_text(10))
     chunks = chunk_pages([page])
 
@@ -82,3 +79,17 @@ def test_embed_does_not_warn_for_a_normally_sized_chunk(caplog):
         embedder.embed([chunks[0].content])
 
     assert not any("exceeding" in record.message for record in caplog.records)
+
+
+def test_embeddings_are_unit_length_384_dim_and_truncate_at_the_real_limit():
+    """The stored vectors (and cosine retrieval) assume normalized 384-dim
+    output, and that everything past MAX_SEQ_LENGTH tokens is ignored — so
+    two texts identical in their first 256 tokens must embed identically."""
+    from app.infrastructure.embedding import OnnxEmbedder
+
+    head = "The lessee shall indemnify the lessor against all claims. " * 60
+    a, b, short = OnnxEmbedder().embed([head + "tail one", head + "a completely different tail", "Rent is due monthly."])
+
+    assert len(a) == 384
+    assert abs(sum(x * x for x in short) - 1.0) < 1e-4
+    assert max(abs(x - y) for x, y in zip(a, b)) < 1e-5

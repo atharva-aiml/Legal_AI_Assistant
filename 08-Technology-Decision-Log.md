@@ -84,3 +84,86 @@ One row per external dependency (library, service, engine) introduced into the c
 | 2026-11-20 | Password hashing (replaces `spring-security-crypto`) | `bcrypt` 5.0.0 (cost 12) | The CRUD port needed a bcrypt implementation compatible with every stored hash. | **Spiked live:** an account created through the Java backend (`$2a$12$`, Spring) and one created through Python (`$2b$12$`) both logged in through the Python backend; the one malformed hash in the dev DB (`x`) returns 401, not 500. `bcrypt>=5` refuses >72-byte passwords (Spring's encoder threw too → Java returned 500); now a 400 validation error on register/change-password. |
 | 2026-11-20 | Multipart form parsing | `python-multipart` 0.0.34 | Required by FastAPI for `UploadFile` (Document upload). | Real DOCX upload (37,001 bytes) through the browser and through the API script; bytes round-trip identically via download. |
 | 2026-11-20 | API test client (test-only) | `httpx` 0.28.1 (FastAPI `TestClient`) | Backs `tests/web/test_api.py` — every endpoint's happy path + BR-008 cross-Firm 404 against the real database. | 11 API tests pass against live Postgres. |
+| 2026-11-21 | LLM provider — chat + image captioning (replaces OpenAI `gpt-4o-mini`) | Google Gemini free tier, **`gemini-3.5-flash-lite`** (fallback `gemini-3.1-flash-lite`), temperature 0, via Gemini's OpenAI-compatible endpoint — still the `openai` SDK 3.0.0, **no new dependency** | Explicit user decision: drop the paid OpenAI API for a free model with no loss of quality or flow. The OpenAI account was also out of credits (429 "no credits remaining"), so chat was 502-ing. Gemini is the only free option checked whose limits fit full-context mode (~83K-token prompts): Groq's free TPM, GitHub Models' 8K-token input cap and local models on this 7.3 GB machine all break it. `gemini-2.5-flash` returned 404 ("no longer available to new users"); `gemini-3.8-flash` took 212 s for a 14.6K-token answer on the free tier — both rejected. | **Spiked for real** with the app's own `SYSTEM_PROMPT`, `_format_context`, `verify_citations` and corrective retry against real dev-DB Matters (no live gpt-4o-mini to compare, so the stored gpt-4o-mini answer was the baseline): "explain section 27" cited the same items [78]/[79]/[80] as the baseline with all 8 points; matter overview correctly structured with exact ₹ amounts (corrective retry → `all_valid`); out-of-scope and absent-fact questions → exact `NOT_FOUND_RESPONSE` (confirmed "settle" appears nowhere in that Matter); page counts taken from metadata items; an 83,457-token full-context chronology in 4.8 s. Latency 1.5–6 s vs ~10 s+ before. Captioning: 3 real Apex PDF diagrams described with labels reproduced exactly; synthetic blank → `NO_CONTENT`. **Limit found live:** 250,000 input tokens/min **per model** (429 after the 3rd back-to-back 80K prompt, `retryDelay` 12 s) → `llm.complete()` falls through the model list on 429 only (4 unit tests). Live end-to-end through `/api` after the switch: register → upload 10-page PDF → `ready` in 64 s → overview (6.0 s, 5 cited pages), "What does Figure 1 show?" answered from the Gemini caption, out-of-scope → not-found; 296/296 pytest. **Caveat:** free-tier prompts may be used by Google for training — acceptable for dev fixtures, not for real client data (DPDP); production on real data needs the paid tier. |
+| 2026-11-21 | Embedding runtime (replaces `sentence-transformers` 5.7.0 + PyTorch) | **`fastembed` 0.9.1** running the **same `all-MiniLM-L6-v2`** as ONNX (via `onnxruntime` 1.32.0); `batch_size=32` and 256-token truncation pinned explicitly | User goal: shrink the backend toward ~500 MB for free hosting **without changing quality or flow**. PyTorch alone was 667 MB of the Linux install; the embedding model was one of only two reasons it was there. Same model + same weights means stored `document_chunks` vectors stay valid — no re-ingestion, no threshold recalibration (an API embedding model would have needed both). | **Spiked for real** in a torch-free venv against the dev DB: fastembed reproduced the stored sentence-transformers vectors at **cosine 1.000000 on 665/669 chunks** (the other 4 are one-line `lease*.pdf` fixtures whose stored vectors don't match their own text under *either* library — pre-existing test data, not a runtime difference); queries and >256-token texts 1.000000; per-Document top-8 retrieval identical. Found: fastembed's default batch 256 → ONNX `bad allocation` OOM on this machine → pinned to 32. A/B of the full extract→chunk→embed pipeline (old code+torch vs new) on the 10-page PDF/DOCX and 30-page PDF: all text/table chunks byte-identical with cosine 1.000000. Resident RAM with model loaded 470 MB → 206 MB. |
+| 2026-11-21 | OCR engine (replaces EasyOCR 1.7.2) | **`rapidocr` 3.10.0** — PP-OCRv6 small det/rec models on ONNX Runtime (models ship inside the wheel); pulls `opencv-python-headless`, `shapely`, `pyclipper` | Second and last reason PyTorch was installed (EasyOCR also pulled `scipy`, `scikit-image`, `torchvision`). Shares `onnxruntime` with the embedder. | **Spiked for real**, both engines on identical inputs: 9 Apex PDF pages rendered as clean / scanned (blur+rotation+JPEG) / low-res images, scored against the PDF's own text layer — **mean word recall EasyOCR 0.277 vs RapidOCR 0.941**, because **EasyOCR crashed the process (access violation `0xC0000005`) on 6/9 full-size pages**; on the 3 low-res pages it did read, RapidOCR still scored higher (0.90–1.00 vs 0.79–0.87). Embedded diagrams: 97–100% identical text, 3–7× faster; RapidOCR keeps `—`/`/` EasyOCR dropped, adds one stray `0` on Figure 2. Format sweep found RapidOCR returning **empty text for CMYK JPEG and palette GIF** → fixed by color-mode normalization in `_ocr_text()`, covered by `tests/infrastructure/test_ocr.py` (13 tests). |
+| 2026-11-21 | Backend size, measured | Linux x86-64 wheels for both requirement sets, summed | Evidence for the free-hosting goal. | **Old:** 1,339 MB installed packages (+ ~90 MB models) ≈ **1.7 GB** unpacked image / ~607 MB compressed. **New:** 487 MB packages (+87 MB ONNX MiniLM) ≈ **0.69 GB** unpacked / **~306 MB compressed** on `python:3.13-slim`. Largest remaining item: `opencv-python-headless` 172 MB (RapidOCR needs it). Live check on the new venv: 309/309 pytest; real `/api` register → Matter → upload PDF/DOCX/scanned-JPEG/CMYK-JPEG → all `ready` in 7–23 s → chat answers with citations, Figure-1 question answered from OCR text, off-topic → not-found. |
+
+## Retired implementations — restore guide
+
+Implementations replaced in favor of something better, kept here so they can be brought back exactly. Each one's last working version is in git — `git show <commit>:<path>` prints it, `git checkout <commit> -- <path>` restores it.
+
+### PyTorch embedding + OCR stack (retired 2026-11-21)
+
+**Replaced by:** `fastembed` (same model, ONNX) + `rapidocr` — see the 2026-11-21 rows above and RAG-Pipeline-Development-History Phase 10. **Retired because:** PyTorch made the Linux image ~1.7 GB unpacked (~607 MB compressed) vs ~0.69 GB / ~306 MB now; EasyOCR crashed the backend process on full-page images on this machine. **Last working version:** commit `c2f7afa` (files `backend-python/requirements.txt`, `backend-python/app/infrastructure/embedding.py`, `backend-python/app/infrastructure/extraction.py`, `backend-python/tests/infrastructure/test_embedding.py`, `backend-python/Dockerfile` at `868521d`).
+
+**When it would make sense to restore:** a GPU host (torch could then run bigger embedding models), or needing a model that only ships as PyTorch. Restoring the *embedder* alone changes nothing about stored data — same model, same vectors (verified cosine 1.000000) — so `document_chunks` stays valid either way. Restoring EasyOCR re-exposes the full-page crash; test a 150-dpi A4 page image first.
+
+**1. Dependencies** — in `requirements.txt`, replace `fastembed`/`rapidocr`/`onnxruntime` with:
+```
+sentence-transformers==5.7.0
+easyocr==1.7.2
+```
+and install CPU-only torch **first**, or pip pulls the CUDA build (several GB):
+```bash
+pip install --index-url https://download.pytorch.org/whl/cpu torch==2.13.0 torchvision==0.28.0
+pip install -r requirements.txt
+```
+On Windows, run the first EasyOCR model download with `PYTHONIOENCODING=utf-8` (its progress bar crashes under cp1252 with `UnicodeEncodeError ... '█'`). Models cache to `~/.cache/huggingface` (~90 MB) and `~/.EasyOCR/model` (~94 MB).
+
+**2. Embedder** (`app/infrastructure/embedding.py`) — the class was `SentenceTransformerEmbedder` (rename back in `web/chat_router.py`, `web/ingest_router.py`, tests):
+```python
+from sentence_transformers import SentenceTransformer
+from app.infrastructure.config import EMBEDDING_MODEL_NAME
+
+_model: SentenceTransformer | None = None
+
+def _get_model() -> SentenceTransformer:
+    global _model
+    if _model is None:
+        _model = SentenceTransformer(EMBEDDING_MODEL_NAME)   # "all-MiniLM-L6-v2"
+    return _model
+
+class SentenceTransformerEmbedder:
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        self._warn_if_any_would_truncate(texts)
+        return [v.tolist() for v in _get_model().encode(texts)]   # batch_size defaults to 32
+
+    @staticmethod
+    def _warn_if_any_would_truncate(texts):
+        model = _get_model()
+        limit, tokenizer = model.max_seq_length, model.tokenizer   # 256
+        for text in texts:
+            n = len(tokenizer.encode(text, add_special_tokens=True))
+            if n > limit:
+                log.warning("Embedding input has %d tokens, exceeding %s's %d-token limit ...", n, EMBEDDING_MODEL_NAME, limit)
+```
+`EMBEDDING_CACHE_DIR` in `config.py` is fastembed-only and can be dropped.
+
+**3. OCR** (`app/infrastructure/extraction.py`) — replace `_get_ocr_engine()`/`_ocr_text()` with:
+```python
+import easyocr
+
+_ocr_reader: easyocr.Reader | None = None
+
+def _get_ocr_reader() -> easyocr.Reader:
+    global _ocr_reader
+    if _ocr_reader is None:
+        _ocr_reader = easyocr.Reader(["en"], gpu=False)   # ~30 s first load
+    return _ocr_reader
+
+def _ocr_text(image_bytes: bytes) -> str:
+    return " ".join(_get_ocr_reader().readtext(image_bytes, detail=0)).strip()
+```
+Keeping `_ocr_text()` as the single entry point means the three call sites (image upload, DOCX images, PDF images) need no change. EasyOCR reads CMYK/palette images natively, so the color-mode normalization isn't needed (harmless if kept). `tests/infrastructure/test_ocr.py` should still pass — run it; its full-page test is the one EasyOCR failed.
+
+**4. Docker image** — the retired backend Dockerfile (commit `868521d`) added, before `pip install -r requirements.txt`:
+```dockerfile
+ENV HF_HOME=/models/hf EASYOCR_MODULE_PATH=/models/easyocr
+RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+RUN pip install --index-url https://download.pytorch.org/whl/cpu torch==2.13.0 torchvision==0.28.0
+# after requirements: bake both models into the image
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')" \
+ && python -c "import easyocr; easyocr.Reader(['en'], gpu=False, model_storage_directory='/models/easyocr')"
+```
+Today's equivalent bakes `python -c "from app.infrastructure.embedding import _get_model; _get_model()"` with `EMBEDDING_CACHE_DIR` set; RapidOCR's models ship inside its wheel.

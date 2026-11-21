@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 # Loads backend-python/.env (gitignored) into the process environment —
-# needed for OPENAI_API_KEY specifically, since (unlike DATABASE_URL) a
+# needed for GOOGLE_API_KEY specifically, since (unlike DATABASE_URL) a
 # secret must never ship a hardcoded default.
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
@@ -18,12 +18,29 @@ DATABASE_URL = os.environ.get(
 STORAGE_DIR = os.environ.get("STORAGE_DIR", os.path.join(os.path.dirname(__file__), "..", "..", "..", "uploads"))
 
 EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+# Where fastembed keeps the ONNX model. Its own default is the OS temp dir,
+# which disk cleanup can wipe (forcing a silent ~90 MB re-download on the next
+# upload) — pinned to backend-python/.model-cache (gitignored) instead. A
+# deploy image bakes the model in and points this at that path.
+EMBEDDING_CACHE_DIR = os.environ.get(
+    "EMBEDDING_CACHE_DIR", os.path.join(os.path.dirname(__file__), "..", "..", ".model-cache")
+)
 
-# AI Architecture / System Architecture §6: LLM provider, resolved via a
-# real spike in V0.4 (Technology Decision Log) — no hardcoded default,
-# since a missing key must fail loudly rather than silently.
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-OPENAI_CHAT_MODEL = os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+# AI Architecture / System Architecture §6: LLM provider. Was OpenAI
+# gpt-4o-mini (V0.4); switched 2026-11-21 to Google Gemini's free tier via its
+# OpenAI-compatible endpoint, after a real spike against real Matters
+# (Technology Decision Log). No hardcoded key default — a missing key must
+# fail loudly rather than silently.
+GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
+# The free tier caps input tokens per minute PER MODEL (250K at spike time) —
+# one full-context question on a large Matter is ~83K tokens. On a 429 the
+# adapter moves on to the next model in this list, each with its own quota.
+LLM_CHAT_MODELS = [
+    m.strip()
+    for m in os.environ.get("LLM_CHAT_MODELS", "gemini-3.5-flash-lite,gemini-3.1-flash-lite").split(",")
+    if m.strip()
+]
 
 # --- Public API (auth + CRUD; formerly backend-java's application.properties) ---
 

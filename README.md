@@ -84,7 +84,7 @@ More diagrams (PNG + editable SVG) live in [`/diagrams`](diagrams/): document in
 
 **Ingestion** (`backend-python/app`): `IngestionService.ingest()` → fetch → extract → chunk → embed → persist, always terminating in `ready` or `failed`.
 
-- **Extraction** branches on MIME type. **PDF** (`pdfplumber` + `pypdf`): per-character font metrics → heading levels; `find_tables()` with bounding-box exclusion from the prose pass; real page numbers; embedded images verified via the page content stream (`Do` operator) and attributed to every page that truly draws them. **DOCX** (`python-docx`): a true document-order walk, heading stack from real paragraph styles, tables from real `<w:tbl>` objects, page numbers from `<w:br w:type="page"/>` markers when present. **Embedded diagrams** are OCR'd (EasyOCR, character-exact) **and** vision-captioned (`gpt-4o-mini`, structure/flow), then combined.
+- **Extraction** branches on MIME type. **PDF** (`pdfplumber` + `pypdf`): per-character font metrics → heading levels; `find_tables()` with bounding-box exclusion from the prose pass; real page numbers; embedded images verified via the page content stream (`Do` operator) and attributed to every page that truly draws them. **DOCX** (`python-docx`): a true document-order walk, heading stack from real paragraph styles, tables from real `<w:tbl>` objects, page numbers from `<w:br w:type="page"/>` markers when present. **Embedded diagrams** are OCR'd (RapidOCR, character-exact) **and** vision-captioned (`gpt-4o-mini`, structure/flow), then combined.
 - **Chunking** (`app/domain/chunk.py`, pure) branches on data *shape*, not file type. Sentence-boundary greedy packing, ~1000 chars (850 for tables), ~150-char whole-sentence overlap. A page / heading / chunk-type / element-number change is a **hard boundary** — so a chunk maps to exactly one real location, and a citation is never a guess.
 - **Embedding**: `all-MiniLM-L6-v2` (384-dim), local, no API key, no per-call cost. A runtime check warns if a text would exceed the model's real 256-token limit.
 - **Storage**: raw SQL `INSERT` into `document_chunks` with an explicit `CAST(:embedding AS vector)`.
@@ -113,8 +113,8 @@ More diagrams (PNG + editable SVG) live in [`/diagrams`](diagrams/): document in
 | Database | PostgreSQL 16 + `pgvector` (`vector(384)`) | One database for relational data *and* embeddings at this scale. |
 | Migrations | Drizzle Kit (TypeScript), standalone in `/database` | Schema authoring kept independent of the backend's language. |
 | LLM | OpenAI `gpt-4o-mini`, `temperature = 0` | The only paid external API. Also used for embedded-diagram vision captions. |
-| Embeddings | `sentence-transformers` · `all-MiniLM-L6-v2` (384-dim) | Runs locally, no API key, zero per-call cost. |
-| OCR | EasyOCR 1.7.2 (CPU) | No system binary needed; installs via pip. |
+| Embeddings | `fastembed` 0.9.1 (ONNX Runtime) · `all-MiniLM-L6-v2` (384-dim) | Runs locally, no API key, zero per-call cost, no PyTorch. |
+| OCR | RapidOCR 3.10.0 (PP-OCR models on ONNX Runtime, CPU) | No system binary, no PyTorch; installs via pip with its models included. |
 | PDF / DOCX | `pypdf` · `pdfplumber` · `python-docx` · `cryptography` (AES-encrypted PDFs) | Structure-aware extraction. |
 | Storage | Local filesystem in dev; Cloudflare R2 in production (same interface) | No R2 credentials in this environment. |
 | Testing | pytest · FastAPI `TestClient` · Playwright (end-to-end) | Domain tests are plain; application tests use hand-written in-memory fakes; API tests run against the real database. |
@@ -179,22 +179,21 @@ cd backend-python
 python -m venv .venv
 source .venv/Scripts/activate          # Windows;  source .venv/bin/activate on macOS/Linux
 
-# install CPU-only torch first so EasyOCR / sentence-transformers don't pull CUDA
-pip install --index-url https://download.pytorch.org/whl/cpu torch
-pip install -r requirements.txt
+pip install -r requirements.txt        # no PyTorch — embeddings and OCR run on ONNX Runtime
 
-# secrets — OPENAI_API_KEY has no default and must be set
+# secrets — GOOGLE_API_KEY (free Gemini key from aistudio.google.com) has no default and must be set
 cat > .env <<'EOF'
-OPENAI_API_KEY=sk-...
+GOOGLE_API_KEY=...
 # Everything else has a working default: DATABASE_URL, STORAGE_DIR, EMBEDDING_MODEL_NAME,
-# OPENAI_CHAT_MODEL, FRONTEND_ORIGIN (http://localhost:3000), SECURE_COOKIES (false),
+# LLM_CHAT_MODELS (gemini-3.5-flash-lite,gemini-3.1-flash-lite — tried in order, next one on a 429),
+# LLM_BASE_URL (Gemini's OpenAI-compatible endpoint), FRONTEND_ORIGIN (http://localhost:3000), SECURE_COOKIES (false),
 # MAX_UPLOAD_BYTES (25 MB), EXPOSE_INTERNAL_AI_ROUTES (false)
 EOF
 
 uvicorn app.main:app --port 8080 --reload
 ```
 
-Settings live in `app/infrastructure/config.py`. The first chat/ingestion request loads the embedding model (~7 s) and, on first use, downloads the EasyOCR model (~30 s). On Windows, set `PYTHONIOENCODING=utf-8` for that first OCR download. An hourly Deadline-reminder scan starts with the server (first run 60 s after startup).
+Settings live in `app/infrastructure/config.py`. The first chat/ingestion request loads the embedding model; on first use it downloads the ONNX `all-MiniLM-L6-v2` (~87 MB) into `backend-python/.model-cache/` (`EMBEDDING_CACHE_DIR`). The OCR models ship inside the `rapidocr` package. An hourly Deadline-reminder scan starts with the server (first run 60 s after startup).
 
 ### 3. Frontend (`:3000`)
 

@@ -6,8 +6,12 @@ pypdf==6.16.1
 pdfplumber==0.11.10
 cryptography==50.0.0
 python-docx==1.2.0
-sentence-transformers==5.7.0
-easyocr==1.7.2
+# Local AI models run on ONNX Runtime — no PyTorch (2026-11-21, Technology
+# Decision Log): fastembed = the same all-MiniLM-L6-v2 the stored vectors were
+# made with; rapidocr = PP-OCR models, replacing EasyOCR.
+fastembed==0.9.1
+rapidocr==3.10.0
+onnxruntime==1.32.0
 pillow==12.3.0
 numpy==2.5.2
 openai==3.0.0
@@ -15,8 +19,4 @@ python-dotenv==1.2.2
 # Auth/CRUD API (ported from the former Java backend, 2026-11-20):
 bcrypt==5.0.0              # password hashing, cost 12 — verifies existing $2a$ (Spring) and $2b$ (Node) hashes
 python-multipart==0.0.34   # FastAPI multipart parsing for Document upload
-httpx==0.28.1              # test-only: FastAPI's TestClient (tests/web)
-
-# CPU-only build — installed separately via:
-# pip install --index-url https://download.pytorch.org/whl/cpu torch
-# (the default PyPI torch wheel pulls CUDA libraries unnecessarily on this machine)
+httpx==0.28.1              # FastAPI's TestClient (tests/web); also an `openai` dependency, so no size cost

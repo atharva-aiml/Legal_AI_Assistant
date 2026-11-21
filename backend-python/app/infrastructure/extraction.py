@@ -2,29 +2,59 @@ import hashlib
 import io
 import re
 
+import threading
+
 import docx
-import easyocr
 import pdfplumber
 from docx.document import Document as DocxDocumentType
 from docx.oxml.ns import qn
 from docx.table import Table
 from docx.text.paragraph import Paragraph
+from PIL import Image
 from pypdf import PdfReader
 from pypdf.generic import ContentStream, IndirectObject
+from rapidocr import RapidOCR
 
 from app.application.ports import ImageCaptioner
 from app.domain.chunk import ExtractedPage, Segment, _segments_for
 
-_ocr_reader: easyocr.Reader | None = None
+_ocr_engine: RapidOCR | None = None
+_ocr_lock = threading.Lock()
+
+# Color modes RapidOCR reads wrongly as raw arrays — it would treat CMYK's 4
+# channels as RGBA and a palette image's indices as grayscale, returning
+# EMPTY text with no error (both found in the 2026-11-21 spike; EasyOCR read
+# them). Converted first; every other mode is passed through untouched,
+# exactly as spiked.
+_TO_RGB_MODES = frozenset({"CMYK", "YCbCr", "LAB", "HSV"})
+_TO_RGBA_MODES = frozenset({"P", "PA"})  # RGBA keeps transparency; RapidOCR picks a contrasting background
 
 
-def _get_ocr_reader() -> easyocr.Reader:
-    # Loaded lazily and cached — the ~30s model init (spiked in Technology
-    # Decision Log) only happens once per process, not per request.
-    global _ocr_reader
-    if _ocr_reader is None:
-        _ocr_reader = easyocr.Reader(["en"], gpu=False)
-    return _ocr_reader
+def _get_ocr_engine() -> RapidOCR:
+    # OCR via RapidOCR (PP-OCR models on ONNX Runtime) since 2026-11-21,
+    # replacing EasyOCR — which needed PyTorch and crashed the whole process
+    # (native access violation) on full-page images on this machine
+    # (Technology Decision Log). Loaded lazily and cached, once per process.
+    global _ocr_engine
+    if _ocr_engine is None:
+        with _ocr_lock:
+            if _ocr_engine is None:
+                _ocr_engine = RapidOCR(params={"Global.log_level": "warning"})
+    return _ocr_engine
+
+
+def _ocr_text(image_bytes: bytes) -> str:
+    """All recognized text in reading order, space-joined (same output shape
+    the EasyOCR-era `" ".join(readtext(..., detail=0))` produced). Raises on
+    bytes that aren't a decodable image — same as before, so a corrupt image
+    still resolves the Document to 'failed', never silently empty."""
+    image: bytes | Image.Image = image_bytes
+    with Image.open(io.BytesIO(image_bytes)) as probe:
+        mode = probe.mode
+    if mode in _TO_RGB_MODES or mode in _TO_RGBA_MODES:
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB" if mode in _TO_RGB_MODES else "RGBA")
+    result = _get_ocr_engine()(image)
+    return " ".join(result.txts or ()).strip()
 
 
 class DocumentTextExtractor:
@@ -65,8 +95,7 @@ class DocumentTextExtractor:
         # packer. Real page numbers come directly from PDF's own page
         # structure — simpler than DOCX, which had to infer them from
         # explicit page-break markers because DOCX has none of its own.
-        ocr_reader = _get_ocr_reader()
-        segments = _extract_pdf_segments(file_bytes, ocr_reader, self.captioner)
+        segments = _extract_pdf_segments(file_bytes, self.captioner)
         return [ExtractedPage(page_number=None, text="", segments=segments)]
 
     def _extract_docx(self, file_bytes: bytes) -> list[ExtractedPage]:
@@ -85,15 +114,12 @@ class DocumentTextExtractor:
         # chunk_pages(), which packs every type through the identical
         # size-bounded packer regardless of source (one fixed output shape).
         document = docx.Document(io.BytesIO(file_bytes))
-        ocr_reader = _get_ocr_reader()
-        segments = _extract_docx_segments(document, ocr_reader, self.captioner)
+        segments = _extract_docx_segments(document, self.captioner)
         return [ExtractedPage(page_number=None, text="", segments=segments)]
 
     @staticmethod
     def _extract_image(file_bytes: bytes) -> list[ExtractedPage]:
-        reader = _get_ocr_reader()
-        results = reader.readtext(file_bytes, detail=0)
-        return [ExtractedPage(page_number=1, text=" ".join(results))]
+        return [ExtractedPage(page_number=1, text=_ocr_text(file_bytes))]
 
     @staticmethod
     def _extract_text(file_bytes: bytes) -> list[ExtractedPage]:
@@ -214,7 +240,7 @@ def _document_has_any_page_break(document: DocxDocumentType) -> bool:
     return any(_paragraph_has_page_break(p) for p in document.paragraphs)
 
 
-def _extract_docx_segments(document: DocxDocumentType, ocr_reader, captioner: ImageCaptioner) -> list[Segment]:
+def _extract_docx_segments(document: DocxDocumentType, captioner: ImageCaptioner) -> list[Segment]:
     segments: list[Segment] = []
     stack: list[tuple[int, str]] = []
     # Sequential, document-wide, 1-indexed — "Table 3"/"Image 2" the way a
@@ -257,7 +283,7 @@ def _extract_docx_segments(document: DocxDocumentType, ocr_reader, captioner: Im
             for blob in _paragraph_image_blobs(block, document):
                 img_hash = hashlib.sha256(blob).digest()
                 if img_hash not in image_content_cache:
-                    ocr_text = " ".join(ocr_reader.readtext(blob, detail=0)).strip()
+                    ocr_text = _ocr_text(blob)
                     content = _combine_ocr_and_caption(ocr_text, captioner.caption(blob))
                     if content:
                         image_count += 1
@@ -406,7 +432,7 @@ def _truly_drawn_xobject_identities(page, reader: PdfReader) -> set[tuple[int, i
     return drawn
 
 
-def _extract_pdf_segments(file_bytes: bytes, ocr_reader, captioner: ImageCaptioner) -> list[Segment]:
+def _extract_pdf_segments(file_bytes: bytes, captioner: ImageCaptioner) -> list[Segment]:
     segments: list[Segment] = []
     reader = PdfReader(io.BytesIO(file_bytes))
 
@@ -548,7 +574,7 @@ def _extract_pdf_segments(file_bytes: bytes, ocr_reader, captioner: ImageCaption
 
                 img_hash = hashlib.sha256(img.data).digest()
                 if img_hash not in image_content_cache:
-                    ocr_text = " ".join(ocr_reader.readtext(img.data, detail=0)).strip()
+                    ocr_text = _ocr_text(img.data)
                     content = _combine_ocr_and_caption(ocr_text, captioner.caption(img.data))
                     if content:
                         image_count += 1
