@@ -11,7 +11,12 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isPublic =
-    PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/_next") || pathname.includes(".");
+    PUBLIC_PATHS.includes(pathname) ||
+    pathname.startsWith("/_next") ||
+    // Proxied to the backend (next.config.ts rewrites), which does its own
+    // auth — redirecting here would break login/register themselves.
+    pathname.startsWith("/api/") ||
+    pathname.includes(".");
 
   if (isPublic) return NextResponse.next();
 

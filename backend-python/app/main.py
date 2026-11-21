@@ -75,7 +75,13 @@ async def reject_foreign_origins(request: Request, call_next):
         own = urlsplit(str(request.base_url))
         if origin.rstrip("/") != f"{own.scheme}://{own.netloc}":
             return PlainTextResponse("Invalid CORS request", status_code=403)
-    return await call_next(request)
+    response = await call_next(request)
+    # In production /api is reached through Vercel's rewrite proxy (frontend
+    # origin -> Cloud Run). Per-lawyer responses must never be stored by a
+    # shared CDN cache, or one Firm could be served another's data (BR-008).
+    if request.url.path.startswith("/api/") and "cache-control" not in response.headers:
+        response.headers["cache-control"] = "private, no-store"
+    return response
 
 
 # ---------------------------------------------------------------- errors
